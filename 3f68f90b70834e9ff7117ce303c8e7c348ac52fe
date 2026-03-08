@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "3f68f90b70834e9ff7117ce303c8e7c348ac52fe",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 5,
+      "accepted_lines": 344,
+      "overriden_lines": 0
+    }
+  }
+}
