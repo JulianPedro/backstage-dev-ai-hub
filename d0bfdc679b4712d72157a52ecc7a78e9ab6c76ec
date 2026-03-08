@@ -1,0 +1,23 @@
+plugins/dev-ai-hub/src/components/DevAiHubPage/DevAiHubPage.tsx
+  c67735fcf4a67647 17,110-139,141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "d0bfdc679b4712d72157a52ecc7a78e9ab6c76ec",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 424,
+      "total_deletions": 53,
+      "accepted_lines": 377,
+      "overriden_lines": 0
+    }
+  }
+}
