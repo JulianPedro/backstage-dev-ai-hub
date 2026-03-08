@@ -1,0 +1,23 @@
+plugins/dev-ai-hub-backend/src/database/AiAssetStore.ts
+  c67735fcf4a67647 190,198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "7eefc892ef2960a64af28f69c6ff861326659e79",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
