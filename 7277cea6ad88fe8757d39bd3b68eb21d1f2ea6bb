@@ -1,0 +1,107 @@
+plugins/dev-ai-hub-backend/package.json
+  c67735fcf4a67647 1-33
+plugins/dev-ai-hub/src/plugin.ts
+  c67735fcf4a67647 1-36
+CLAUDE.md
+  c67735fcf4a67647 1-135
+package.json
+  c67735fcf4a67647 1-19
+plugins/dev-ai-hub/src/routes.ts
+  c67735fcf4a67647 1-9
+plugins/dev-ai-hub/src/components/AssetFilters/index.ts
+  c67735fcf4a67647 1-2
+plugins/dev-ai-hub/src/components/AssetFilters/AssetFilters.tsx
+  c67735fcf4a67647 1-139
+plugins/dev-ai-hub-node/package.json
+  c67735fcf4a67647 1-24
+plugins/dev-ai-hub/tsconfig.json
+  c67735fcf4a67647 1-10
+plugins/dev-ai-hub/src/components/AssetCard/index.ts
+  c67735fcf4a67647 1
+plugins/dev-ai-hub/src/components/AssetInstallDialog/AssetInstallDialog.tsx
+  c67735fcf4a67647 1-192
+plugins/dev-ai-hub-common/src/types.ts
+  c67735fcf4a67647 1-73
+plugins/dev-ai-hub-node/src/index.ts
+  c67735fcf4a67647 1-7
+plugins/dev-ai-hub-backend/src/database/AiAssetStore.ts
+  c67735fcf4a67647 1-222
+plugins/dev-ai-hub-backend/src/plugin.ts
+  c67735fcf4a67647 1-90
+plugins/dev-ai-hub-common/package.json
+  c67735fcf4a67647 1-23
+plugins/dev-ai-hub-backend/src/index.ts
+  c67735fcf4a67647 1-2
+plugins/dev-ai-hub-node/tsconfig.json
+  c67735fcf4a67647 1-8
+app-config.example.yaml
+  c67735fcf4a67647 1-94
+plugins/dev-ai-hub-node/src/extensions.ts
+  c67735fcf4a67647 1-20
+plugins/dev-ai-hub/src/components/DevAiHubPage/index.ts
+  c67735fcf4a67647 1
+plugins/dev-ai-hub/src/components/AssetInstallDialog/index.ts
+  c67735fcf4a67647 1
+plugins/dev-ai-hub/src/components/AssetDetailPanel/AssetDetailPanel.tsx
+  c67735fcf4a67647 1-308
+plugins/dev-ai-hub/src/components/AssetDetailPanel/index.ts
+  c67735fcf4a67647 1
+plugins/dev-ai-hub-backend/migrations/001_init.js
+  c67735fcf4a67647 1-47
+.gitignore
+  c67735fcf4a67647 1-7
+plugins/dev-ai-hub-backend/src/service/AiAssetSyncService.ts
+  c67735fcf4a67647 1-225
+tsconfig.json
+  c67735fcf4a67647 1-13
+plugins/dev-ai-hub/src/components/DevAiHubPage/DevAiHubPage.tsx
+  c67735fcf4a67647 1-187
+plugins/dev-ai-hub-backend/src/service/AssetParser.ts
+  c67735fcf4a67647 1-107
+plugins/dev-ai-hub/src/api/DevAiHubClient.ts
+  c67735fcf4a67647 1-96
+plugins/dev-ai-hub-common/tsconfig.json
+  c67735fcf4a67647 1-8
+plugins/dev-ai-hub-backend/src/types.ts
+  c67735fcf4a67647 1-31
+plugins/dev-ai-hub-common/src/schemas.ts
+  c67735fcf4a67647 1-48
+plugins/dev-ai-hub/src/components/AssetCard/AssetCard.tsx
+  c67735fcf4a67647 1-171
+plugins/dev-ai-hub/src/index.ts
+  c67735fcf4a67647 1-5
+plugins/dev-ai-hub-backend/tsconfig.json
+  c67735fcf4a67647 1-8
+.yarnrc.yml
+  c67735fcf4a67647 1
+plugins/dev-ai-hub-backend/src/router.ts
+  c67735fcf4a67647 1-314
+plugins/dev-ai-hub/package.json
+  c67735fcf4a67647 1-37
+plugins/dev-ai-hub/src/hooks/index.ts
+  c67735fcf4a67647 1-152
+plugins/dev-ai-hub-backend/src/service/McpServerService.ts
+  c67735fcf4a67647 1-266
+plugins/dev-ai-hub-common/src/index.ts
+  c67735fcf4a67647 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "7277cea6ad88fe8757d39bd3b68eb21d1f2ea6bb",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 3647,
+      "total_deletions": 38,
+      "accepted_lines": 3609,
+      "overriden_lines": 0
+    }
+  }
+}
