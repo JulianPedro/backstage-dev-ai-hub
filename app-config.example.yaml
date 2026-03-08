@@ -1,0 +1,94 @@
+# Example Backstage app-config.yaml additions for Dev AI Hub plugin
+# Add these sections to your Backstage instance's app-config.yaml
+
+# 1. Register the backend plugin in packages/backend/src/index.ts:
+#    backend.add(import('@internal/plugin-dev-ai-hub-backend'));
+#
+# 2. Register the frontend plugin (New Frontend System) in packages/app/src/App.tsx:
+#    import devAiHub from '@internal/plugin-dev-ai-hub';
+#    app.addExtensions([devAiHub]);
+
+devAiHub:
+  providers:
+    - id: "main-ai-assets"
+      type: "github"
+      target: "https://github.com/your-org/ai-assets-repo.git"
+      branch: "main"
+      schedule:
+        frequency:
+          minutes: 30
+        timeout:
+          minutes: 5
+      # Optional: sync only specific tools/types
+      # filters:
+      #   tools:
+      #     - github-copilot
+      #     - claude-code
+      #   types:
+      #     - agent
+      #     - instruction
+
+    # - id: "team-assets"
+    #   type: "bitbucket"
+    #   target: "https://bitbucket.org/your-org/team-ai-assets.git"
+    #   branch: "main"
+    #   schedule:
+    #     frequency:
+    #       hours: 1
+    #     timeout:
+    #       minutes: 10
+
+# GitHub integration (required for reading GitHub repositories)
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MCP Client Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# The MCP server runs EMBEDDED in the Backstage backend at:
+#   POST/GET/DELETE  /api/dev-ai-hub/mcp
+#
+# No separate process is needed. Clients connect via StreamableHTTP.
+#
+# The `?tool=` query parameter filters which assets are returned.
+# Set AI_HUB_TOOL in your environment, then substitute it in the URL below.
+#
+# ── Claude Code (.mcp.json or ~/.claude/mcp.json) ────────────────────────────
+#
+#   {
+#     "mcpServers": {
+#       "dev-ai-hub": {
+#         "type": "http",
+#         "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp?tool=claude-code"
+#       }
+#     }
+#   }
+#
+# ── GitHub Copilot (VS Code settings.json) ────────────────────────────────────
+#
+#   {
+#     "mcp.servers": {
+#       "dev-ai-hub": {
+#         "type": "http",
+#         "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp?tool=github-copilot"
+#       }
+#     }
+#   }
+#
+# ── Google Gemini ─────────────────────────────────────────────────────────────
+#
+#   {
+#     "mcpServers": {
+#       "dev-ai-hub": {
+#         "type": "http",
+#         "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp?tool=google-gemini"
+#       }
+#     }
+#   }
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Tip: omit ?tool= to receive all assets regardless of tool compatibility:
+#   "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp"

@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dev AI Hub — Backstage Plugin</title>
+  <meta name="description"
+    content="A centralized hub for AI assets — Instructions, Agents, Skills, and Workflows — for GitHub Copilot, Claude Code, Google Gemini, Cursor and more." />
+  <meta property="og:title" content="Dev AI Hub — Backstage Plugin" />
+  <meta property="og:description" content="Centralized AI assets for your engineering team, embedded in Backstage." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #05060f;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-hover: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.15);
+      --text: #f0f0f8;
+      --text-muted: rgba(240, 240, 248, 0.55);
+      --text-faint: rgba(240, 240, 248, 0.3);
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --accent3: #06b6d4;
+      --green: #10b981;
+      --radius: 16px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── Background orbs ── */
+    .orb-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 700px;
+      height: 700px;
+      background: #6366f1;
+      top: -200px;
+      left: -200px;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 500px;
+      height: 500px;
+      background: #8b5cf6;
+      top: 30%;
+      right: -150px;
+      animation-delay: -7s;
+    }
+
+    .orb-3 {
+      width: 400px;
+      height: 400px;
+      background: #06b6d4;
+      bottom: 10%;
+      left: 20%;
+      animation-delay: -14s;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        transform: translateY(-40px) scale(1.05);
+      }
+    }
+
+    /* ── Layout ── */
+    section {
+      position: relative;
+      z-index: 1;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(5, 6, 15, 0.7);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .nav-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .nav-logo-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: #fff;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: var(--surface-hover);
+    }
+
+    .nav-cta {
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-cta:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 160px 0 100px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #a5b4fc;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: #a5b4fc;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 .grad {
+      background: linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 40%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-muted);
+      max-width: 620px;
+      margin: 0 auto 40px;
+      font-weight: 400;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 13px 28px;
+      border-radius: 12px;
+      transition: all 0.2s;
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 13px 28px;
+      border-radius: 12px;
+      border: 1px solid var(--border-strong);
+      transition: all 0.2s;
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      transform: translateY(-2px);
+    }
+
+    /* ── Tools strip ── */
+    .tools-strip {
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tools-strip-label {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 28px;
+    }
+
+    .tools-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tool-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 10px 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .tool-pill:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+      color: var(--text);
+      transform: translateY(-2px);
+    }
+
+    .tool-pill svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* ── Section titles ── */
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    /* ── Features ── */
+    .features {
+      padding: 100px 0;
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .features-header .section-desc {
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: all 0.3s;
+      backdrop-filter: blur(8px);
+    }
+
+    .feature-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 18px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ── Asset types ── */
+    .asset-types {
+      padding: 80px 0;
+    }
+
+    .asset-types-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .asset-cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .asset-type-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: default;
+      transition: all 0.2s;
+    }
+
+    .asset-type-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+    }
+
+    .asset-type-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .asset-type-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .asset-type-card p {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── MCP ── */
+    .mcp {
+      padding: 100px 0;
+    }
+
+    .mcp-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .code-block {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .code-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .code-block-title {
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      font-family: 'JetBrains Mono', monospace;
+      margin-left: 4px;
+    }
+
+    .code-block pre {
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      color: #e2e8f0;
+    }
+
+    .code-block pre .key {
+      color: #c4b5fd;
+    }
+
+    .code-block pre .str {
+      color: #86efac;
+    }
+
+    .code-block pre .url {
+      color: #67e8f9;
+    }
+
+    .code-block pre .cmt {
+      color: #475569;
+    }
+
+    .mcp-tools {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .mcp-tool {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      transition: all 0.2s;
+    }
+
+    .mcp-tool:hover {
+      background: var(--surface-hover);
+    }
+
+    .mcp-tool-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: #c4b5fd;
+      font-weight: 500;
+      min-width: 140px;
+    }
+
+    .mcp-tool-desc {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Install ── */
+    .install {
+      padding: 100px 0;
+    }
+
+    .install-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-top: 8px;
+    }
+
+    .step {
+      display: flex;
+      gap: 16px;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      color: #fff;
+    }
+
+    .step h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .step p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .step code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── Stats ── */
+    .stats {
+      padding: 80px 0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-strong);
+      background: var(--surface-hover);
+    }
+
+    .stat-num {
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #a5b4fc, #67e8f9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 100px 0;
+    }
+
+    .cta-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 24px;
+      padding: 72px 48px;
+      text-align: center;
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(ellipse, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-card h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .cta-card p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-link {
+      font-size: 0.85rem;
+      color: var(--text-faint);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: var(--text);
+    }
+
+    .footer-copy {
+      font-size: 0.8rem;
+      color: var(--text-faint);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav {
+        padding: 12px 16px;
+      }
+
+      .nav-links .nav-link:not(:last-child) {
+        display: none;
+      }
+
+      .hero {
+        padding: 120px 0 64px;
+      }
+
+      .asset-types-inner,
+      .mcp-inner,
+      .install-inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .cta-card {
+        padding: 48px 24px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Background orbs -->
+  <div class="orb-container">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Nav -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M8.4,18.2C8.78,18.7,9,19.32,9,20c0,1.66-1.34,3-3,3s-3-1.34-3-3s1.34-3,3-3c0.44,0,0.85,0.09,1.23,0.26l1.41-1.77c-0.92-1.03-1.29-2.39-1.09-3.69l-2.03-0.68C4.98,11.95,4.06,12.5,3,12.5c-1.66,0-3-1.34-3-3s1.34-3,3-3s3,1.34,3,3c0,0.07,0,0.14-0.01,0.21l2.03,0.68c0.64-1.21,1.82-2.09,3.22-2.32l0-2.16C9.96,5.57,9,4.4,9,3c0-1.66,1.34-3,3-3s3,1.34,3,3c0,1.4-0.96,2.57-2.25,2.91v2.16c1.4,0.23,2.58,1.11,3.22,2.32l2.03-0.68C18,9.64,18,9.57,18,9.5c0-1.66,1.34-3,3-3s3,1.34,3,3s-1.34,3-3,3c-1.06,0-1.98-0.55-2.52-1.37l-2.03,0.68c0.2,1.29-0.16,2.65-1.09,3.69l1.41,1.77C17.15,17.09,17.56,17,18,17c1.66,0,3,1.34,3,3s-1.34,3-3,3s-3-1.34-3-3c0-0.68,0.22-1.3,0.6-1.8l-1.41-1.77c-1.35,0.75-3.01,0.76-4.37,0L8.4,18.2z" />
+        </svg>
+      </div>
+      Dev AI Hub
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#mcp" class="nav-link">MCP Server</a>
+      <a href="#install" class="nav-link">Install</a>
+      <a href="https://github.com/JulianPedro/backstage-dev-ai-hub" class="nav-cta" target="_blank" rel="noopener">
+        View on GitHub
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Backstage Plugin · Open Source
+      </div>
+      <h1>
+        AI Assets,<br />
+        <span class="grad">One Hub.</span>
+      </h1>
+      <p class="hero-desc">
+        A centralized hub for AI Instructions, Agents, Skills and Workflows — synced from Git, served via MCP, and
+        available to every AI tool your team uses.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/JulianPedro/backstage-dev-ai-hub" class="btn-primary" target="_blank"
+          rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+          </svg>
+          GitHub
+        </a>
+        <a href="#install" class="btn-secondary">
+          Quick Install
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tools strip -->
+  <section class="tools-strip">
+    <div class="container">
+      <p class="tools-strip-label">Works with your AI tools</p>
+      <div class="tools-row">
+        <!-- Claude Code -->
+        <div class="tool-pill">
+          <svg viewBox="0 0 24 24" fill="#D97706" width="20" height="20">
+            <path
+              d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" />
+          </svg>
+          Claude Code
+        </div>
+        <!-- GitHub Copilot -->
+        <div class="tool-pill">
+          <svg viewBox="0 0 24 24" fill="#a5b4fc" width="20" height="20">
+            <path
+              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+          </svg>
+          GitHub Copilot
+        </div>
+        <!-- Google Gemini -->
+        <div class="tool-pill">
+          <svg viewBox="0 0 24 24" fill="#67e8f9" width="20" height="20">
+            <path
+              d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81" />
+          </svg>
+          Google Gemini
+        </div>
+        <!-- Cursor -->
+        <div class="tool-pill">
+          <svg viewBox="0 0 24 24" fill="#86efac" width="20" height="20">
+            <path
+              d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23" />
+          </svg>
+          Cursor
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshot -->
+  <section style="padding: 80px 0 0; position: relative; z-index: 1;">
+    <div class="container">
+      <div
+        style="position: relative; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
+        <div
+          style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 70%, #05060f 100%); z-index: 1; pointer-events: none;">
+        </div>
+        <img src="screenshot.png" alt="Dev AI Hub screenshot"
+          style="width: 100%; display: block; border-radius: 20px;" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="features-header">
+        <p class="section-label">Features</p>
+        <h2 class="section-title">Everything your team needs</h2>
+        <p class="section-desc">From Git sync to MCP server, Dev AI Hub handles the full lifecycle of AI assets in your
+          organization.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(99,102,241,0.15);">🔄</div>
+          <h3>Git-Synced Assets</h3>
+          <p>Sync from GitHub, GitLab, Bitbucket, Azure DevOps or any Git provider. Assets are always up to date.
+            Schedule syncs or trigger them manually.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(6,182,212,0.15);">⚡</div>
+          <h3>Embedded MCP Server</h3>
+          <p>Built-in Model Context Protocol server using StreamableHTTP — no separate process needed. AI tools discover
+            and install assets automatically.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(16,185,129,0.15);">🎯</div>
+          <h3>Smart Install Paths</h3>
+          <p>Per-tool path conventions auto-resolved. The right file ends up in the right place for each AI tool —
+            Claude Code, Copilot, Gemini or Cursor.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(245,158,11,0.15);">📊</div>
+          <h3>Usage Metrics</h3>
+          <p>Track how many times each asset has been installed, via MCP or direct download. See which assets your team
+            uses most.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(239,68,68,0.15);">🔍</div>
+          <h3>Rich UI</h3>
+          <p>Browse, search and filter assets by type, tool and tags. Markdown preview, raw YAML, metadata — all in one
+            panel.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(139,92,246,0.15);">🗄️</div>
+          <h3>Backstage Native</h3>
+          <p>Uses Backstage database service with automatic migrations. SQLite for development, PostgreSQL for
+            production. Zero manual setup.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Asset types -->
+  <section class="asset-types">
+    <div class="container">
+      <div class="asset-types-inner">
+        <div>
+          <p class="section-label">Asset Types</p>
+          <h2 class="section-title">Four types of AI assets</h2>
+          <p class="section-desc" style="margin-bottom:0">Each asset is two files: a YAML envelope with metadata and a
+            pure Markdown file with the content your AI tool consumes.</p>
+        </div>
+        <div class="asset-cards-list">
+          <div class="asset-type-card">
+            <div class="asset-type-icon" style="background:rgba(37,99,235,0.15)">📄</div>
+            <div>
+              <h4>Instructions</h4>
+              <p>Persistent behavior rules applied to every conversation in a project. Equivalent to system prompts.</p>
+            </div>
+          </div>
+          <div class="asset-type-card">
+            <div class="asset-type-icon" style="background:rgba(124,58,237,0.15)">🤖</div>
+            <div>
+              <h4>Agents</h4>
+              <p>Specialized sub-agents with a defined role, model and behavior. Used in multi-agent orchestration.</p>
+            </div>
+          </div>
+          <div class="asset-type-card">
+            <div class="asset-type-icon" style="background:rgba(5,150,105,0.15)">🔧</div>
+            <div>
+              <h4>Skills</h4>
+              <p>Reusable capabilities following the open Agent Skills standard. Compatible across tools.</p>
+            </div>
+          </div>
+          <div class="asset-type-card">
+            <div class="asset-type-icon" style="background:rgba(217,119,6,0.15)">🔀</div>
+            <div>
+              <h4>Workflows</h4>
+              <p>Step-by-step processes that guide the AI through complex multi-stage tasks.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MCP Server -->
+  <section class="mcp" id="mcp">
+    <div class="container">
+      <div class="mcp-inner">
+        <div>
+          <p class="section-label">MCP Server</p>
+          <h2 class="section-title">Your AI tools, connected</h2>
+          <p class="section-desc">Point any MCP-compatible tool at your Backstage instance. The <code
+              style="font-family:'JetBrains Mono',monospace;font-size:0.85em;background:rgba(99,102,241,0.15);color:#a5b4fc;padding:2px 6px;border-radius:4px">?tool=</code>
+            param filters assets per client.</p>
+          <div class="mcp-tools">
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">search_assets</span>
+              <span class="mcp-tool-desc">Full-text search across name, description and content</span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">list_assets</span>
+              <span class="mcp-tool-desc">List assets filtered by type or tool</span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">get_asset</span>
+              <span class="mcp-tool-desc">Fetch full metadata and pure Markdown content</span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">install_asset</span>
+              <span class="mcp-tool-desc">Get content + install path; model creates the file</span>
+            </div>
+          </div>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header">
+            <div class="code-dot" style="background:#ff5f57"></div>
+            <div class="code-dot" style="background:#ffbd2e"></div>
+            <div class="code-dot" style="background:#28c840"></div>
+            <span class="code-block-title">.mcp.json</span>
+          </div>
+          <pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"dev-ai-hub"</span>: {
+      <span class="key">"type"</span>: <span class="str">"http"</span>,
+      <span class="key">"url"</span>: <span class="str">"<span class="url">http://backstage:7007</span>
+        <span class="url">/api/dev-ai-hub/mcp</span>
+        <span class="url">?tool=claude-code</span>"</span>
+    }
+  }
+}</pre>
+          <div style="border-top:1px solid var(--border);padding:14px 16px 4px;background:rgba(99,102,241,0.08);">
+            <span
+              style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#a5b4fc;">✦
+              Ask your AI tool</span>
+          </div>
+          <pre style="background:rgba(99,102,241,0.06);"><span style="color:#c4b5fd;font-style:italic;">"List available agents in Dev AI Hub"</span>
+<span style="color:#c4b5fd;font-style:italic;">"Install the code-review skill"</span>
+<span style="color:#c4b5fd;font-style:italic;">"Search for security instructions"</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="install" id="install">
+    <div class="container">
+      <div class="install-inner">
+        <div>
+          <p class="section-label">Installation</p>
+          <h2 class="section-title">Up and running in minutes</h2>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div>
+                <h4>Copy the plugin packages</h4>
+                <p>Drop the four packages into your Backstage monorepo's <code>plugins/</code> folder and run
+                  <code>yarn install</code>.
+                </p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div>
+                <h4>Register the backend</h4>
+                <p>Add <code>import('@internal/plugin-dev-ai-hub-backend')</code> to your
+                  <code>packages/backend/src/index.ts</code>.
+                </p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div>
+                <h4>Register the frontend</h4>
+                <p>Add the <code>DevAiHubPage</code> route and a sidebar item to your Backstage app.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div>
+                <h4>Configure providers</h4>
+                <p>Point at your Git repo in <code>app-config.yaml</code> and set your <code>GITHUB_TOKEN</code>. Done.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header">
+            <div class="code-dot" style="background:#ff5f57"></div>
+            <div class="code-dot" style="background:#ffbd2e"></div>
+            <div class="code-dot" style="background:#28c840"></div>
+            <span class="code-block-title">app-config.yaml</span>
+          </div>
+          <pre><span class="key">devAiHub</span>:
+  <span class="key">providers</span>:
+    - <span class="key">id</span>: <span class="str">main-ai-assets</span>
+      <span class="key">type</span>: <span class="str">github</span>
+      <span class="key">target</span>: <span class="url">https://github.com/
+        your-org/ai-assets.git</span>
+      <span class="key">branch</span>: <span class="str">main</span>
+      <span class="key">schedule</span>:
+        <span class="key">frequency</span>:
+          <span class="key">minutes</span>: <span class="str">30</span>
+        <span class="key">timeout</span>:
+          <span class="key">minutes</span>: <span class="str">5</span>
+
+<span class="key">integrations</span>:
+  <span class="key">github</span>:
+    - <span class="key">host</span>: <span class="str">github.com</span>
+      <span class="key">token</span>: <span class="url">${GITHUB_TOKEN}</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num">4</div>
+          <div class="stat-label">Asset types</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">4</div>
+          <div class="stat-label">AI tools supported</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">4</div>
+          <div class="stat-label">MCP tools</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">0</div>
+          <div class="stat-label">Extra processes needed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card">
+        <h2>Ready to centralize your AI assets?</h2>
+        <p>Open source, Apache 2.0 licensed. Drop it into your Backstage instance today.</p>
+        <div class="hero-actions">
+          <a href="https://github.com/JulianPedro/backstage-dev-ai-hub" class="btn-primary" target="_blank"
+            rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            Get Started on GitHub
+          </a>
+          <a href="#install" class="btn-secondary">Read the Docs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-logo">
+          <div class="nav-logo-icon" style="width:24px;height:24px;">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#fff">
+              <path
+                d="M8.4,18.2C8.78,18.7,9,19.32,9,20c0,1.66-1.34,3-3,3s-3-1.34-3-3s1.34-3,3-3c0.44,0,0.85,0.09,1.23,0.26l1.41-1.77c-0.92-1.03-1.29-2.39-1.09-3.69l-2.03-0.68C4.98,11.95,4.06,12.5,3,12.5c-1.66,0-3-1.34-3-3s1.34-3,3-3s3,1.34,3,3c0,0.07,0,0.14-0.01,0.21l2.03,0.68c0.64-1.21,1.82-2.09,3.22-2.32l0-2.16C9.96,5.57,9,4.4,9,3c0-1.66,1.34-3,3-3s3,1.34,3,3c0,1.4-0.96,2.57-2.25,2.91v2.16c1.4,0.23,2.58,1.11,3.22,2.32l2.03-0.68C18,9.64,18,9.57,18,9.5c0-1.66,1.34-3,3-3s3,1.34,3,3s-1.34,3-3,3c-1.06,0-1.98-0.55-2.52-1.37l-2.03,0.68c0.2,1.29-0.16,2.65-1.09,3.69l1.41,1.77C17.15,17.09,17.56,17,18,17c1.66,0,3,1.34,3,3s-1.34,3-3,3s-3-1.34-3-3c0-0.68,0.22-1.3,0.6-1.8l-1.41-1.77c-1.35,0.75-3.01,0.76-4.37,0L8.4,18.2z" />
+            </svg>
+          </div>
+          Dev AI Hub
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/JulianPedro/backstage-dev-ai-hub" class="footer-link" target="_blank"
+            rel="noopener">GitHub</a>
+          <a href="https://github.com/JulianPedro/backstage-dev-ai-hub/blob/main/README.md" class="footer-link"
+            target="_blank" rel="noopener">Docs</a>
+          <a href="https://github.com/JulianPedro/backstage-dev-ai-hub/issues" class="footer-link" target="_blank"
+            rel="noopener">Issues</a>
+          <a href="https://github.com/JulianPedro/backstage-dev-ai-hub/blob/main/LICENSE" class="footer-link"
+            target="_blank" rel="noopener">Apache 2.0</a>
+        </div>
+        <div class="footer-copy">Built for the Backstage ecosystem</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>
