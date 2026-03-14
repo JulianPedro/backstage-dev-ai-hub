@@ -1,0 +1,39 @@
+plugins/dev-ai-hub-backend/dev/index.ts
+  c67735fcf4a67647 1-8
+plugins/dev-ai-hub/package.json
+  c67735fcf4a67647 6-10,13-17,22,24,26-27,43,46-49,52-53
+app-config.dev.yaml
+  c67735fcf4a67647 1-33
+plugins/dev-ai-hub/dev/index.tsx
+  c67735fcf4a67647 1-230
+package.json
+  c67735fcf4a67647 10-11,15
+plugins/dev-ai-hub-common/package.json
+  c67735fcf4a67647 6-10,13-17,23,25-26
+plugins/dev-ai-hub-node/package.json
+  c67735fcf4a67647 6-10,13-17,23,25-26
+tsconfig.json
+  c67735fcf4a67647 2-7,9-13
+plugins/dev-ai-hub-backend/package.json
+  c67735fcf4a67647 6-10,12-16,21,23,25-26,41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "900666ef5caa71c28d6fe88e6afb415df0185544",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 359,
+      "total_deletions": 29,
+      "accepted_lines": 347,
+      "overriden_lines": 0
+    }
+  }
+}
