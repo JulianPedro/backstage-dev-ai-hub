@@ -1,0 +1,27 @@
+plugins/dev-ai-hub/src/components/McpConfigDialog/McpConfigDialog.tsx
+  c67735fcf4a67647 5,11-12,21,24,65-68,77-78,81,83-84,93-102,137-186,213-215,246,249,260,267
+plugins/dev-ai-hub-backend/src/router.ts
+  c67735fcf4a67647 247,252-255,263,273
+plugins/dev-ai-hub-backend/src/service/McpServerService.ts
+  c67735fcf4a67647 4,8-12,14,16-19,23-25,27-68,70-71,73-92,94-113,115,119-123,133,141-148,156-186,191,193-206,208,213,217-221,232,239,264,267-268,273,276-277,279-280,282-284,286-287,290-301,304,309-342,346-351,353-354,356-366,369,374,381-399,404,407-415
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "3ad8c25b68d90a462c283096967a96255d49b3d1",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 415,
+      "total_deletions": 145,
+      "accepted_lines": 369,
+      "overriden_lines": 0
+    }
+  }
+}
