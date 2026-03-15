@@ -1,0 +1,31 @@
+plugins/dev-ai-hub-backend/src/database/AiAssetStore.test.ts
+  c67735fcf4a67647 287-288
+plugins/dev-ai-hub-backend/src/service/AssetParser.ts
+  c67735fcf4a67647 39
+plugins/dev-ai-hub-backend/src/database/AiAssetStore.ts
+  c67735fcf4a67647 2,12,62,72
+plugins/dev-ai-hub-common/src/installPaths.ts
+  c67735fcf4a67647 71
+plugins/dev-ai-hub-backend/src/service/AssetParser.test.ts
+  c67735fcf4a67647 35,41,106,205,212
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "5e5bb5f05d38e691d52f4811ff2ee87ac916e23b",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 15,
+      "total_deletions": 16,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    }
+  }
+}
