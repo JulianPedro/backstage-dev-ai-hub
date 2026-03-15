@@ -7,13 +7,16 @@
     "plugins/*"
   ],
   "scripts": {
+    "start:frontend": "yarn workspace @internal/plugin-dev-ai-hub start",
+    "start:backend": "yarn workspace @internal/plugin-dev-ai-hub-backend start",
     "build:all": "yarn workspaces foreach --all --topological-dev run build",
     "test": "yarn workspaces foreach --all -p run test --passWithNoTests",
     "lint:all": "yarn workspaces foreach --all -p run lint",
-    "tsc": "yarn workspaces foreach --all -p run tsc"
+    "tsc": "tsc"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.28.0",
+    "@backstage/cli": "*",
+    "jest": "^29.0.0",
     "typescript": "^5.3.0"
   },
   "packageManager": "yarn@4.5.3"

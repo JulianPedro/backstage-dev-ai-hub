@@ -2,32 +2,115 @@
 
 A centralized hub for AI assets — Instructions, Agents, Skills, and Workflows — usable by **GitHub Copilot**, **Claude Code**, **Google Gemini**, **Cursor**, and other AI coding tools.
 
-The plugin syncs one or more Git repositories as the source of truth, stores assets in your Backstage database, exposes them via a rich UI, and serves them over an embedded **MCP (Model Context Protocol) server** so AI tools can discover and install assets automatically.
+The plugin syncs one or more Git repositories as the source of truth, stores assets in your Backstage database, exposes them via a UI, and serves them through an embedded **MCP (Model Context Protocol) server** so AI tools can discover and install assets automatically.
 
 ![Project Screenshot](docs/screenshot.png)
 
 ---
 
-## Features
+## Installation
 
-- Browse, search, and filter AI assets by type, tool, and tags
-- Sync assets from GitHub, GitLab, Bitbucket, Azure DevOps, or any Git provider
-- Embedded MCP server (StreamableHTTP) — no separate process needed
-- AI tools discover and install assets directly via MCP
-- Install dialog with per-tool path conventions (copy or download)
-- Usage metrics — tracks how many times each asset has been installed
-- Live sync status and asset statistics in the page header
+### 1. Copy plugin packages
+
+Copy the four plugin directories into your Backstage monorepo's `plugins/` folder:
+
+```
+plugins/
+  dev-ai-hub/
+  dev-ai-hub-backend/
+  dev-ai-hub-common/
+  dev-ai-hub-node/
+```
+
+Then install:
+
+```bash
+yarn install
+```
+
+### 2. Register the backend plugin
+
+In `packages/backend/src/index.ts`:
+
+```typescript
+backend.add(import('@internal/plugin-dev-ai-hub-backend'));
+```
+
+### 3. Register the frontend plugin
+
+#### New Frontend System (NFS)
+
+In `packages/app/src/App.tsx`:
+
+```typescript
+import { devAiHubPlugin } from '@internal/plugin-dev-ai-hub';
+
+const app = createApp({
+  features: [
+    // ...existing features
+    devAiHubPlugin,
+  ],
+});
+```
+
+The sidebar item is registered automatically — no additional configuration needed.
+
+#### Legacy frontend system
+
+In `packages/app/src/App.tsx`, add the route inside `<FlatRoutes>`:
+
+```typescript
+import { DevAiHubPage } from '@internal/plugin-dev-ai-hub';
+
+// inside <FlatRoutes>:
+<Route path="/dev-ai-hub" element={<DevAiHubPage />} />
+```
+
+In `packages/app/src/components/Root/Root.tsx`, add the sidebar item:
+
+```typescript
+import HubIcon from '@mui/icons-material/Hub';
+
+// inside <SidebarGroup>:
+<SidebarItem icon={HubIcon} to="dev-ai-hub" text="AI Hub" />
+```
+
+The API client is registered automatically when `DevAiHubPage` is used — no extra plugin registration needed.
+
+### 4. Configure `app-config.yaml`
+
+```yaml
+devAiHub:
+  providers:
+    - id: "main-ai-assets"
+      type: "github"                                          # github | gitlab | bitbucket | azure-devops | git
+      target: "https://github.com/your-org/ai-assets.git"
+      branch: "main"
+      schedule:
+        frequency:
+          minutes: 30
+        timeout:
+          minutes: 5
+
+# Required: Git integration for reading repositories
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+```
+
+See `app-config.example.yaml` for more provider examples (GitLab, Bitbucket, filters).
 
 ---
 
 ## Asset Format
 
-Each AI asset is two files with the same base name in the repository:
+Each AI asset is two files with the same base name in your repository:
 
 ```
 agents/
   product-manager.yaml   ← metadata envelope
-  product-manager.md     ← pure markdown content (never modified)
+  product-manager.md     ← pure markdown content (never modified by the plugin)
 instructions/
   security-guidelines.yaml
   security-guidelines.md
@@ -62,15 +145,17 @@ version: 1.0.0
 #   github-copilot: ".github/agents/product-manager.agent.md"
 
 # Agent-specific
-model: claude-opus-4-5
+model: claude-opus-4-6
 
 # Instruction-specific
 # applyTo: "src/**/*.ts"
 ```
 
-The `content` field is optional — if omitted, the parser looks for `<same-name>.md` in the same directory. For skills, it defaults to `SKILL.md`.
+If `content` is omitted, the parser looks for `<same-name>.md` in the same directory. For skills, it defaults to `SKILL.md`.
 
-### Install path conventions (auto-resolved per tool)
+Use `tools: [all]` for tool-agnostic assets that should appear for every tool.
+
+### Default install paths (auto-resolved per tool)
 
 | Type | Tool | Default path |
 |------|------|-------------|
@@ -85,111 +170,13 @@ The `content` field is optional — if omitted, the parser looks for `<same-name
 | `workflow` | `claude-code` | `.claude/workflows/<name>.md` |
 | `workflow` | `github-copilot` | `.github/workflows/<name>.workflow.md` |
 
-Use `tools: [all]` for tool-agnostic assets that should appear for every tool.
-
----
-
-## Installation
-
-### 1. Copy the plugin packages
-
-Copy the four plugin directories into your Backstage monorepo's `plugins/` folder:
-
-```
-plugins/
-  dev-ai-hub/
-  dev-ai-hub-backend/
-  dev-ai-hub-common/
-  dev-ai-hub-node/
-```
-
-### 2. Register the packages
-
-Add the plugins to your root `package.json` workspaces (if not auto-discovered) and install:
-
-```bash
-yarn install
-```
-
-### 3. Register the backend plugin
-
-In `packages/backend/src/index.ts`:
-
-```typescript
-backend.add(import('@internal/plugin-dev-ai-hub-backend'));
-```
-
-### 4. Register the frontend plugin
-
-#### Classic Backstage frontend system
-
-In `packages/app/src/App.tsx`, add the route:
-
-```typescript
-import { DevAiHubPage } from '@internal/plugin-dev-ai-hub';
-
-// Inside <FlatRoutes>:
-<Route path="/dev-ai-hub" element={<DevAiHubPage />} />
-```
-
-In `packages/app/src/components/Root/Root.tsx`, add the sidebar item:
-
-```typescript
-import HubIcon from '@mui/icons-material/Hub';
-
-// Inside <SidebarGroup>:
-<SidebarItem icon={HubIcon} to="dev-ai-hub" text="AI Hub" />
-```
-
-### 5. Configure `app-config.yaml`
-
-```yaml
-devAiHub:
-  providers:
-    - id: "main-ai-assets"
-      type: "github"                                          # github | gitlab | bitbucket | azure-devops | git
-      target: "https://github.com/your-org/ai-assets.git"
-      branch: "main"
-      schedule:
-        frequency:
-          minutes: 30
-        timeout:
-          minutes: 5
-      # Optional filters
-      # filters:
-      #   tools: [claude-code, github-copilot]
-      #   types: [agent, instruction]
-
-    # GitLab example
-    # - id: "gitlab-assets"
-    #   type: "gitlab"
-    #   target: "https://gitlab.example.com/your-group/ai-assets.git"
-    #   branch: "main"
-    #   schedule:
-    #     frequency:
-    #       hours: 1
-    #     timeout:
-    #       minutes: 10
-
-# Required: Git integration for reading repositories
-integrations:
-  github:
-    - host: github.com
-      token: ${GITHUB_TOKEN}
-
-  # GitLab example
-  # gitlab:
-  #   - host: gitlab.example.com
-  #     token: ${GITLAB_TOKEN}
-```
-
 ---
 
 ## MCP Server
 
-The MCP server runs **embedded** in the Backstage backend — no separate process is needed. It uses the StreamableHTTP transport.
+The MCP server runs **embedded** in the Backstage backend — no separate process needed. It uses the StreamableHTTP transport.
 
-**Base URL:** `http://<backstage-host>:7007/api/dev-ai-hub/mcp`
+**URL:** `http://<backstage-host>:7007/api/dev-ai-hub/mcp`
 
 The `?tool=` query parameter filters which assets the AI tool receives. Omit it to receive all assets.
 
@@ -214,7 +201,7 @@ In `.vscode/settings.json` or VS Code user settings:
 
 ```json
 {
-  "mcp.servers": {
+  "github.copilot.chat.mcp.servers": {
     "dev-ai-hub": {
       "type": "http",
       "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp?tool=github-copilot"
@@ -253,24 +240,20 @@ In `.cursor/mcp.json`:
 }
 ```
 
-### MCP Tools
+### Available MCP tools
 
 | Tool | Description |
 |------|-------------|
+| `list_assets` | List assets, optionally filtered by type |
 | `search_assets` | Full-text search across name, description, and content |
-| `list_assets` | List available assets, optionally filtered by type |
 | `get_asset` | Get full metadata and markdown content by ID or name |
-| `install_asset` | Get content + recommended install path; the model creates the file |
+| `install_asset` | Returns content + recommended install path; the model creates the file |
 
-### Using the MCP in chat
-
-Talk to your AI tool naturally:
+Usage examples in chat:
 
 > "List the available agents in Dev AI Hub"
 > "Search for a code review asset in the hub"
 > "Install the Product Manager agent in this project"
-
-When you ask to install, the model calls `install_asset`, receives the pure markdown content and the correct path for its tool (e.g., `.claude/agents/product-manager.md`), and creates the file directly.
 
 ---
 
@@ -300,43 +283,7 @@ DELETE /api/dev-ai-hub/mcp                    Terminate MCP session
 | `@internal/plugin-dev-ai-hub` | `frontend-plugin` | React UI — page, cards, filters, install dialog |
 | `@internal/plugin-dev-ai-hub-backend` | `backend-plugin` | Sync service, REST API, embedded MCP server |
 | `@internal/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, Zod schemas, install path conventions |
-| `@internal/plugin-dev-ai-hub-node` | `node-library` | Extension points for external modules |
-
----
-
-## Development
-
-```bash
-# Install dependencies
-yarn install
-
-# Build all packages
-yarn build:all
-
-# Build a specific package
-yarn workspace @internal/plugin-dev-ai-hub-backend build
-
-# Lint
-yarn lint:all
-
-# Type check
-yarn tsc
-
-# Run tests
-yarn test
-```
-
----
-
-## Database
-
-The backend uses Backstage's database service (SQLite in development, PostgreSQL in production). Migrations run automatically on startup.
-
-Tables:
-- `ai_assets` — asset catalog with content, metadata, and install path overrides
-- `ai_asset_sync_status` — sync state per provider
-
-No manual database setup is required.
+| `@internal/plugin-dev-ai-hub-node` | `node-library` | Extension points for external provider modules |
 
 ---
 

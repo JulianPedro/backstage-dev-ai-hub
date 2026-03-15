@@ -3,15 +3,27 @@
   "version": "0.1.0",
   "description": "Node.js extension points for Dev AI Hub",
   "license": "Apache-2.0",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
+    "types": "dist/index.d.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
   "backstage": {
     "role": "node-library"
   },
   "scripts": {
     "build": "backstage-cli package build",
+    "clean": "backstage-cli package clean",
     "lint": "backstage-cli package lint",
+    "prepack": "backstage-cli package prepack",
+    "postpack": "backstage-cli package postpack",
     "test": "backstage-cli package test --passWithNoTests",
     "tsc": "tsc --noEmit"
   },
@@ -20,6 +32,8 @@
     "@internal/plugin-dev-ai-hub-common": "*"
   },
   "devDependencies": {
-    "@backstage/cli": "*"
+    "@backstage/cli": "*",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^29.0.0"
   }
 }

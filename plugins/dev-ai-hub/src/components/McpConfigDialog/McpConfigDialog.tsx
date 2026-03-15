@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Tab,
-  Tabs,
-  Tooltip,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { useEffect, useState } from 'react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import StorageIcon from '@mui/icons-material/Storage';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { ToolIcon } from '../ToolIcon';
-import { useCopyToClipboard } from '../../hooks';
+import { useCopyToClipboard, useProviders } from '../../hooks';
 import type { AiTool } from '@internal/plugin-dev-ai-hub-common';
 
 interface ToolConfig {
@@ -35,9 +35,7 @@ const TOOL_CONFIGS: ToolConfig[] = [
     file: '.mcp.json',
     description: 'Add to .mcp.json in your project root (or run via claude mcp add):',
     buildConfig: url => JSON.stringify({
-      mcpServers: {
-        'dev-ai-hub': { type: 'http', url },
-      },
+      mcpServers: { 'dev-ai-hub': { type: 'http', url } },
     }, null, 2),
   },
   {
@@ -46,9 +44,7 @@ const TOOL_CONFIGS: ToolConfig[] = [
     file: '.vscode/settings.json',
     description: 'Add to your VS Code settings (.vscode/settings.json or user settings):',
     buildConfig: url => JSON.stringify({
-      'github.copilot.chat.mcp.servers': {
-        'dev-ai-hub': { type: 'http', url },
-      },
+      'github.copilot.chat.mcp.servers': { 'dev-ai-hub': { type: 'http', url } },
     }, null, 2),
   },
   {
@@ -57,12 +53,14 @@ const TOOL_CONFIGS: ToolConfig[] = [
     file: 'gemini-config.json',
     description: 'Add to your Gemini CLI configuration:',
     buildConfig: url => JSON.stringify({
-      mcpServers: {
-        'dev-ai-hub': { url },
-      },
+      mcpServers: { 'dev-ai-hub': { url } },
     }, null, 2),
   },
 ];
+
+function providerLabel(target: string): string {
+  return target.split('/').pop()?.replace(/\.git$/, '') ?? target;
+}
 
 interface McpConfigDialogProps {
   open: boolean;
@@ -72,9 +70,14 @@ interface McpConfigDialogProps {
 export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   const theme = useTheme();
   const discoveryApi = useApi(discoveryApiRef);
-  const { copy, copied } = useCopyToClipboard();
+  const { copy: copyUrl, copied: copiedUrl } = useCopyToClipboard();
+  const { copy: copySnippet, copied: copiedSnippet } = useCopyToClipboard();
   const [tab, setTab] = useState(0);
   const [baseUrl, setBaseUrl] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
+
+  const { providers } = useProviders();
+  const showProviderFilter = providers.length > 1;
 
   useEffect(() => {
     if (open) {
@@ -83,7 +86,16 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   }, [open, discoveryApi]);
 
   const cfg = TOOL_CONFIGS[tab];
-  const mcpUrl = baseUrl ? `${baseUrl}/mcp?tool=${cfg.tool}` : 'loading...';
+
+  const buildMcpUrl = () => {
+    if (!baseUrl) return 'loading...';
+    const params = new URLSearchParams();
+    params.set('tool', cfg.tool);
+    if (selectedProvider) params.set('provider', selectedProvider);
+    return `${baseUrl}/mcp?${params.toString()}`;
+  };
+
+  const mcpUrl = buildMcpUrl();
   const configSnippet = baseUrl ? cfg.buildConfig(mcpUrl) : '';
 
   return (
@@ -118,6 +130,57 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
           ))}
         </Tabs>
 
+        {/* Provider filter — only shown when there are 2+ providers */}
+        {showProviderFilter && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.75 }}>
+              Scope to Provider
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+              <Chip
+                label="All providers"
+                size="small"
+                clickable
+                onClick={() => setSelectedProvider('')}
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  borderRadius: 2,
+                  border: '1.5px solid',
+                  borderColor: !selectedProvider ? 'text.primary' : 'divider',
+                  backgroundColor: !selectedProvider ? 'text.primary' : 'transparent',
+                  color: !selectedProvider ? 'background.paper' : 'text.secondary',
+                  transition: 'all 0.15s ease',
+                }}
+              />
+              {providers.map(p => {
+                const isSelected = selectedProvider === p.id;
+                const label = providerLabel(p.target);
+                return (
+                  <Chip
+                    key={p.id}
+                    icon={<StorageIcon sx={{ fontSize: '0.8rem !important', color: isSelected ? 'background.paper' : 'inherit' }} />}
+                    label={label}
+                    size="small"
+                    clickable
+                    onClick={() => setSelectedProvider(isSelected ? '' : p.id)}
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      borderRadius: 2,
+                      border: '1.5px solid',
+                      borderColor: isSelected ? 'text.primary' : 'divider',
+                      backgroundColor: isSelected ? 'text.primary' : 'transparent',
+                      color: isSelected ? 'background.paper' : 'text.secondary',
+                      transition: 'all 0.15s ease',
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
+        )}
+
         {/* MCP URL */}
         <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
           MCP Endpoint
@@ -143,9 +206,9 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
           >
             {mcpUrl}
           </Typography>
-          <Tooltip title={copied ? 'Copied!' : 'Copy URL'}>
-            <IconButton size="small" onClick={() => copy(mcpUrl)}>
-              {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+          <Tooltip title={copiedUrl ? 'Copied!' : 'Copy URL'}>
+            <IconButton size="small" onClick={() => copyUrl(mcpUrl)}>
+              {copiedUrl ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
         </Box>
@@ -176,10 +239,10 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
           >
             {configSnippet}
           </Box>
-          <Tooltip title={copied ? 'Copied!' : 'Copy config'}>
+          <Tooltip title={copiedSnippet ? 'Copied!' : 'Copy config'}>
             <IconButton
               size="small"
-              onClick={() => copy(configSnippet)}
+              onClick={() => copySnippet(configSnippet)}
               sx={{
                 position: 'absolute',
                 top: 8,
@@ -190,13 +253,14 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
                 },
               }}
             >
-              {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+              {copiedSnippet ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
         </Box>
 
         <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 1.5 }}>
           💡 Omit <code>?tool=</code> from the URL to receive assets for all AI tools.
+          {showProviderFilter && ' Omit ?provider= to receive assets from all repositories.'}
         </Typography>
       </DialogContent>
 

@@ -1,0 +1,33 @@
+app:
+  title: Dev AI Hub
+  baseUrl: http://localhost:3000
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
+
+devAiHub:
+  providers:
+    - id: example
+      type: github
+      target: https://github.com/your-org/your-ai-assets.git
+      branch: main
+      schedule:
+        frequency:
+          minutes: 60
+        timeout:
+          minutes: 5
+
+# GitHub integration — required for the sync to fetch files
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}

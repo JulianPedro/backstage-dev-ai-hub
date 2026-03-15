@@ -1,21 +1,20 @@
-import React from 'react';
-import {
-  Box,
-  Chip,
-  InputAdornment,
-  TextField,
-  Typography,
-} from '@mui/material';
+import type { ElementType } from 'react';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import InputAdornment from '@mui/material/InputAdornment';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import SearchIcon from '@mui/icons-material/Search';
+import StorageIcon from '@mui/icons-material/Storage';
 import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AppsIcon from '@mui/icons-material/Apps';
-import type { AssetType, AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AssetType, AiTool, AiHubProvider } from '@internal/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 
-const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Icon: React.ElementType }[] = [
+const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Icon: ElementType }[] = [
   { value: 'all', label: 'All', color: '#64748b', Icon: AppsIcon },
   { value: 'instruction', label: 'Instructions', color: '#2563EB', Icon: ArticleIcon },
   { value: 'agent', label: 'Agents', color: '#7C3AED', Icon: SmartToyIcon },
@@ -36,17 +35,20 @@ export interface AssetFiltersValue {
   tools: AiTool[];
   search: string;
   tags: string[];
+  providerId?: string;
 }
 
 interface AssetFiltersProps {
   value: AssetFiltersValue;
   onChange: (value: AssetFiltersValue) => void;
   availableTags?: string[];
+  providers?: AiHubProvider[];
 }
 
-export function AssetFilters({ value, onChange, availableTags = [] }: AssetFiltersProps) {
+export function AssetFilters({ value, onChange, availableTags = [], providers }: AssetFiltersProps) {
   const selectedType = value.types.length === 1 ? value.types[0] : 'all';
   const selectedTool = value.tools.length === 1 ? value.tools[0] : 'all';
+  const showProviderFilter = providers && providers.length > 1;
 
   const handleTypeClick = (type: AssetType | 'all') => {
     onChange({ ...value, types: type === 'all' ? [] : [type] });
@@ -61,6 +63,10 @@ export function AssetFilters({ value, onChange, availableTags = [] }: AssetFilte
       ? value.tags.filter(t => t !== tag)
       : [...value.tags, tag];
     onChange({ ...value, tags: next });
+  };
+
+  const handleProviderClick = (id: string | undefined) => {
+    onChange({ ...value, providerId: id });
   };
 
   return (
@@ -161,6 +167,66 @@ export function AssetFilters({ value, onChange, availableTags = [] }: AssetFilte
             })}
           </Box>
         </Box>
+
+        {/* Provider filter — only shown when there are 2+ providers */}
+        {showProviderFilter && (
+          <Box>
+            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Provider
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+              <Chip
+                icon={<AppsIcon sx={{ fontSize: '0.9rem !important' }} />}
+                label="All"
+                size="small"
+                clickable
+                onClick={() => handleProviderClick(undefined)}
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  borderRadius: 2,
+                  border: '1.5px solid',
+                  borderColor: !value.providerId ? 'text.primary' : 'divider',
+                  backgroundColor: !value.providerId ? 'text.primary' : 'transparent',
+                  color: !value.providerId ? 'background.paper' : 'text.secondary',
+                  transition: 'all 0.15s ease',
+                  '&:hover': {
+                    borderColor: 'text.primary',
+                    backgroundColor: !value.providerId ? 'text.primary' : 'action.hover',
+                  },
+                }}
+              />
+              {providers.map(p => {
+                const isSelected = value.providerId === p.id;
+                const label = p.target.split('/').slice(-1)[0]?.replace(/\.git$/, '') ?? p.id;
+                return (
+                  <Chip
+                    key={p.id}
+                    icon={<StorageIcon sx={{ fontSize: '0.85rem !important', color: isSelected ? 'background.paper' : 'inherit' }} />}
+                    label={label}
+                    size="small"
+                    clickable
+                    onClick={() => handleProviderClick(p.id)}
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      borderRadius: 2,
+                      border: '1.5px solid',
+                      borderColor: isSelected ? 'text.primary' : 'divider',
+                      backgroundColor: isSelected ? 'text.primary' : 'transparent',
+                      color: isSelected ? 'background.paper' : 'text.secondary',
+                      transition: 'all 0.15s ease',
+                      '&:hover': {
+                        borderColor: 'text.primary',
+                        backgroundColor: isSelected ? 'text.primary' : 'action.hover',
+                      },
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
+        )}
       </Box>
 
       {availableTags.length > 0 && (

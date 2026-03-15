@@ -1,26 +1,23 @@
-import React from 'react';
-import {
-  Box,
-  Card,
-  CardActions,
-  CardContent,
-  Chip,
-  IconButton,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import type { ElementType } from 'react';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
-import DownloadDoneIcon from '@mui/icons-material/DownloadDone';
 import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import CheckIcon from '@mui/icons-material/Check';
-import type { AiAsset, AssetType, AiTool } from '@internal/plugin-dev-ai-hub-common';
-import { useCopyToClipboard } from '../../hooks';
+import type { AiAssetSummary, AssetType, AiTool } from '@internal/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
+
+const POPULAR_THRESHOLD = 5;
+const NEW_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
 const TOOL_LABELS: Record<AiTool, string> = {
   'all':            'Universal',
@@ -30,24 +27,24 @@ const TOOL_LABELS: Record<AiTool, string> = {
   'cursor':         'Cursor',
 };
 
-const TYPE_CONFIG: Record<AssetType, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
+const TYPE_CONFIG: Record<AssetType, { label: string; color: string; bg: string; Icon: ElementType }> = {
   instruction: { label: 'Instruction', color: '#2563EB', bg: '#EFF6FF', Icon: ArticleIcon },
   agent:       { label: 'Agent',       color: '#7C3AED', bg: '#F5F3FF', Icon: SmartToyIcon },
   skill:       { label: 'Skill',       color: '#059669', bg: '#ECFDF5', Icon: BuildIcon },
   workflow:    { label: 'Workflow',    color: '#D97706', bg: '#FFFBEB', Icon: AccountTreeIcon },
 };
 
-
 interface AssetCardProps {
-  asset: AiAsset;
-  onView: (asset: AiAsset) => void;
-  onInstall: (asset: AiAsset) => void;
+  asset: AiAssetSummary;
+  onView: (id: string) => void;
+  onInstall: (id: string) => void;
 }
 
 export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
-  const { copy, copied } = useCopyToClipboard();
   const cfg = TYPE_CONFIG[asset.type];
   const TypeIcon = cfg.Icon;
+  const isPopular = asset.installCount >= POPULAR_THRESHOLD;
+  const isNew = Date.now() - new Date(asset.updatedAt).getTime() < NEW_DAYS_MS;
 
   return (
     <Card
@@ -60,27 +57,28 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
         border: '1px solid',
         borderColor: 'divider',
         borderLeft: `3px solid ${cfg.color}`,
-        transition: 'all 0.15s ease',
+        transition: 'all 0.18s ease',
         '&:hover': {
-          boxShadow: `0 4px 20px ${cfg.color}25`,
+          boxShadow: `0 6px 24px ${cfg.color}30`,
           borderColor: cfg.color,
-          transform: 'translateY(-1px)',
+          transform: 'translateY(-2px)',
         },
       }}
     >
       <CardContent sx={{ p: 1.5, pb: '0 !important', flex: 1 }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
           <Box
             sx={{
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               borderRadius: 1.5,
               backgroundColor: cfg.bg,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              boxShadow: `0 2px 8px ${cfg.color}25`,
             }}
           >
             {asset.icon ? (
@@ -92,14 +90,32 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <TypeIcon sx={{ color: cfg.color, fontSize: '1rem' }} />
+              <TypeIcon sx={{ color: cfg.color, fontSize: '1.1rem' }} />
             )}
           </Box>
 
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body2" fontWeight={700} noWrap title={asset.name} sx={{ lineHeight: 1.2 }}>
-              {asset.name}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.2 }}>
+              <Typography variant="body2" fontWeight={700} noWrap title={asset.name} sx={{ lineHeight: 1.2, flex: 1 }}>
+                {asset.name}
+              </Typography>
+              {isNew && (
+                <Chip
+                  label="New"
+                  size="small"
+                  sx={{
+                    height: 16,
+                    fontSize: '0.58rem',
+                    fontWeight: 700,
+                    backgroundColor: '#059669',
+                    color: '#fff',
+                    borderRadius: 1,
+                    flexShrink: 0,
+                    '& .MuiChip-label': { px: '5px' },
+                  }}
+                />
+              )}
+            </Box>
             <Typography variant="caption" sx={{ color: cfg.color, fontWeight: 600 }}>
               {cfg.label}
             </Typography>
@@ -178,7 +194,9 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
           </Typography>
           {asset.installCount > 0 && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-              <DownloadDoneIcon sx={{ fontSize: '0.65rem', color: 'text.disabled' }} />
+              <Typography sx={{ fontSize: '0.65rem', lineHeight: 1 }}>
+                {isPopular ? '🔥' : '↓'}
+              </Typography>
               <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
                 {asset.installCount}
               </Typography>
@@ -186,20 +204,13 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
           )}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.25 }}>
-          <Tooltip title={copied ? 'Copied!' : 'Copy Markdown'}>
-            <IconButton size="small" onClick={() => copy(asset.content)}>
-              {copied
-                ? <CheckIcon fontSize="small" color="success" />
-                : <ContentCopyIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
           <Tooltip title="Install in editor">
-            <IconButton size="small" onClick={() => onInstall(asset)} color="primary">
+            <IconButton size="small" onClick={() => onInstall(asset.id)} color="primary">
               <DownloadIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="View details">
-            <IconButton size="small" onClick={() => onView(asset)}>
+            <IconButton size="small" onClick={() => onView(asset.id)}>
               <OpenInNewIcon fontSize="small" />
             </IconButton>
           </Tooltip>

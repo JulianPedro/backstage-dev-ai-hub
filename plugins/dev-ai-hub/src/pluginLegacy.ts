@@ -1,32 +1,38 @@
+/**
+ * Legacy Backstage frontend system support.
+ *
+ * For New Frontend System (NFS) use `devAiHubPlugin` from `./plugin` instead.
+ */
+import type { ComponentType } from 'react';
 import {
   createPlugin,
-  createApiFactory,
   createRoutableExtension,
+  createRouteRef,
+  createApiFactory,
   discoveryApiRef,
   fetchApiRef,
 } from '@backstage/core-plugin-api';
 import { devAiHubApiRef, DevAiHubClient } from './api/DevAiHubClient';
-import { rootRouteRef } from './routes';
 
-export const devAiHubPlugin = createPlugin({
+const rootRouteRef = createRouteRef({ id: 'dev-ai-hub' });
+
+const devAiHubLegacyPlugin = createPlugin({
   id: 'dev-ai-hub',
+  routes: {
+    root: rootRouteRef,
+  },
   apis: [
     createApiFactory({
       api: devAiHubApiRef,
-      deps: {
-        discoveryApi: discoveryApiRef,
-        fetchApi: fetchApiRef,
-      },
+      deps: { discoveryApi: discoveryApiRef, fetchApi: fetchApiRef },
       factory: ({ discoveryApi, fetchApi }) =>
         new DevAiHubClient(discoveryApi, fetchApi),
     }),
   ],
-  routes: {
-    root: rootRouteRef,
-  },
 });
 
-export const DevAiHubPage = devAiHubPlugin.provide(
+/** Routable page extension for the legacy frontend system. */
+export const DevAiHubPage: ComponentType = devAiHubLegacyPlugin.provide(
   createRoutableExtension({
     name: 'DevAiHubPage',
     component: () =>

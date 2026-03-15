@@ -1,39 +1,36 @@
 import type {
-  RootConfigService,
   LoggerService,
   SchedulerService,
   UrlReaderService,
 } from '@backstage/backend-plugin-api';
 import type { AiAssetStore } from '../database/AiAssetStore';
 import type { ProviderConfig } from '../types';
+import type { AiAssetProvider } from '@internal/plugin-dev-ai-hub-node';
 import { AssetParser } from './AssetParser';
 
 interface Options {
-  config: RootConfigService;
   logger: LoggerService;
   store: AiAssetStore;
   scheduler: SchedulerService;
   urlReader: UrlReaderService;
+  providers: ProviderConfig[];
+  externalProviders: AiAssetProvider[];
 }
 
 export class AiAssetSyncService {
-  private readonly providers: ProviderConfig[];
-
-  constructor(private readonly options: Options) {
-    this.providers = AiAssetSyncService.readProviders(options.config);
-  }
+  constructor(private readonly options: Options) {}
 
   async start(): Promise<void> {
-    const { scheduler, logger } = this.options;
+    const { scheduler, logger, providers, externalProviders } = this.options;
 
-    if (this.providers.length === 0) {
+    if (providers.length === 0 && externalProviders.length === 0) {
       logger.warn(
         'dev-ai-hub: no providers configured under devAiHub.providers',
       );
       return;
     }
 
-    for (const provider of this.providers) {
+    for (const provider of providers) {
       const { frequency, timeout } = provider.schedule;
       const frequencyDuration = frequency.minutes
         ? { minutes: frequency.minutes }
@@ -56,6 +53,22 @@ export class AiAssetSyncService {
         `dev-ai-hub: scheduled sync for provider "${provider.id}" every ${JSON.stringify(frequencyDuration)}`,
       );
     }
+
+    for (const extProvider of externalProviders) {
+      await scheduler.scheduleTask({
+        id: `dev-ai-hub-sync-external-${extProvider.id}`,
+        frequency: { minutes: 60 },
+        timeout: { minutes: 5 },
+        initialDelay: { seconds: 15 },
+        fn: async () => {
+          await this.syncExternalProvider(extProvider);
+        },
+      });
+
+      logger.info(
+        `dev-ai-hub: scheduled sync for external provider "${extProvider.id}"`,
+      );
+    }
   }
 
   async syncProvider(provider: ProviderConfig): Promise<void> {
@@ -74,7 +87,6 @@ export class AiAssetSyncService {
       const tree = await urlReader.readTree(treeUrl);
       const files = await tree.files();
 
-      // Build lookup map: normalized path → file
       const fileMap = new Map<
         string,
         { content(): Promise<Buffer>; path: string }
@@ -160,32 +172,51 @@ export class AiAssetSyncService {
     }
   }
 
-  private static readProviders(config: RootConfigService): ProviderConfig[] {
-    const providersConfig = config.getOptionalConfigArray('devAiHub.providers');
-    if (!providersConfig) return [];
+  private async syncExternalProvider(provider: AiAssetProvider): Promise<void> {
+    const { logger, store } = this.options;
 
-    return providersConfig.map(p => ({
-      id: p.getString('id'),
-      type: p.getString('type') as ProviderConfig['type'],
-      target: p.getString('target'),
-      branch: p.getOptionalString('branch') ?? 'main',
-      schedule: {
-        frequency: {
-          minutes: p.getOptionalNumber('schedule.frequency.minutes'),
-          hours: p.getOptionalNumber('schedule.frequency.hours'),
-        },
-        timeout: {
-          minutes: p.getOptionalNumber('schedule.timeout.minutes'),
-          hours: p.getOptionalNumber('schedule.timeout.hours'),
-        },
-      },
-      filters: p.has('filters')
-        ? {
-            tools: p.getOptionalStringArray('filters.tools'),
-            types: p.getOptionalStringArray('filters.types'),
-          }
-        : undefined,
-    }));
+    logger.info(`dev-ai-hub: syncing external provider "${provider.id}"`);
+
+    await store.upsertSyncStatus({
+      providerId: provider.id,
+      status: 'syncing',
+      assetCount: 0,
+    });
+
+    try {
+      const assets = await provider.getAssets();
+      const syncedIds: string[] = [];
+
+      for (const assetData of assets) {
+        const id = AssetParser.buildId(provider.id, assetData.yamlPath);
+        await store.upsertAsset({ ...assetData, id });
+        syncedIds.push(id);
+      }
+
+      await store.deleteAssetsNotIn(provider.id, syncedIds);
+
+      await store.upsertSyncStatus({
+        providerId: provider.id,
+        lastSync: new Date().toISOString(),
+        status: 'idle',
+        assetCount: syncedIds.length,
+      });
+
+      logger.info(
+        `dev-ai-hub: external sync complete for "${provider.id}" — ${syncedIds.length} assets`,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error(
+        `dev-ai-hub: external sync failed for "${provider.id}": ${message}`,
+      );
+      await store.upsertSyncStatus({
+        providerId: provider.id,
+        status: 'error',
+        error: message,
+        assetCount: 0,
+      });
+    }
   }
 }
 
@@ -193,11 +224,6 @@ function normalizePath(p: string): string {
   return p.replace(/\\/g, '/').replace(/^\//, '');
 }
 
-/**
- * Build the tree URL for Backstage's UrlReaderService.
- * Format varies by provider type — UrlReader uses the integration config
- * (integrations.gitlab, integrations.github, etc.) to resolve auth automatically.
- */
 function buildTreeUrl(provider: ProviderConfig): string {
   const base = provider.target.replace(/\.git$/, '');
   const { branch, type } = provider;

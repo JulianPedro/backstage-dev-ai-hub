@@ -1,7 +1,6 @@
-import path from 'path';
 import type { Knex } from 'knex';
-import type { DatabaseService } from '@backstage/backend-plugin-api';
-import type { AiAsset, AiHubStats, AssetListFilter, AssetType } from '@internal/plugin-dev-ai-hub-common';
+import { resolvePackagePath, type DatabaseService } from '@backstage/backend-plugin-api';
+import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter, AssetType } from '@internal/plugin-dev-ai-hub-common';
 import type { AiAssetInput, SyncStatus } from '../types';
 
 export class AiAssetStore {
@@ -10,7 +9,7 @@ export class AiAssetStore {
   static async create(options: { database: DatabaseService }): Promise<AiAssetStore> {
     const db = await options.database.getClient();
     await db.migrate.latest({
-      directory: path.resolve(__dirname, '../../migrations'),
+      directory: resolvePackagePath('@internal/plugin-dev-ai-hub-backend', 'migrations'),
       loadExtensions: ['.js'],
     });
     return new AiAssetStore(db);
@@ -45,25 +44,22 @@ export class AiAssetStore {
       updated_at: now,
     };
 
-    const exists = await this.db('ai_assets').where('id', input.id).first();
-    if (exists) {
-      await this.db('ai_assets').where('id', input.id).update(row);
-    } else {
-      await this.db('ai_assets').insert({ ...row, created_at: now });
-    }
+    await this.db('ai_assets')
+      .insert({ ...row, created_at: now })
+      .onConflict('id')
+      .merge(Object.keys(row) as (keyof typeof row)[]);
   }
 
   async listAssets(
     filter: AssetListFilter,
-  ): Promise<{ items: AiAsset[]; totalCount: number }> {
+  ): Promise<{ items: AiAssetSummary[]; totalCount: number }> {
     let query = this.db<Record<string, unknown>>('ai_assets');
 
     if (filter.type) {
       query = query.where('type', filter.type);
     }
     if (filter.tool) {
-      // Match the specific tool OR assets tagged as 'all' (tool-agnostic)
-      query = query.where(function () {
+      query = query.where(function toolFilter() {
         this.where('tools', 'like', `%"${filter.tool}"%`)
           .orWhere('tools', 'like', `%"all"%`);
       });
@@ -73,7 +69,7 @@ export class AiAssetStore {
     }
     if (filter.search) {
       const term = `%${filter.search}%`;
-      query = query.where(function () {
+      query = query.where(function searchFilter() {
         this.where('name', 'like', term)
           .orWhere('description', 'like', term)
           .orWhere('content', 'like', term);
@@ -92,11 +88,13 @@ export class AiAssetStore {
     const pageSize = Math.min(100, Math.max(1, filter.pageSize ?? 20));
 
     const rows = await query
+      .select('id', 'provider_id', 'name', 'description', 'type', 'tools', 'tags',
+              'author', 'icon', 'version', 'install_count', 'synced_at', 'created_at', 'updated_at')
       .orderBy('name', 'asc')
       .limit(pageSize)
       .offset((page - 1) * pageSize);
 
-    return { items: rows.map(r => this.rowToAsset(r)), totalCount };
+    return { items: rows.map(r => this.rowToAssetSummary(r)), totalCount };
   }
 
   async getAsset(id: string): Promise<AiAsset | null> {
@@ -125,16 +123,10 @@ export class AiAssetStore {
       error: status.error ?? null,
       asset_count: status.assetCount,
     };
-    const exists = await this.db('ai_asset_sync_status')
-      .where('provider_id', status.providerId)
-      .first();
-    if (exists) {
-      await this.db('ai_asset_sync_status')
-        .where('provider_id', status.providerId)
-        .update(row);
-    } else {
-      await this.db('ai_asset_sync_status').insert(row);
-    }
+    await this.db('ai_asset_sync_status')
+      .insert(row)
+      .onConflict('provider_id')
+      .merge(Object.keys(row) as (keyof typeof row)[]);
   }
 
   async getSyncStatus(providerId: string): Promise<SyncStatus | null> {
@@ -196,6 +188,25 @@ export class AiAssetStore {
       byTool,
       byProvider,
       lastSync: (lastSyncRow?.last_sync as string | null) ?? undefined,
+    };
+  }
+
+  private rowToAssetSummary(row: Record<string, unknown>): AiAssetSummary {
+    return {
+      id: row.id as string,
+      providerId: row.provider_id as string,
+      name: row.name as string,
+      description: row.description as string,
+      type: row.type as AssetType,
+      tools: JSON.parse((row.tools as string) || '[]'),
+      tags: JSON.parse((row.tags as string) || '[]'),
+      author: row.author as string,
+      icon: (row.icon as string | null) ?? undefined,
+      version: row.version as string,
+      installCount: (row.install_count as number) ?? 0,
+      syncedAt: row.synced_at as string,
+      createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string,
     };
   }
 

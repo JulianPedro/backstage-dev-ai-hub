@@ -68,7 +68,7 @@ export function getInstallPath(
 
   const slug = toSlug(name);
   const toolConventions = CONVENTIONS[type];
-  const fn = toolConventions[tool as AiTool] ?? toolConventions['default'];
+  const fn = toolConventions[tool as AiTool] ?? toolConventions.default;
   return fn(slug);
 }
 

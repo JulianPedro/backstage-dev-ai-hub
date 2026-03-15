@@ -2,6 +2,24 @@ export type AssetType = 'instruction' | 'agent' | 'skill' | 'workflow';
 
 export type AiTool = 'all' | 'github-copilot' | 'claude-code' | 'google-gemini' | 'cursor';
 
+/** Lightweight summary returned by list endpoints — no markdown content. */
+export interface AiAssetSummary {
+  id: string;
+  providerId: string;
+  name: string;
+  description: string;
+  type: AssetType;
+  tools: AiTool[];
+  tags: string[];
+  author: string;
+  icon?: string;
+  version: string;
+  installCount: number;
+  syncedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AiAsset {
   id: string;
   providerId: string;
@@ -41,7 +59,7 @@ export interface AiAsset {
 }
 
 export interface AiAssetListResponse {
-  items: AiAsset[];
+  items: AiAssetSummary[];
   totalCount: number;
   page: number;
   pageSize: number;

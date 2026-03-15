@@ -76,11 +76,9 @@ export class DevAiHubClient implements DevAiHubApi {
   }
 
   async trackInstall(id: string): Promise<void> {
-    const base = await this.baseUrl();
-    await this.fetchApi.fetch(
-      `${base}/assets/${encodeURIComponent(id)}/track-install`,
-      { method: 'POST' },
-    );
+    await this.fetch(`/assets/${encodeURIComponent(id)}/track-install`, {
+      method: 'POST',
+    });
   }
 
   async listProviders(): Promise<AiHubProvider[]> {

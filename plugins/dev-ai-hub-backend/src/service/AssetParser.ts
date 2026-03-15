@@ -36,7 +36,7 @@ export class AssetParser {
 
     // Resolve .md path: use the `content` field, or fall back to <same-name>.md
     const mdReference =
-      meta.content ?? path.basename(yamlFilePath, '.yaml') + '.md';
+      meta.content ?? `${path.basename(yamlFilePath, '.yaml')}.md`;
     const mdPath = path.posix.join(
       path.posix.dirname(yamlFilePath),
       mdReference,

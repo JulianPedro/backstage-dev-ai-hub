@@ -64,7 +64,7 @@ export function useAssetDetail(id: string | null) {
   useEffect(() => {
     if (!id) {
       setAsset(null);
-      return;
+      return () => {};
     }
     let cancelled = false;
     setLoading(true);

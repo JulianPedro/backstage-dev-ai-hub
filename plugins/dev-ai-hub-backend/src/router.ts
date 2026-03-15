@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import express from 'express';
 import archiver from 'archiver';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import type { LoggerService, RootConfigService } from '@backstage/backend-plugin-api';
+import type { LoggerService } from '@backstage/backend-plugin-api';
 import type { AiAssetStore } from './database/AiAssetStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createMcpServer } from './service/McpServerService';
@@ -12,7 +12,6 @@ import type { AssetType } from '@internal/plugin-dev-ai-hub-common';
 interface RouterOptions {
   logger: LoggerService;
   store: AiAssetStore;
-  config: RootConfigService;
   syncService: AiAssetSyncService;
   providers: ProviderConfig[];
 }
@@ -245,10 +244,14 @@ export function createRouter(options: RouterOptions): express.Router {
         return;
       }
 
-      // New session — extract tool filter from query or X-AI-Hub-Tool header
+      // New session — extract filters from query params or headers
       const toolFilter =
         (req.query.tool as string | undefined) ??
         (req.headers['x-ai-hub-tool'] as string | undefined) ??
+        '';
+      const providerFilter =
+        (req.query.provider as string | undefined) ??
+        (req.headers['x-ai-hub-provider'] as string | undefined) ??
         '';
 
       const newSessionId = randomUUID();
@@ -257,7 +260,7 @@ export function createRouter(options: RouterOptions): express.Router {
         onsessioninitialized: id => {
           mcpSessions.set(id, transport);
           options.logger.debug(
-            `dev-ai-hub MCP: session ${id} opened (tool="${toolFilter || 'all'}")`,
+            `dev-ai-hub MCP: session ${id} opened (tool="${toolFilter || 'all'}", provider="${providerFilter || 'all'}")`,
           );
         },
       });
@@ -267,7 +270,7 @@ export function createRouter(options: RouterOptions): express.Router {
         options.logger.debug(`dev-ai-hub MCP: session ${newSessionId} closed`);
       };
 
-      const server = createMcpServer(store, toolFilter);
+      const server = createMcpServer(store, toolFilter, providerFilter, providers);
       await server.connect(transport);
 
       await transport.handleRequest(req, res, req.body);

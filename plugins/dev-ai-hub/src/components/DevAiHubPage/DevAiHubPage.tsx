@@ -1,13 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import {
-  Box,
-  Button,
-  Grid,
-  Pagination,
-  Skeleton,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Pagination from '@mui/material/Pagination';
+import Skeleton from '@mui/material/Skeleton';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet';
 import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -16,7 +15,7 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import HubIcon from '@mui/icons-material/Hub';
 import { Content, Header, Page } from '@backstage/core-components';
-import type { AiAsset, AssetType, AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AssetType, AiTool } from '@internal/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
 import type { AssetFiltersValue } from '../AssetFilters';
@@ -24,9 +23,7 @@ import { AssetDetailPanel } from '../AssetDetailPanel';
 import { AssetInstallDialog } from '../AssetInstallDialog';
 import { McpConfigDialog } from '../McpConfigDialog';
 import { ToolIcon } from '../ToolIcon';
-import { useApi } from '@backstage/core-plugin-api';
-import { devAiHubApiRef } from '../../api/DevAiHubClient';
-import { useAssets, useStats } from '../../hooks';
+import { useAssets, useStats, useProviders } from '../../hooks';
 
 const SUPPORTED_TOOLS: AiTool[] = ['claude-code', 'github-copilot', 'google-gemini', 'cursor'];
 
@@ -51,6 +48,7 @@ const DEFAULT_FILTERS: AssetFiltersValue = {
   tools: [],
   search: '',
   tags: [],
+  providerId: undefined,
 };
 
 const PAGE_SIZE = 24;
@@ -69,12 +67,26 @@ const STATS_CONFIG = [
 export function DevAiHubPage() {
   const [filters, setFilters] = useState<AssetFiltersValue>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
-  const [selectedAsset, setSelectedAsset] = useState<AiAsset | null>(null);
-  const [installAsset, setInstallAsset] = useState<AiAsset | null>(null);
   const [mcpDialogOpen, setMcpDialogOpen] = useState(false);
-  const api = useApi(devAiHubApiRef);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedAssetId = searchParams.get('assetId');
+  const installAssetId = searchParams.get('installId');
+
+  const handleViewAsset = (id: string) =>
+    setSearchParams(p => { const n = new URLSearchParams(p); n.set('assetId', id); return n; });
+
+  const handleCloseDetail = () =>
+    setSearchParams(p => { const n = new URLSearchParams(p); n.delete('assetId'); return n; });
+
+  const handleInstallAsset = (id: string) =>
+    setSearchParams(p => { const n = new URLSearchParams(p); n.set('installId', id); return n; });
+
+  const handleCloseInstall = () =>
+    setSearchParams(p => { const n = new URLSearchParams(p); n.delete('installId'); return n; });
 
   const { stats } = useStats();
+  const { providers } = useProviders();
 
   const apiFilter = useMemo(
     () => ({
@@ -82,6 +94,7 @@ export function DevAiHubPage() {
       tool: filters.tools.length === 1 ? (filters.tools[0] as AiTool) : undefined,
       search: filters.search || undefined,
       tags: filters.tags.length > 0 ? filters.tags : undefined,
+      providerId: filters.providerId || undefined,
       page,
       pageSize: PAGE_SIZE,
     }),
@@ -260,6 +273,7 @@ export function DevAiHubPage() {
           value={filters}
           onChange={handleFiltersChange}
           availableTags={availableTags}
+          providers={providers.length > 1 ? providers : undefined}
         />
 
         {/* Results summary */}
@@ -281,8 +295,8 @@ export function DevAiHubPage() {
                 <Grid item xs={12} sm={6} md={4} lg={3} key={asset.id}>
                   <AssetCard
                     asset={asset}
-                    onView={setSelectedAsset}
-                    onInstall={setInstallAsset}
+                    onView={handleViewAsset}
+                    onInstall={handleInstallAsset}
                   />
                 </Grid>
               ))}
@@ -290,10 +304,10 @@ export function DevAiHubPage() {
 
         {/* Empty state */}
         {!loading && result?.items.length === 0 && (
-          <Box sx={{ py: 10, textAlign: 'center' }}>
-            <Typography variant="h2" sx={{ mb: 1, opacity: 0.2 }}>🤖</Typography>
-            <Typography variant="h6" color="text.secondary">No assets found</Typography>
-            <Typography variant="body2" color="text.disabled">
+          <Box sx={{ py: 12, textAlign: 'center' }}>
+            <Typography variant="h1" sx={{ mb: 2, opacity: 0.15, fontSize: '5rem' }}>🤖</Typography>
+            <Typography variant="h6" color="text.secondary" fontWeight={600}>No assets found</Typography>
+            <Typography variant="body2" color="text.disabled" sx={{ mt: 0.5 }}>
               Try adjusting your filters or search terms.
             </Typography>
           </Box>
@@ -314,14 +328,13 @@ export function DevAiHubPage() {
       </Content>
 
       <AssetDetailPanel
-        asset={selectedAsset}
-        onClose={() => setSelectedAsset(null)}
+        assetId={selectedAssetId}
+        onClose={handleCloseDetail}
       />
 
       <AssetInstallDialog
-        asset={installAsset}
-        onClose={() => setInstallAsset(null)}
-        onInstall={asset => { api.trackInstall(asset.id).catch(() => {}); }}
+        assetId={installAssetId}
+        onClose={handleCloseInstall}
       />
 
       <McpConfigDialog
