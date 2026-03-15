@@ -1,0 +1,45 @@
+plugins/dev-ai-hub-common/src/schemas.ts
+  c67735fcf4a67647 8,36-38
+plugins/dev-ai-hub-backend/src/database/AiAssetStore.ts
+  c67735fcf4a67647 34-35,216-219
+plugins/dev-ai-hub/src/components/AssetFilters/AssetFilters.tsx
+  c67735fcf4a67647 31
+plugins/dev-ai-hub/src/components/ToolIcon/ToolIcon.tsx
+  c67735fcf4a67647 4,8,10,27-37
+plugins/dev-ai-hub/src/components/AssetCard/AssetCard.tsx
+  c67735fcf4a67647 30
+plugins/dev-ai-hub-common/src/installPaths.ts
+  c67735fcf4a67647 1-91
+plugins/dev-ai-hub/src/components/AssetInstallDialog/AssetInstallDialog.tsx
+  c67735fcf4a67647 12-24,33,37,42-65,69-72,74-84,86-93,95-97,104-106,108,110-111,114,117-126,128-142,144,148
+plugins/dev-ai-hub-common/src/types.ts
+  c67735fcf4a67647 3,20-23
+plugins/dev-ai-hub-backend/migrations/003_install_paths.js
+  c67735fcf4a67647 1-19
+plugins/dev-ai-hub-backend/src/service/McpServerService.ts
+  c67735fcf4a67647 4-5,71,77,100-104,122,172-175,179-180,184,195-198,204-216
+plugins/dev-ai-hub-backend/src/service/AssetParser.ts
+  c67735fcf4a67647 81-82
+plugins/dev-ai-hub-common/src/index.ts
+  c67735fcf4a67647 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "99eda7c5a9490320535d9569a7ab78c77a76a1f2",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 290,
+      "total_deletions": 256,
+      "accepted_lines": 278,
+      "overriden_lines": 0
+    }
+  }
+}

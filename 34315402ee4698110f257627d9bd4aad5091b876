@@ -1,0 +1,35 @@
+package.json
+  c67735fcf4a67647 5
+plugins/dev-ai-hub-backend/package.json
+  c67735fcf4a67647 5
+LICENSE
+  c67735fcf4a67647 1-201
+plugins/dev-ai-hub/package.json
+  c67735fcf4a67647 5
+plugins/dev-ai-hub-common/package.json
+  c67735fcf4a67647 5
+.gitignore
+  c67735fcf4a67647 8
+plugins/dev-ai-hub-node/package.json
+  c67735fcf4a67647 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.8",
+  "base_commit_sha": "34315402ee4698110f257627d9bd4aad5091b876",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 206,
+      "total_deletions": 0,
+      "accepted_lines": 207,
+      "overriden_lines": 0
+    }
+  }
+}
