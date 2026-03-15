@@ -1,0 +1,43 @@
+plugins/dev-ai-hub-backend/src/database/AiAssetStore.test.ts
+  c67735fcf4a67647 1-298
+plugins/dev-ai-hub-common/src/installPaths.test.ts
+  c67735fcf4a67647 1-154
+plugins/dev-ai-hub-backend/src/service/AssetParser.test.ts
+  c67735fcf4a67647 1-255
+.github/workflows/ci.yml
+  c67735fcf4a67647 1-37
+package.json
+  c67735fcf4a67647 19
+plugins/dev-ai-hub-backend/package.json
+  c67735fcf4a67647 42,47-48
+plugins/dev-ai-hub/src/components/AssetCard/AssetCard.test.tsx
+  c67735fcf4a67647 1-183
+plugins/dev-ai-hub-common/package.json
+  c67735fcf4a67647 34-36
+plugins/dev-ai-hub-node/package.json
+  c67735fcf4a67647 35-37
+plugins/dev-ai-hub/package.json
+  c67735fcf4a67647 47,51-52
+README.md
+  c67735fcf4a67647 202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.12",
+  "base_commit_sha": "8d9cd6e59d58bd0f13493afb545ff4111c4d71e3",
+  "prompts": {
+    "c67735fcf4a67647": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c494a7cc-2c62-4b53-be6a-f57f723a31e6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>",
+      "messages": [],
+      "total_additions": 1199,
+      "total_deletions": 261,
+      "accepted_lines": 941,
+      "overriden_lines": 0
+    }
+  }
+}
