@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
@@ -11,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckIcon from '@mui/icons-material/Check';
+import FolderZipIcon from '@mui/icons-material/FolderZip';
 import type { AiTool } from '@internal/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@internal/plugin-dev-ai-hub-common';
 import { useApi } from '@backstage/core-plugin-api';
@@ -49,10 +51,14 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
     api.trackInstall(asset.id).catch(() => {});
   };
 
+  const resourcePaths = asset?.resourcesContent
+    ? Object.keys(asset.resourcesContent)
+    : [];
+  const isZipSkill = asset?.type === 'skill' && resourcePaths.length > 0;
+
   const handleDownload = async (_tool: string, installPath: string) => {
     if (!asset) return;
-    if (asset.type === 'skill') {
-      // Skills may have bundled resource files — use the backend zip endpoint
+    if (isZipSkill) {
       const url = await api.getDownloadUrl(asset.id);
       const a = document.createElement('a');
       a.href = url;
@@ -91,6 +97,47 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
         {loading && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
             <CircularProgress />
+          </Box>
+        )}
+
+        {!loading && asset && isZipSkill && (
+          <Box
+            sx={{
+              border: '1px solid',
+              borderColor: 'info.main',
+              borderRadius: 2,
+              p: 1.5,
+              backgroundColor: 'info.main',
+              backgroundImage: 'none',
+              bgcolor: theme => `${theme.palette.info.main}12`,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <FolderZipIcon sx={{ fontSize: '1rem', color: 'info.main' }} />
+              <Typography variant="subtitle2" fontWeight={700} color="info.main">
+                Bundled skill — downloads as .zip
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              This skill includes resource files alongside <code>SKILL.md</code>.
+              Extract the zip and place all files in the skill directory.
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              <Chip
+                label="SKILL.md"
+                size="small"
+                sx={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}
+              />
+              {resourcePaths.map(p => (
+                <Chip
+                  key={p}
+                  label={p}
+                  size="small"
+                  variant="outlined"
+                  sx={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}
+                />
+              ))}
+            </Box>
           </Box>
         )}
 
@@ -145,15 +192,15 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
                   {copiedTool === tool ? 'Copied!' : 'Copy Content'}
                 </Button>
               </Tooltip>
-              <Tooltip title="Download file with correct name">
+              <Tooltip title={isZipSkill ? 'Download as .zip with all bundled files' : 'Download file with correct name'}>
                 <Button
                   size="small"
                   variant="outlined"
-                  startIcon={<DownloadIcon />}
+                  startIcon={isZipSkill ? <FolderZipIcon /> : <DownloadIcon />}
                   onClick={() => handleDownload(tool, installPath)}
                   sx={{ flex: 1 }}
                 >
-                  Download
+                  {isZipSkill ? 'Download .zip' : 'Download'}
                 </Button>
               </Tooltip>
             </Box>

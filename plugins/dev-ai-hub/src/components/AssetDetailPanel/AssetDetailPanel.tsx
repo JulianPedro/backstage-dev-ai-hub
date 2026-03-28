@@ -16,6 +16,7 @@ import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import FolderZipIcon from '@mui/icons-material/FolderZip';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import type { AssetType } from '@internal/plugin-dev-ai-hub-common';
 import { useAssetDetail } from '../../hooks';
@@ -228,6 +229,51 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                           ))}
                         </Box>
                       </Box>
+                    )}
+
+                   {asset.type === 'skill' && (
+                      <>
+                        <Divider />
+                        <Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+                            <FolderZipIcon sx={{ fontSize: '0.85rem', color: 'text.secondary' }} />
+                            <Typography variant="caption" color="text.secondary">
+                              Bundled files
+                            </Typography>
+                          </Box>
+                          {asset.resourcesContent && Object.keys(asset.resourcesContent).length > 0 ? (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
+                              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                <Chip
+                                  label="SKILL.md"
+                                  size="small"
+                                  sx={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}
+                                />
+                                {Object.keys(asset.resourcesContent).map(p => (
+                                  <Chip
+                                    key={p}
+                                    label={p}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}
+                                  />
+                                ))}
+                              </Box>
+                              <Typography variant="caption" color="text.disabled">
+                                Downloads as .zip containing all files above.
+                              </Typography>
+                            </Box>
+                          ) : (
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                              <Chip
+                                label="SKILL.md"
+                                size="small"
+                                sx={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}
+                              />
+                            </Box>
+                          )}
+                        </Box>
+                      </>
                     )}
 
                     <Divider />
