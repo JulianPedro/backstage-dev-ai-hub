@@ -1,4 +1,5 @@
 import type { ElementType } from 'react';
+import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -27,11 +28,11 @@ const TOOL_LABELS: Record<AiTool, string> = {
   'cursor':         'Cursor',
 };
 
-const TYPE_CONFIG: Record<AssetType, { label: string; color: string; bg: string; Icon: ElementType }> = {
-  instruction: { label: 'Instruction', color: '#2563EB', bg: '#EFF6FF', Icon: ArticleIcon },
-  agent:       { label: 'Agent',       color: '#7C3AED', bg: '#F5F3FF', Icon: SmartToyIcon },
-  skill:       { label: 'Skill',       color: '#059669', bg: '#ECFDF5', Icon: BuildIcon },
-  workflow:    { label: 'Workflow',    color: '#D97706', bg: '#FFFBEB', Icon: AccountTreeIcon },
+const TYPE_CONFIG: Record<AssetType, { label: string; color: string; Icon: ElementType }> = {
+  instruction: { label: 'Instruction', color: '#2563EB', Icon: ArticleIcon },
+  agent:       { label: 'Agent',       color: '#7C3AED', Icon: SmartToyIcon },
+  skill:       { label: 'Skill',       color: '#059669', Icon: BuildIcon },
+  workflow:    { label: 'Workflow',    color: '#D97706', Icon: AccountTreeIcon },
 };
 
 interface AssetCardProps {
@@ -73,7 +74,7 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
               width: 36,
               height: 36,
               borderRadius: 1.5,
-              backgroundColor: cfg.bg,
+              backgroundColor: alpha(cfg.color, 0.12),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -107,8 +108,8 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
                     height: 16,
                     fontSize: '0.58rem',
                     fontWeight: 700,
-                    backgroundColor: '#059669',
-                    color: '#fff',
+                    backgroundColor: 'success.main',
+                    color: 'success.contrastText',
                     borderRadius: 1,
                     flexShrink: 0,
                     '& .MuiChip-label': { px: '5px' },

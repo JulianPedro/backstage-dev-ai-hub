@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Alert from '@mui/material/Alert';
@@ -24,7 +25,7 @@ import { useAssetDetail } from '../../hooks';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const SyntaxHighlighter = require('react-syntax-highlighter/dist/esm/prism').default;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { oneLight } = require('react-syntax-highlighter/dist/esm/styles/prism');
+const { oneLight, oneDark } = require('react-syntax-highlighter/dist/esm/styles/prism');
 
 const TYPE_COLORS: Record<AssetType, string> = {
   instruction: '#1976d2',
@@ -42,6 +43,8 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
   const [tab, setTab] = useState(0);
   const [snackbar, setSnackbar] = useState<string | null>(null);
   const { asset, loading } = useAssetDetail(assetId);
+  const theme = useTheme();
+  const syntaxTheme = theme.palette.mode === 'dark' ? oneDark : oneLight;
 
   const handleCopy = () => {
     if (!asset) return;
@@ -171,14 +174,14 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                           const isBlock = code.includes('\n') || !!match;
                           return isBlock ? (
                             <SyntaxHighlighter
-                              style={oneLight}
+                              style={syntaxTheme}
                               language={match?.[1] ?? 'text'}
                               PreTag="div"
                               customStyle={{
                                 borderRadius: 8,
                                 fontSize: '0.8rem',
                                 margin: 0,
-                                border: '1px solid rgba(0,0,0,0.08)',
+                                border: `1px solid ${theme.palette.divider}`,
                               }}
                             >
                               {code}
