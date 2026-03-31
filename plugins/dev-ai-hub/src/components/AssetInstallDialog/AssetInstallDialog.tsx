@@ -107,9 +107,8 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
               borderColor: 'info.main',
               borderRadius: 2,
               p: 1.5,
-              backgroundColor: 'info.main',
+              backgroundColor: 'rgba(2, 136, 209, 0.07)',
               backgroundImage: 'none',
-              bgcolor: theme => `${theme.palette.info.main}12`,
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>

@@ -71,6 +71,7 @@ interface McpConfigDialogProps {
 
 export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   const theme = useTheme();
+  const isDark = (theme.palette as any).mode === 'dark' || (theme.palette as any).type === 'dark';
   const discoveryApi = useApi(discoveryApiRef);
   const { copy: copyUrl, copied: copiedUrl } = useCopyToClipboard();
   const { copy: copySnippet, copied: copiedSnippet } = useCopyToClipboard();
@@ -125,7 +126,7 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ToolIcon
                     tool={t.tool}
-                    sx={{ fontSize: '1rem', color: theme.palette.mode === 'dark' ? '#fff' : undefined }}
+                    sx={{ fontSize: '1rem', color: isDark ? '#fff' : undefined }}
                   />
                   <span>{t.label}</span>
                 </Box>
@@ -224,7 +225,7 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
             borderRadius: 1.5,
             border: '1px solid',
             borderColor: 'divider',
-            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+            backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
           }}
         >
           <Typography
@@ -256,8 +257,8 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
               borderRadius: 2,
               border: '1px solid',
               borderColor: 'divider',
-              backgroundColor: theme.palette.mode === 'dark' ? '#0d1117' : '#f6f8fa',
-              color: theme.palette.mode === 'dark' ? '#e6edf3' : '#24292f',
+              backgroundColor: isDark ? '#0d1117' : '#f6f8fa',
+              color: isDark ? '#e6edf3' : '#24292f',
               fontFamily: 'monospace',
               fontSize: '0.8rem',
               overflowX: 'auto',
@@ -274,9 +275,9 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
                 position: 'absolute',
                 top: 8,
                 right: 8,
-                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
                 '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
                 },
               }}
             >
