@@ -1,9 +1,15 @@
+import { createHash } from 'crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { AiAssetStore } from '../database/AiAssetStore';
 import type { ProviderConfig } from '../types';
-import type { AssetType } from '@internal/plugin-dev-ai-hub-common';
+import type { AssetType, AiAsset } from '@internal/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@internal/plugin-dev-ai-hub-common';
+
+/** SHA-256 hex digest of a UTF-8 string. */
+function sha256(text: string): string {
+  return createHash('sha256').update(text, 'utf8').digest('hex');
+}
 
 /** Derives a human-readable label from a Git target URL. */
 function providerLabel(target: string): string {
@@ -18,6 +24,7 @@ function providerLabel(target: string): string {
  * @param providerFilter   - Captured from `?provider=` at session init; scopes assets to a single provider
  * @param providers        - Full provider config list (for `list_providers` and label resolution)
  * @param proactiveEnabled - When false, the `check_for_assets` prompt and `suggest_assets` tool are not registered
+ * @param baseUrl          - Base URL of the plugin (e.g. http://backstage:7007/api/dev-ai-hub), used to generate raw_url
  */
 export function createMcpServer(
   store: AiAssetStore,
@@ -25,6 +32,7 @@ export function createMcpServer(
   providerFilter: string,
   providers: ProviderConfig[],
   proactiveEnabled = false,
+  baseUrl = '',
 ): McpServer {
   const server = new McpServer({ name: 'dev-ai-hub', version: '0.1.0' });
 
@@ -39,6 +47,37 @@ export function createMcpServer(
 
   /** Returns the human-readable display name for an asset. */
   const displayName = (a: { name: string; label?: string }) => a.label ?? a.name;
+
+    /** Returns the raw-content URL for an asset (empty string when baseUrl is not configured). */
+  const rawUrl = (assetId: string) =>
+    baseUrl ? `${baseUrl}/assets/${encodeURIComponent(assetId)}/raw` : undefined;
+
+  /**
+   * Builds the install payload shared by install_asset and install_assets.
+   * Contains everything the model needs to write the file and verify integrity.
+   */
+  const buildInstallPayload = (asset: AiAsset, recommendedPath: string) => {
+    const contentSha256 = sha256(asset.content);
+    const expectedBytes = Buffer.byteLength(asset.content, 'utf8');
+    const url = rawUrl(asset.id);
+    const resources = asset.resourcesContent
+      ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
+          path: filePath,
+          content: fileContent,
+          sha256: sha256(fileContent),
+          bytes: Buffer.byteLength(fileContent, 'utf8'),
+        }))
+      : undefined;
+
+    return {
+      recommended_path: recommendedPath,
+      raw_url: url,
+      content: asset.content,
+      content_sha256: contentSha256,
+      expected_bytes: expectedBytes,
+      resources,
+    };
+  };
 
   /**
    * Resolves an asset by name: tries exact match on name/label first,
@@ -425,35 +464,153 @@ export function createMcpServer(
         .slice(0, 3)
         .map(a => ({ id: a.id, name: displayName(a), type: a.type, description: a.description }));
 
-      const resources = asset.resourcesContent
-        ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
-            path: filePath,
-            content: fileContent,
-          }))
-        : undefined;
+      const payload = buildInstallPayload(asset, recommendedPath);
 
       return {
         content: [{
           type: 'text' as const,
           text: JSON.stringify({
             action_required: [
-              'Write the "content" field to "recommended_path". Create parent directories if needed.',
-              resources?.length
-                ? 'Also write each file in "resources" to its "path" relative to the skill directory.'
+              'PREFERRED — if your tool has a built-in fetch/HTTP tool:',
+              '  1. Call fetch(raw_url) to download the exact content.',
+              '  2. Write the fetched content verbatim to recommended_path (create parent directories if needed).',
+              'FALLBACK — if no fetch tool is available:',
+              '  1. Write the "content" field verbatim to recommended_path (create parent directories if needed).',
+              'REQUIRED in both cases:',
+              '  • Read the written file back and call verify_install(id, read_content) to confirm integrity.',
+              '  • If verify_install returns ok=false, re-write the file from scratch.',
+              payload.resources?.length
+                ? '  • Also write each file in "resources[]" to its "path" relative to the skill directory, verifying each one.'
                 : null,
-            ].filter(Boolean).join(' '),
+            ].filter(Boolean).join('\n'),
             installed: {
               id: asset.id,
               name: displayName(asset),
               type: asset.type,
               provider: { id: asset.providerId, label: resolveProviderLabel(asset.providerId) },
             },
-            recommended_path: recommendedPath,
             all_install_paths: installPaths,
             path_override_hint: 'Paths can be customised per-tool in the asset YAML: installPaths: { claude-code: ".claude/rules/custom.md" }',
-            content: asset.content,
-            resources,
+            ...payload,
             related_assets: related,
+          }, null, 2),
+        }],
+      };
+    },
+  );
+
+  // ── verify_install ────────────────────────────────────────────────────────
+  //
+  // Called after the model writes a file. The model reads the written file
+  // back and passes the content here; the backend compares SHA-256 hashes.
+  // Works on any OS, any AI tool — no shell commands required.
+
+  server.tool(
+    'verify_install',
+    [
+      'Verify that an asset was written to disk correctly by comparing SHA-256 hashes.',
+      'ALWAYS call this after writing an asset file.',
+      'Steps: (1) write the file, (2) read the file back with your file-read tool, (3) call verify_install with the read content.',
+      'If ok=false, re-write the file verbatim from the content returned by install_asset and verify again.',
+    ].join(' '),
+    {
+      id: z.string().describe('Asset ID returned by install_asset'),
+      installed_content: z.string().describe('Exact content of the file as you read it back from disk after writing'),
+    },
+    async ({ id, installed_content }) => {
+      const asset = await store.getAsset(id);
+      if (!asset) {
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify({ error: `Asset not found: ${id}` }) }],
+          isError: true,
+        };
+      }
+
+      const expected_sha256 = sha256(asset.content);
+      const actual_sha256   = sha256(installed_content);
+      const ok              = expected_sha256 === actual_sha256;
+      const expected_bytes  = Buffer.byteLength(asset.content, 'utf8');
+      const actual_bytes    = Buffer.byteLength(installed_content, 'utf8');
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            ok,
+            message: ok
+              ? 'Asset installed correctly.'
+              : `Content mismatch — re-write the file verbatim. Expected ${expected_bytes} bytes, got ${actual_bytes} bytes.`,
+            expected_sha256,
+            actual_sha256,
+            expected_bytes,
+            actual_bytes,
+          }, null, 2),
+        }],
+      };
+    },
+  );
+
+  // ── install_assets ────────────────────────────────────────────────────────
+  //
+  // Batch installation: one MCP round-trip for N assets.
+  // Returns a lean response (only what is needed to write + verify each file).
+  // Use instead of calling install_asset N times.
+
+  server.tool(
+    'install_assets',
+    [
+      'Install multiple assets at once — one MCP call instead of N.',
+      'ALWAYS prefer this over calling install_asset individually when installing 2 or more assets.',
+      'Returns a lean list: path + raw_url + content + sha256 for each asset.',
+      'For each file: write it (preferably via fetch(raw_url)), then call verify_install.',
+    ].join(' '),
+    {
+      ids: z.array(z.string()).min(1).max(20).describe('List of asset IDs to install'),
+    },
+    async ({ ids }) => {
+      const results = await Promise.all(ids.map(id => store.getAsset(id)));
+
+      const found    = results.filter((a): a is AiAsset => a !== null);
+      const notFound = ids.filter((_, i) => results[i] === null);
+
+      // Track installs for all found assets in parallel
+      await Promise.all(found.map(a => store.incrementInstallCount(a.id)));
+
+      const files = found.map(asset => {
+        const installPaths = getInstallPathsForAsset(asset.type, asset.tools, asset.name, {
+          installPath: asset.installPath,
+          installPaths: asset.installPaths,
+        });
+        const recommendedPath = toolParam
+          ? (installPaths[toolParam] ?? Object.values(installPaths)[0])
+          : Object.values(installPaths)[0];
+
+        return {
+          id: asset.id,
+          name: displayName(asset),
+          type: asset.type,
+          ...buildInstallPayload(asset, recommendedPath),
+        };
+      });
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            action_required: [
+              'For EACH file in files[]:',
+              '  PREFERRED — if your tool has a built-in fetch/HTTP tool:',
+              '    1. Call fetch(raw_url) to download the exact content.',
+              '    2. Write the fetched content verbatim to recommended_path (create parent directories if needed).',
+              '  FALLBACK — if no fetch tool is available:',
+              '    1. Write the "content" field verbatim to recommended_path (create parent directories if needed).',
+              '  REQUIRED after each write:',
+              '    • Read the written file back and call verify_install(id, read_content).',
+              '    • If verify_install returns ok=false, re-write that file from scratch and verify again.',
+            ].join('\n'),
+            total: found.length,
+            not_found: notFound.length > 0 ? notFound : undefined,
+            files,
           }, null, 2),
         }],
       };
