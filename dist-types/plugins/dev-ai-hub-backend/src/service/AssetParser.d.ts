@@ -16,7 +16,7 @@ export declare class AssetParser {
      * Build the full AiAssetInput from parsed metadata + raw markdown content.
      * The mdContent is stored verbatim — never modified.
      */
-    static buildAsset(parsed: ParsedAssetMeta, mdContent: string, providerId: string, repoUrl: string, branch: string, yamlFilePath: string): AiAssetInput;
+    static buildAsset(parsed: ParsedAssetMeta, mdContent: string, providerId: string, repoUrl: string, branch: string, yamlFilePath: string, resourcesContent?: Record<string, string>): AiAssetInput;
     static buildId(providerId: string, yamlPath: string): string;
     /** True if the file is in a known asset directory */
     static isAssetFile(filePath: string): boolean;

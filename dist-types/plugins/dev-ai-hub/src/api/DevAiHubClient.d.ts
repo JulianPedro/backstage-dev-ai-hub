@@ -5,6 +5,8 @@ export interface DevAiHubApi {
     listAssets(filter?: AssetListFilter): Promise<AiAssetListResponse>;
     getAsset(id: string): Promise<AiAsset>;
     getAssetRaw(id: string): Promise<string>;
+    /** Returns the absolute URL for the download endpoint (zip for skills, md for others). */
+    getDownloadUrl(id: string): Promise<string>;
     trackInstall(id: string): Promise<void>;
     listProviders(): Promise<AiHubProvider[]>;
     getProviderStatus(id: string): Promise<AiHubProvider>;
@@ -20,6 +22,7 @@ export declare class DevAiHubClient implements DevAiHubApi {
     listAssets(filter?: AssetListFilter): Promise<AiAssetListResponse>;
     getAsset(id: string): Promise<AiAsset>;
     getAssetRaw(id: string): Promise<string>;
+    getDownloadUrl(id: string): Promise<string>;
     trackInstall(id: string): Promise<void>;
     listProviders(): Promise<AiHubProvider[]>;
     getProviderStatus(id: string): Promise<AiHubProvider>;

@@ -48,7 +48,7 @@ export function createMcpServer(
   /** Returns the human-readable display name for an asset. */
   const displayName = (a: { name: string; label?: string }) => a.label ?? a.name;
 
-    /** Returns the raw-content URL for an asset (empty string when baseUrl is not configured). */
+  /** Returns the raw-content URL for an asset (empty string when baseUrl is not configured). */
   const rawUrl = (assetId: string) =>
     baseUrl ? `${baseUrl}/assets/${encodeURIComponent(assetId)}/raw` : undefined;
 
@@ -57,21 +57,32 @@ export function createMcpServer(
    * Contains everything the model needs to write the file and verify integrity.
    */
   const buildInstallPayload = (asset: AiAsset, recommendedPath: string) => {
-    const contentSha256 = sha256(asset.content);
+    // Normalize trailing whitespace so content_sha256 matches what verify_install
+    // will compute — prevents spurious 1-byte mismatches from trailing newlines.
+    const contentSha256 = sha256(asset.content.trimEnd());
     const expectedBytes = Buffer.byteLength(asset.content, 'utf8');
     const url = rawUrl(asset.id);
     const resources = asset.resourcesContent
       ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
           path: filePath,
           content: fileContent,
-          sha256: sha256(fileContent),
+          sha256: sha256(fileContent.trimEnd()),
           bytes: Buffer.byteLength(fileContent, 'utf8'),
         }))
+      : undefined;
+
+    // Pre-computed curl command: downloads raw_url and writes directly to disk.
+    // curl is built-in on Windows 10+ (since 2018), macOS, and Linux.
+    // --create-dirs creates parent directories; -fsSL follows redirects silently.
+    // Paths and URL are quoted to handle spaces/special characters.
+    const curlCmd = url
+      ? `curl -fsSL --create-dirs -o ${JSON.stringify(recommendedPath)} ${JSON.stringify(url)}`
       : undefined;
 
     return {
       recommended_path: recommendedPath,
       raw_url: url,
+      install_command: curlCmd,
       content: asset.content,
       content_sha256: contentSha256,
       expected_bytes: expectedBytes,
@@ -408,14 +419,12 @@ export function createMcpServer(
   server.tool(
     'install_asset',
     [
-      'Fetches asset content and the recommended install path for this tool.',
-      'Accepts asset ID or name (partial match supported).',
-      'IMPORTANT: After calling this tool you MUST write the file yourself:',
-      '1. Use recommended_path as the destination.',
-      '2. Create all parent directories if they do not exist.',
-      '3. Write the value of "content" verbatim to that path.',
-      'Calling this tool alone does NOT write any file — you must perform the write.',
-      'After installing, offer the assets listed in related_assets to complement the installation.',
+      'Returns the install path and a pre-built install_command (curl) for a single asset.',
+      'IMPORTANT: Run install_command via your terminal/shell tool (execute, run_terminal, Bash).',
+      'This writes the file directly without content going through the model — prevents truncation.',
+      'Fallback: use web tool (Copilot) or WebFetch (Claude Code) to fetch raw_url, then write.',
+      'Last resort only: write the "content" field if no terminal or web tool is available.',
+      'After writing, always call verify_install to confirm integrity.',
     ].join(' '),
     {
       id:   z.string().optional().describe('Exact asset ID (preferred — avoids ambiguity)'),
@@ -471,16 +480,22 @@ export function createMcpServer(
           type: 'text' as const,
           text: JSON.stringify({
             action_required: [
-              'PREFERRED — if your tool has a built-in fetch/HTTP tool:',
-              '  1. Call fetch(raw_url) to download the exact content.',
-              '  2. Write the fetched content verbatim to recommended_path (create parent directories if needed).',
-              'FALLBACK — if no fetch tool is available:',
-              '  1. Write the "content" field verbatim to recommended_path (create parent directories if needed).',
-              'REQUIRED in both cases:',
-              '  • Read the written file back and call verify_install(id, read_content) to confirm integrity.',
-              '  • If verify_install returns ok=false, re-write the file from scratch.',
+              'Follow these steps exactly — do NOT write content from memory:',
+              '',
+              'STEP 1 — Write the file. Choose the FIRST option available to you:',
+              '  [A] Run install_command in your terminal tool (execute, run_terminal, or Bash).',
+              '      This uses curl to download and write the file atomically. method="curl".',
+              '  [B] Use the web tool (Copilot) or WebFetch (Claude Code) to fetch raw_url,',
+              '      then write the fetched result to recommended_path. Create dirs first. method="fetch".',
+              '  [C] Last resort: write the "content" field verbatim to recommended_path. method="content".',
+              '',
+              'STEP 2 — Read the written file back from disk.',
+              '',
+              'STEP 3 — Call verify_install(id, read_content, method).',
+              '',
+              'STEP 4 — If verify_install returns ok=false, repeat from STEP 1.',
               payload.resources?.length
-                ? '  • Also write each file in "resources[]" to its "path" relative to the skill directory, verifying each one.'
+                ? '\nFor each file in resources[]: repeat STEP 1-4 using resources[].path as destination.'
                 : null,
             ].filter(Boolean).join('\n'),
             installed: {
@@ -511,13 +526,17 @@ export function createMcpServer(
       'Verify that an asset was written to disk correctly by comparing SHA-256 hashes.',
       'ALWAYS call this after writing an asset file.',
       'Steps: (1) write the file, (2) read the file back with your file-read tool, (3) call verify_install with the read content.',
+      'Set method to "fetch" if you used fetch(raw_url), or "content" if you wrote the content field directly.',
       'If ok=false, re-write the file verbatim from the content returned by install_asset and verify again.',
     ].join(' '),
     {
       id: z.string().describe('Asset ID returned by install_asset'),
       installed_content: z.string().describe('Exact content of the file as you read it back from disk after writing'),
+      method: z.enum(['curl', 'fetch', 'content']).optional().describe(
+        'Which install method was used: "curl" (ran install_command via terminal), "fetch" (web/WebFetch tool), or "content" (wrote the content field directly)',
+      ),
     },
-    async ({ id, installed_content }) => {
+    async ({ id, installed_content, method }) => {
       const asset = await store.getAsset(id);
       if (!asset) {
         return {
@@ -526,8 +545,13 @@ export function createMcpServer(
         };
       }
 
-      const expected_sha256 = sha256(asset.content);
-      const actual_sha256   = sha256(installed_content);
+      // Normalize trailing whitespace before comparing: markdown assets are
+      // functionally identical regardless of a trailing newline, and different
+      // tools (urlReader, file-read tools, curl) may add or strip one byte.
+      const normalizedExpected = asset.content.trimEnd();
+      const normalizedActual   = installed_content.trimEnd();
+      const expected_sha256 = sha256(normalizedExpected);
+      const actual_sha256   = sha256(normalizedActual);
       const ok              = expected_sha256 === actual_sha256;
       const expected_bytes  = Buffer.byteLength(asset.content, 'utf8');
       const actual_bytes    = Buffer.byteLength(installed_content, 'utf8');
@@ -537,8 +561,9 @@ export function createMcpServer(
           type: 'text' as const,
           text: JSON.stringify({
             ok,
+            method_used: method ?? 'unknown',
             message: ok
-              ? 'Asset installed correctly.'
+              ? `Asset installed correctly via ${method ?? 'unknown'} method.`
               : `Content mismatch — re-write the file verbatim. Expected ${expected_bytes} bytes, got ${actual_bytes} bytes.`,
             expected_sha256,
             actual_sha256,
@@ -561,8 +586,8 @@ export function createMcpServer(
     [
       'Install multiple assets at once — one MCP call instead of N.',
       'ALWAYS prefer this over calling install_asset individually when installing 2 or more assets.',
-      'Returns a lean list: path + raw_url + content + sha256 for each asset.',
-      'For each file: write it (preferably via fetch(raw_url)), then call verify_install.',
+      'Each file includes an install_command (curl) — run it via your terminal tool (execute, run_terminal, Bash) for atomic, truncation-free install.',
+      'After each write, call verify_install. Never reproduce content from memory.',
     ].join(' '),
     {
       ids: z.array(z.string()).min(1).max(20).describe('List of asset IDs to install'),
@@ -598,15 +623,20 @@ export function createMcpServer(
           type: 'text' as const,
           text: JSON.stringify({
             action_required: [
-              'For EACH file in files[]:',
-              '  PREFERRED — if your tool has a built-in fetch/HTTP tool:',
-              '    1. Call fetch(raw_url) to download the exact content.',
-              '    2. Write the fetched content verbatim to recommended_path (create parent directories if needed).',
-              '  FALLBACK — if no fetch tool is available:',
-              '    1. Write the "content" field verbatim to recommended_path (create parent directories if needed).',
-              '  REQUIRED after each write:',
-              '    • Read the written file back and call verify_install(id, read_content).',
-              '    • If verify_install returns ok=false, re-write that file from scratch and verify again.',
+              'For EACH file in files[], follow these steps — do NOT write content from memory:',
+              '',
+              'STEP 1 — Write the file WITHOUT reproducing its content. Choose the first available option:',
+              '  [A] BEST — Run install_command in your terminal tool (execute, run_terminal, or Bash).',
+              '      This uses curl to download and write the file atomically. method="curl".',
+              '  [B] FALLBACK — Use the web tool (Copilot) or WebFetch (Claude Code) to fetch raw_url,',
+              '      then write the fetched result to recommended_path. Create dirs first. method="fetch".',
+              '  [C] LAST RESORT — Write the "content" field verbatim (only if no terminal/web tool available). method="content".',
+              '',
+              'STEP 2 — Read the written file back from disk.',
+              'STEP 3 — Call verify_install(id, read_content, method).',
+              'STEP 4 — If ok=false, repeat from STEP 1 for that file.',
+              '',
+              'Process all files. Do not skip any.',
             ].join('\n'),
             total: found.length,
             not_found: notFound.length > 0 ? notFound : undefined,
