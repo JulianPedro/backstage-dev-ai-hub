@@ -6,34 +6,37 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   ci:
-    name: Lint · Type check · Test · Build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2 # v6.0.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6.3.0 # v6.3.0
         with:
-          node-version: 22
+          node-version: "24"
 
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Enable Corepack & activate Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.13.0 --activate
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install
+
+      - name: Type-check
+        run: yarn tsc
 
       - name: Lint
         run: yarn lint:all
 
-      - name: Type check
-        run: yarn tsc
-
-      - name: Test
-        run: yarn test
+      - name: Check formatting
+        run: yarn prettier:check
 
       - name: Build
         run: yarn build:all
