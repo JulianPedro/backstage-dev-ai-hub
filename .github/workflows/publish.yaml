@@ -30,16 +30,31 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Verify tag matches package.json version
+      - name: Set version from tag
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          PKG_VERSION=$(node -p "require('./plugins/dev-ai-hub-common/package.json').version")
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "❌ Tag ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
-            echo "Update the version in all package.json files before creating the tag."
-            exit 1
-          fi
-          echo "✅ Version $TAG_VERSION verified"
+          node << 'EOF'
+          const fs = require('fs');
+          const tag = process.env.GITHUB_REF_NAME;
+          const version = tag.startsWith('v') ? tag.slice(1) : tag;
+          const plugins = ['dev-ai-hub-common', 'dev-ai-hub-node', 'dev-ai-hub-backend', 'dev-ai-hub'];
+          const names = new Set(
+            plugins.map(p => JSON.parse(fs.readFileSync(`plugins/${p}/package.json`, 'utf8')).name)
+          );
+          for (const plugin of plugins) {
+            const pkgPath = `plugins/${plugin}/package.json`;
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            pkg.version = version;
+            for (const field of ['dependencies', 'devDependencies', 'peerDependencies']) {
+              if (pkg[field]) {
+                for (const dep of Object.keys(pkg[field])) {
+                  if (names.has(dep)) pkg[field][dep] = `^${version}`;
+                }
+              }
+            }
+            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+            console.log(`Updated ${pkgPath} to ${version}`);
+          }
+          EOF
 
       - name: Lint
         run: yarn lint:all
