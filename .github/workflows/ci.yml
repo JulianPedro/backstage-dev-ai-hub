@@ -32,7 +32,12 @@ jobs:
         run: yarn lint:all
 
       - name: Type check
-        run: yarn tsc
+        run: |
+          for dir in plugins/dev-ai-hub-common plugins/dev-ai-hub-node plugins/dev-ai-hub-backend plugins/dev-ai-hub; do
+            pkg=$(node -p "require('./$dir/package.json').name")
+            echo "Type checking $pkg..."
+            yarn workspace "$pkg" tsc
+          done
 
       - name: Test
         run: yarn test
