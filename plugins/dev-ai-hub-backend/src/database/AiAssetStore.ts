@@ -1,6 +1,6 @@
 import type { Knex } from 'knex';
 import { resolvePackagePath, type DatabaseService } from '@backstage/backend-plugin-api';
-import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter, AssetType } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter, AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
 import type { AiAssetInput, SyncStatus } from '../types';
 
 export class AiAssetStore {
@@ -9,7 +9,7 @@ export class AiAssetStore {
   static async create(options: { database: DatabaseService }): Promise<AiAssetStore> {
     const db = await options.database.getClient();
     await db.migrate.latest({
-      directory: resolvePackagePath('@internal/plugin-dev-ai-hub-backend', 'migrations'),
+      directory: resolvePackagePath('@julianpedro/plugin-dev-ai-hub-backend', 'migrations'),
       loadExtensions: ['.js'],
     });
     return new AiAssetStore(db);

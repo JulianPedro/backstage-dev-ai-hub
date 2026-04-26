@@ -7,7 +7,7 @@ import type { AiAssetStore } from './database/AiAssetStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createMcpServer } from './service/McpServerService';
 import type { ProviderConfig, AssetListFilter } from './types';
-import type { AssetType } from '@internal/plugin-dev-ai-hub-common';
+import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface RouterOptions {
   logger: LoggerService;

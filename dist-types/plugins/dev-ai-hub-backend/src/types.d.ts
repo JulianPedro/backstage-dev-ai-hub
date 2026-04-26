@@ -1,4 +1,4 @@
-import type { AiAsset, AssetListFilter } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAsset, AssetListFilter } from '@julianpedro/plugin-dev-ai-hub-common';
 export interface ProviderConfig {
     id: string;
     type: 'github' | 'bitbucket' | 'azure-devops' | 'gitlab' | 'git';

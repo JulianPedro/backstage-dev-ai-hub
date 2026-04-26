@@ -1,4 +1,4 @@
-import type { AssetType, AiTool, AiHubProvider } from '@internal/plugin-dev-ai-hub-common';
+import type { AssetType, AiTool, AiHubProvider } from '@julianpedro/plugin-dev-ai-hub-common';
 export interface AssetFiltersValue {
     types: AssetType[];
     tools: AiTool[];

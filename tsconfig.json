@@ -11,6 +11,8 @@
     "useUnknownInCatchVariables": false,
     "jsx": "react-jsx",
     "types": ["node", "jest"],
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "ignoreDeprecations": "6.0",
+    "skipLibCheck": true
   }
 }

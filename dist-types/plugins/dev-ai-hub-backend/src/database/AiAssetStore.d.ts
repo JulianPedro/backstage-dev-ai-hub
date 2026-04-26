@@ -1,5 +1,5 @@
 import { type DatabaseService } from '@backstage/backend-plugin-api';
-import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter } from '@julianpedro/plugin-dev-ai-hub-common';
 import type { AiAssetInput, SyncStatus } from '../types';
 export declare class AiAssetStore {
     private readonly db;

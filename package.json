@@ -7,8 +7,8 @@
     "plugins/*"
   ],
   "scripts": {
-    "start:frontend": "yarn workspace @internal/plugin-dev-ai-hub start",
-    "start:backend": "yarn workspace @internal/plugin-dev-ai-hub-backend start",
+    "start:frontend": "yarn workspace @julianpedro/plugin-dev-ai-hub start",
+    "start:backend": "yarn workspace @julianpedro/plugin-dev-ai-hub-backend start",
     "build:all": "yarn workspaces foreach --all --topological-dev run build",
     "test": "yarn workspaces foreach --all -p run test --passWithNoTests",
     "lint:all": "yarn workspaces foreach --all -p run lint",

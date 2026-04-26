@@ -1,5 +1,5 @@
 import { createExtensionPoint } from '@backstage/backend-plugin-api';
-import type { AiAsset } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 
 export interface AiAssetProvider {
   /** Unique identifier for this provider instance */

@@ -13,22 +13,13 @@ https://github.com/user-attachments/assets/5728807d-2587-408b-88f2-4c2853606285
 
 ## Installation
 
-### 1. Copy plugin packages
+### 1. Add the packages
 
-Copy the four plugin directories into your Backstage monorepo's `plugins/` folder:
-
-```
-plugins/
-  dev-ai-hub/
-  dev-ai-hub-backend/
-  dev-ai-hub-common/
-  dev-ai-hub-node/
-```
-
-Then install:
+In your Backstage monorepo:
 
 ```bash
-yarn install
+yarn workspace backend add @julianpedro/plugin-dev-ai-hub-backend
+yarn workspace app add @julianpedro/plugin-dev-ai-hub
 ```
 
 ### 2. Register the backend plugin
@@ -36,7 +27,7 @@ yarn install
 In `packages/backend/src/index.ts`:
 
 ```typescript
-backend.add(import('@internal/plugin-dev-ai-hub-backend'));
+backend.add(import('@julianpedro/plugin-dev-ai-hub-backend'));
 ```
 
 ### 3. Register the frontend plugin
@@ -46,7 +37,7 @@ backend.add(import('@internal/plugin-dev-ai-hub-backend'));
 In `packages/app/src/App.tsx`:
 
 ```typescript
-import { devAiHubPlugin } from '@internal/plugin-dev-ai-hub';
+import { devAiHubPlugin } from '@julianpedro/plugin-dev-ai-hub';
 
 const app = createApp({
   features: [
@@ -63,7 +54,7 @@ The sidebar item is registered automatically — no additional configuration nee
 In `packages/app/src/App.tsx`, add the route inside `<FlatRoutes>`:
 
 ```typescript
-import { DevAiHubPage } from '@internal/plugin-dev-ai-hub';
+import { DevAiHubPage } from '@julianpedro/plugin-dev-ai-hub';
 
 // inside <FlatRoutes>:
 <Route path="/dev-ai-hub" element={<DevAiHubPage />} />
@@ -77,8 +68,6 @@ import HubIcon from '@mui/icons-material/Hub';
 // inside <SidebarGroup>:
 <SidebarItem icon={HubIcon} to="dev-ai-hub" text="AI Hub" />
 ```
-
-The API client is registered automatically when `DevAiHubPage` is used — no extra plugin registration needed.
 
 ### 4. Configure `app-config.yaml`
 
@@ -294,10 +283,10 @@ DELETE /api/dev-ai-hub/mcp                    Terminate MCP session
 
 | Package | Role | Description |
 |---------|------|-------------|
-| `@internal/plugin-dev-ai-hub` | `frontend-plugin` | React UI — page, cards, filters, install dialog |
-| `@internal/plugin-dev-ai-hub-backend` | `backend-plugin` | Sync service, REST API, embedded MCP server |
-| `@internal/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, Zod schemas, install path conventions |
-| `@internal/plugin-dev-ai-hub-node` | `node-library` | Extension points for external provider modules |
+| `@julianpedro/plugin-dev-ai-hub` | `frontend-plugin` | React UI — page, cards, filters, install dialog |
+| `@julianpedro/plugin-dev-ai-hub-backend` | `backend-plugin` | Sync service, REST API, embedded MCP server |
+| `@julianpedro/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, Zod schemas, install path conventions |
+| `@julianpedro/plugin-dev-ai-hub-node` | `node-library` | Extension points for external provider modules |
 
 ---
 

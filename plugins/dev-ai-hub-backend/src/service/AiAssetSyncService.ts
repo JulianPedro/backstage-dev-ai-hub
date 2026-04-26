@@ -5,7 +5,7 @@ import type {
 } from '@backstage/backend-plugin-api';
 import type { AiAssetStore } from '../database/AiAssetStore';
 import type { ProviderConfig } from '../types';
-import type { AiAssetProvider } from '@internal/plugin-dev-ai-hub-node';
+import type { AiAssetProvider } from '@julianpedro/plugin-dev-ai-hub-node';
 import { AssetParser } from './AssetParser';
 
 interface Options {

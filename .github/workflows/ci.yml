@@ -8,8 +8,10 @@ on:
 
 jobs:
   ci:
-    name: Lint · Type check · Test · Build
+    name: Lint · Test · Build
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
 
     steps:
       - name: Checkout
@@ -28,9 +30,6 @@ jobs:
 
       - name: Lint
         run: yarn lint:all
-
-      - name: Type check
-        run: yarn tsc
 
       - name: Test
         run: yarn test

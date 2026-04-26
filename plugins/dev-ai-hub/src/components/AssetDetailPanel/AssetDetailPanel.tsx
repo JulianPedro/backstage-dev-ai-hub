@@ -19,7 +19,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FolderZipIcon from '@mui/icons-material/FolderZip';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import type { AssetType } from '@internal/plugin-dev-ai-hub-common';
+import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
 import { useAssetDetail } from '../../hooks';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

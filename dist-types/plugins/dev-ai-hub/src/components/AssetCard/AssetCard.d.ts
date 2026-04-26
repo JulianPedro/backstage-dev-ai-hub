@@ -1,4 +1,4 @@
-import type { AiAssetSummary } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAssetSummary } from '@julianpedro/plugin-dev-ai-hub-common';
 interface AssetCardProps {
     asset: AiAssetSummary;
     onView: (id: string) => void;

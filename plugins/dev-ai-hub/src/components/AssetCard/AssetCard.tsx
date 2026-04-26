@@ -14,7 +14,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import type { AiAssetSummary, AssetType, AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAssetSummary, AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 
 const POPULAR_THRESHOLD = 5;

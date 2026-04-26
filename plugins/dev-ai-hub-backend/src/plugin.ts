@@ -5,7 +5,7 @@ import {
 import {
   devAiHubProviderExtensionPoint,
   type AiAssetProvider,
-} from '@internal/plugin-dev-ai-hub-node';
+} from '@julianpedro/plugin-dev-ai-hub-node';
 import { AiAssetStore } from './database/AiAssetStore';
 import { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createRouter } from './router';

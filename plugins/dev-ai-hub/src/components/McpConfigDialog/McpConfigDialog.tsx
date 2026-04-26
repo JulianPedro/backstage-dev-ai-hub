@@ -22,7 +22,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useProviders } from '../../hooks';
-import type { AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface ToolConfig {
   tool: AiTool;
@@ -58,6 +58,15 @@ const TOOL_CONFIGS: ToolConfig[] = [
     description: 'Add to your Gemini CLI configuration:',
     buildConfig: url => JSON.stringify({
       mcpServers: { 'dev-ai-hub': { url } },
+    }, null, 2),
+  },
+  {
+    tool: 'cursor',
+    label: 'Cursor',
+    file: '.cursor/mcp.json',
+    description: 'Add to .cursor/mcp.json in your project root:',
+    buildConfig: url => JSON.stringify({
+      mcpServers: { 'dev-ai-hub': { type: 'http', url } },
     }, null, 2),
   },
 ];
