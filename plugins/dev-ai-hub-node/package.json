@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Node.js extension points for Dev AI Hub",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JulianPedro/backstage-dev-ai-hub"
+  },
   "main": "src/index.ts",
   "types": "src/index.ts",
   "publishConfig": {
@@ -47,5 +51,6 @@
   },
   "peerDependencies": {
     "@backstage/backend-plugin-api": ">=1.40.0"
-  }
+  },
+  "module": "dist/index.esm.js"
 }
