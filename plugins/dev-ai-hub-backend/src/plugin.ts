@@ -5,7 +5,7 @@ import {
 import {
   devAiHubProviderExtensionPoint,
   type AiAssetProvider,
-} from '@internal/plugin-dev-ai-hub-node';
+} from '@julianpedro/plugin-dev-ai-hub-node';
 import { AiAssetStore } from './database/AiAssetStore';
 import { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createRouter } from './router';
@@ -30,8 +30,9 @@ export const devAiHubPlugin = createBackendPlugin({
         scheduler: coreServices.scheduler,
         httpRouter: coreServices.httpRouter,
         urlReader: coreServices.urlReader,
+        discovery: coreServices.discovery,
       },
-      async init({ config, logger, database, scheduler, httpRouter, urlReader }) {
+      async init({ config, logger, database, scheduler, httpRouter, urlReader, discovery }) {
         const store = await AiAssetStore.create({ database });
 
         const providers: ProviderConfig[] = (
@@ -70,7 +71,8 @@ export const devAiHubPlugin = createBackendPlugin({
 
         await syncService.start();
 
-        const router = createRouter({ logger, store, syncService, providers });
+        const baseUrl = await discovery.getBaseUrl('dev-ai-hub');
+        const router = createRouter({ logger, store, syncService, providers, baseUrl });
 
         httpRouter.use(router);
 

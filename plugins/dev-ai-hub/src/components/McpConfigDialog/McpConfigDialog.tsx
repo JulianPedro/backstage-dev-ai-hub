@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import Collapse from '@mui/material/Collapse';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -16,11 +17,12 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StorageIcon from '@mui/icons-material/Storage';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useProviders } from '../../hooks';
-import type { AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface ToolConfig {
   tool: AiTool;
@@ -58,6 +60,15 @@ const TOOL_CONFIGS: ToolConfig[] = [
       mcpServers: { 'dev-ai-hub': { url } },
     }, null, 2),
   },
+  {
+    tool: 'cursor',
+    label: 'Cursor',
+    file: '.cursor/mcp.json',
+    description: 'Add to .cursor/mcp.json in your project root:',
+    buildConfig: url => JSON.stringify({
+      mcpServers: { 'dev-ai-hub': { type: 'http', url } },
+    }, null, 2),
+  },
 ];
 
 function providerLabel(target: string): string {
@@ -78,6 +89,7 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   const [baseUrl, setBaseUrl] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [proactiveEnabled, setProactiveEnabled] = useState(false);
+  const [manualExpanded, setManualExpanded] = useState(false);
 
   const { providers } = useProviders();
   const showProviderFilter = providers.length > 1;
@@ -240,57 +252,83 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
           </Tooltip>
         </Box>
 
-        {/* Config snippet */}
-        <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          {cfg.file}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 0.5 }}>
-          {cfg.description}
-        </Typography>
-        <Box sx={{ position: 'relative' }}>
-          <Box
-            component="pre"
+
+        {/* Manual config snippet — collapsed by default */}
+        <Box
+          onClick={() => setManualExpanded(v => !v)}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            userSelect: 'none',
+            py: 0.75,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Manual config — {cfg.file}
+          </Typography>
+          <ExpandMoreIcon
+            fontSize="small"
             sx={{
-              m: 0,
-              p: 2,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              backgroundColor: theme.palette.mode === 'dark' ? '#0d1117' : '#f6f8fa',
-              color: theme.palette.mode === 'dark' ? '#e6edf3' : '#24292f',
-              fontFamily: 'monospace',
-              fontSize: '0.8rem',
-              overflowX: 'auto',
-              whiteSpace: 'pre',
+              color: 'text.disabled',
+              transition: 'transform 0.2s ease',
+              transform: manualExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
             }}
-          >
-            {configSnippet}
-          </Box>
-          <Tooltip title={copiedSnippet ? 'Copied!' : 'Copy config'}>
-            <IconButton
-              size="small"
-              onClick={() => copySnippet(configSnippet)}
-              sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-                '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
-                },
-              }}
-            >
-              {copiedSnippet ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
+          />
         </Box>
 
-        <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 1.5 }}>
-          💡 Omit <code>?tool=</code> from the URL to receive assets for all AI tools.
-          {showProviderFilter && ' Omit ?provider= to receive assets from all repositories.'}
-          {' '}Proactive suggestions add <code>?proactive=true</code> and register the{' '}
-          <code>suggest_assets</code> tool and <code>check_for_assets</code> prompt.
-        </Typography>
+        <Collapse in={manualExpanded}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 0.5 }}>
+            {cfg.description}
+          </Typography>
+          <Box sx={{ position: 'relative' }}>
+            <Box
+              component="pre"
+              sx={{
+                m: 0,
+                p: 2,
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                backgroundColor: theme.palette.mode === 'dark' ? '#0d1117' : '#f6f8fa',
+                color: theme.palette.mode === 'dark' ? '#e6edf3' : '#24292f',
+                fontFamily: 'monospace',
+                fontSize: '0.8rem',
+                overflowX: 'auto',
+                whiteSpace: 'pre',
+              }}
+            >
+              {configSnippet}
+            </Box>
+            <Tooltip title={copiedSnippet ? 'Copied!' : 'Copy config'}>
+              <IconButton
+                size="small"
+                onClick={e => { e.stopPropagation(); copySnippet(configSnippet); }}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                  '&:hover': {
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
+                  },
+                }}
+              >
+                {copiedSnippet ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 1.5 }}>
+            💡 Omit <code>?tool=</code> from the URL to receive assets for all AI tools.
+            {showProviderFilter && ' Omit ?provider= to receive assets from all repositories.'}
+            {' '}Proactive suggestions add <code>?proactive=true</code> and register the{' '}
+            <code>suggest_assets</code> tool and <code>check_for_assets</code> prompt.
+          </Typography>
+        </Collapse>
       </DialogContent>
 
       <DialogActions>

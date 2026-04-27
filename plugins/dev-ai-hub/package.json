@@ -1,8 +1,12 @@
 {
-  "name": "@internal/plugin-dev-ai-hub",
+  "name": "@julianpedro/plugin-dev-ai-hub",
   "version": "0.1.0",
   "description": "Frontend plugin for Dev AI Hub",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JulianPedro/backstage-dev-ai-hub"
+  },
   "main": "src/index.ts",
   "types": "src/index.ts",
   "publishConfig": {
@@ -15,8 +19,18 @@
     ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
+  "files": [
+    "dist"
+  ],
   "backstage": {
-    "role": "frontend-plugin"
+    "role": "frontend-plugin",
+    "pluginId": "dev-ai-hub",
+    "pluginPackages": [
+      "@julianpedro/plugin-dev-ai-hub",
+      "@julianpedro/plugin-dev-ai-hub-backend",
+      "@julianpedro/plugin-dev-ai-hub-common",
+      "@julianpedro/plugin-dev-ai-hub-node"
+    ]
   },
   "scripts": {
     "start": "backstage-cli package start --config ../../app-config.dev.yaml",
@@ -29,10 +43,7 @@
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
-    "@backstage/core-components": "*",
-    "@backstage/core-plugin-api": "*",
-    "@backstage/frontend-plugin-api": "*",
-    "@internal/plugin-dev-ai-hub-common": "*",
+    "@julianpedro/plugin-dev-ai-hub-common": "^0.1.0",
     "@mui/icons-material": "^5.15.0",
     "@mui/material": "^5.15.0",
     "react-markdown": "^9.0.0",
@@ -56,6 +67,9 @@
     "react-router-dom": "^6.0.0"
   },
   "peerDependencies": {
+    "@backstage/core-components": ">=1.40.0",
+    "@backstage/core-plugin-api": ">=1.40.0",
+    "@backstage/frontend-plugin-api": ">=1.40.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0"

@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AssetCard } from './AssetCard';
-import type { AiAssetSummary } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAssetSummary } from '@julianpedro/plugin-dev-ai-hub-common';
 
 jest.mock('../ToolIcon', () => ({
   ToolIcon: ({ tool }: { tool: string }) => <span data-testid={`tool-icon-${tool}`} />,

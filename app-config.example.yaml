@@ -2,10 +2,10 @@
 # Add these sections to your Backstage instance's app-config.yaml
 
 # 1. Register the backend plugin in packages/backend/src/index.ts:
-#    backend.add(import('@internal/plugin-dev-ai-hub-backend'));
+#    backend.add(import('@julianpedro/plugin-dev-ai-hub-backend'));
 #
 # 2. Register the frontend plugin (New Frontend System) in packages/app/src/App.tsx:
-#    import devAiHub from '@internal/plugin-dev-ai-hub';
+#    import devAiHub from '@julianpedro/plugin-dev-ai-hub';
 #    app.addExtensions([devAiHub]);
 
 devAiHub:

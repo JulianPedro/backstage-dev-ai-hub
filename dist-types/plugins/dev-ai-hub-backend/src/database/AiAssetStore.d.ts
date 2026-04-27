@@ -1,5 +1,5 @@
 import { type DatabaseService } from '@backstage/backend-plugin-api';
-import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter } from '@julianpedro/plugin-dev-ai-hub-common';
 import type { AiAssetInput, SyncStatus } from '../types';
 export declare class AiAssetStore {
     private readonly db;
@@ -15,6 +15,11 @@ export declare class AiAssetStore {
     getAsset(id: string): Promise<AiAsset | null>;
     incrementInstallCount(id: string): Promise<void>;
     deleteAssetsNotIn(providerId: string, ids: string[]): Promise<void>;
+    /**
+     * Removes all assets and sync status for a provider in a single transaction.
+     * Called when a provider is no longer present in the Backstage config.
+     */
+    purgeProvider(providerId: string): Promise<void>;
     upsertSyncStatus(status: SyncStatus): Promise<void>;
     getSyncStatus(providerId: string): Promise<SyncStatus | null>;
     getAllSyncStatuses(): Promise<SyncStatus[]>;

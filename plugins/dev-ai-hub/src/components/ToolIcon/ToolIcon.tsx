@@ -2,7 +2,7 @@ import SvgIcon, { SvgIconProps } from '@mui/material/SvgIcon';
 import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import { siAnthropic, siGithub, siGooglegemini } from 'simple-icons';
-import type { AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 
 type SvgTool = Exclude<AiTool, 'all' | 'cursor'>;
 

@@ -1,8 +1,12 @@
 {
-  "name": "@internal/plugin-dev-ai-hub-common",
+  "name": "@julianpedro/plugin-dev-ai-hub-common",
   "version": "0.1.0",
   "description": "Common types and schemas for Dev AI Hub",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JulianPedro/backstage-dev-ai-hub"
+  },
   "main": "src/index.ts",
   "types": "src/index.ts",
   "publishConfig": {
@@ -15,8 +19,18 @@
     ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
+  "files": [
+    "dist"
+  ],
   "backstage": {
-    "role": "common-library"
+    "role": "common-library",
+    "pluginId": "dev-ai-hub",
+    "pluginPackages": [
+      "@julianpedro/plugin-dev-ai-hub",
+      "@julianpedro/plugin-dev-ai-hub-backend",
+      "@julianpedro/plugin-dev-ai-hub-common",
+      "@julianpedro/plugin-dev-ai-hub-node"
+    ]
   },
   "scripts": {
     "build": "backstage-cli package build",

@@ -1,4 +1,4 @@
-import type { AiAsset, AiAssetListResponse, AiHubProvider, AiHubStats, AssetListFilter } from '@internal/plugin-dev-ai-hub-common';
+import type { AiAsset, AiAssetListResponse, AiHubProvider, AiHubStats, AssetListFilter } from '@julianpedro/plugin-dev-ai-hub-common';
 export declare function useAssets(filter: AssetListFilter): {
     result: AiAssetListResponse | null;
     loading: boolean;

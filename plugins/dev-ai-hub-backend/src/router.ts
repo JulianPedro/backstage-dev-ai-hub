@@ -7,17 +7,19 @@ import type { AiAssetStore } from './database/AiAssetStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createMcpServer } from './service/McpServerService';
 import type { ProviderConfig, AssetListFilter } from './types';
-import type { AssetType } from '@internal/plugin-dev-ai-hub-common';
+import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface RouterOptions {
   logger: LoggerService;
   store: AiAssetStore;
   syncService: AiAssetSyncService;
   providers: ProviderConfig[];
+  /** Base URL of this plugin, e.g. http://backstage:7007/api/dev-ai-hub */
+  baseUrl: string;
 }
 
 export function createRouter(options: RouterOptions): express.Router {
-  const { store, syncService, providers } = options;
+  const { store, syncService, providers, baseUrl } = options;
   const router = express.Router();
 
   /** Active MCP sessions: sessionId → transport */
@@ -279,7 +281,7 @@ export function createRouter(options: RouterOptions): express.Router {
         options.logger.debug(`dev-ai-hub MCP: session ${newSessionId} closed`);
       };
 
-      const server = createMcpServer(store, toolFilter, providerFilter, providers, proactiveEnabled);
+      const server = createMcpServer(store, toolFilter, providerFilter, providers, proactiveEnabled, baseUrl);
       await server.connect(transport);
 
       await transport.handleRequest(req, res, req.body);

@@ -1147,26 +1147,23 @@
             <div class="step">
               <div class="step-num">1</div>
               <div>
-                <h4>Copy the plugin packages</h4>
-                <p>Drop the four packages into your Backstage monorepo's <code>plugins/</code> folder and run
-                  <code>yarn install</code>.
-                </p>
+                <h4>Install via npm</h4>
+                <p>Run <code>yarn workspace backend add @julianpedro/plugin-dev-ai-hub-backend</code> and <code>yarn workspace app add @julianpedro/plugin-dev-ai-hub</code> in your Backstage monorepo.</p>
               </div>
             </div>
             <div class="step">
               <div class="step-num">2</div>
               <div>
                 <h4>Register the backend</h4>
-                <p>Add <code>import('@internal/plugin-dev-ai-hub-backend')</code> to your
-                  <code>packages/backend/src/index.ts</code>.
-                </p>
+                <p>Add <code>backend.add(import('@julianpedro/plugin-dev-ai-hub-backend'))</code> to your
+                  <code>packages/backend/src/index.ts</code>.</p>
               </div>
             </div>
             <div class="step">
               <div class="step-num">3</div>
               <div>
                 <h4>Register the frontend</h4>
-                <p>Add the <code>DevAiHubPage</code> route and a sidebar item to your Backstage app.</p>
+                <p>Add <code>devAiHubPlugin</code> to the <code>features</code> array in your <code>createApp()</code>. Page, sidebar and API register automatically.</p>
               </div>
             </div>
             <div class="step">

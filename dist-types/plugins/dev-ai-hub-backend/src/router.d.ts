@@ -8,6 +8,8 @@ interface RouterOptions {
     store: AiAssetStore;
     syncService: AiAssetSyncService;
     providers: ProviderConfig[];
+    /** Base URL of this plugin, e.g. http://backstage:7007/api/dev-ai-hub */
+    baseUrl: string;
 }
 export declare function createRouter(options: RouterOptions): express.Router;
 export {};

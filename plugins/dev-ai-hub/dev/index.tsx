@@ -7,7 +7,7 @@ import type {
   AiHubProvider,
   AiHubStats,
   AssetListFilter,
-} from '@internal/plugin-dev-ai-hub-common';
+} from '@julianpedro/plugin-dev-ai-hub-common';
 
 const MOCK_ASSETS: AiAsset[] = [
   {

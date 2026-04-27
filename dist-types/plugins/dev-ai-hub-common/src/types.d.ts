@@ -42,6 +42,11 @@ export interface AiAsset {
     yamlRaw: string;
     /** Extra metadata stored from the envelope (e.g. resources for skills) */
     metadata?: Record<string, unknown>;
+    /**
+     * Content of bundled resource files for skills (path → file content).
+     * Only populated for assets of type `skill` that declare `resources` in the envelope.
+     */
+    resourcesContent?: Record<string, string>;
     /** Path of the .yaml file in the repository */
     yamlPath: string;
     /** Path of the .md file in the repository */

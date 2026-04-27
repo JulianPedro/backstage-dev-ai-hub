@@ -15,7 +15,7 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import HubIcon from '@mui/icons-material/Hub';
 import { Content, Header, Page } from '@backstage/core-components';
-import type { AssetType, AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
 import type { AssetFiltersValue } from '../AssetFilters';
