@@ -19,6 +19,8 @@ export interface DevAiHubApi {
   listAssets(filter?: AssetListFilter): Promise<AiAssetListResponse>;
   getAsset(id: string): Promise<AiAsset>;
   getAssetRaw(id: string): Promise<string>;
+  /** Returns the absolute URL for the raw markdown content endpoint. */
+  getRawUrl(id: string): Promise<string>;
   /** Returns the absolute URL for the download endpoint (zip for skills, md for others). */
   getDownloadUrl(id: string): Promise<string>;
   trackInstall(id: string): Promise<void>;
@@ -75,6 +77,11 @@ export class DevAiHubClient implements DevAiHubApi {
     );
     if (!response.ok) throw new Error(`Failed to fetch raw asset: ${response.status}`);
     return response.text();
+  }
+
+  async getRawUrl(id: string): Promise<string> {
+    const base = await this.baseUrl();
+    return `${base}/assets/${encodeURIComponent(id)}/raw`;
   }
 
   async getDownloadUrl(id: string): Promise<string> {

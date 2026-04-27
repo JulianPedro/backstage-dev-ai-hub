@@ -152,6 +152,10 @@ describe('AssetParser.isAssetFile', () => {
     'agents/my-agent.yaml',
     'skills/my-skill.yaml',
     'workflows/my-workflow.yaml',
+    '.github/instructions/my-rule.yaml',
+    '.github/agents/my-agent.yaml',
+    '.github/skills/my-skill.yaml',
+    '.github/workflows/my-workflow.yaml',
   ])('returns true for %s', filePath => {
     expect(AssetParser.isAssetFile(filePath)).toBe(true);
   });
@@ -169,6 +173,8 @@ describe('AssetParser.isAssetFile', () => {
   it('normalises backslashes (Windows paths)', () => {
     expect(AssetParser.isAssetFile('instructions\\my-rule.yaml')).toBe(true);
     expect(AssetParser.isAssetFile('agents\\my-agent.yaml')).toBe(true);
+    expect(AssetParser.isAssetFile('.github\\instructions\\my-rule.yaml')).toBe(true);
+    expect(AssetParser.isAssetFile('.github\\agents\\my-agent.yaml')).toBe(true);
   });
 });
 

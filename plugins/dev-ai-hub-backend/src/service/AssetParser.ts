@@ -97,14 +97,21 @@ export class AssetParser {
     return Buffer.from(`${providerId}:${normalized}`).toString('base64url');
   }
 
-  /** True if the file is in a known asset directory */
+  /** Known top-level directories that contain assets */
+  private static readonly ASSET_DIRS = [
+    'instructions/',
+    'agents/',
+    'skills/',
+    'workflows/',
+  ];
+
+  /** True if the file is in a known asset directory (root or .github/) */
   static isAssetFile(filePath: string): boolean {
     const normalized = filePath.replace(/\\/g, '/');
-    return (
-      normalized.startsWith('instructions/') ||
-      normalized.startsWith('agents/') ||
-      normalized.startsWith('skills/') ||
-      normalized.startsWith('workflows/')
+    return AssetParser.ASSET_DIRS.some(
+      dir =>
+        normalized.startsWith(dir) ||
+        normalized.startsWith(`.github/${dir}`),
     );
   }
 }
