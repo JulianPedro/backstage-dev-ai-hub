@@ -1,0 +1,58 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  id-token: write # Required for npm OIDC trusted publishing
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2 # v6.0.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0 # v6.3.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Enable Corepack & activate Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.13.0 --activate
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Generate type declarations
+        run: yarn tsc
+
+      - name: Build all packages
+        run: yarn build:all
+
+      - name: Fix plugin metadata
+        run: yarn backstage-cli repo fix --publish
+
+      - name: Publish dev-ai-hub-common
+        working-directory: plugins/dev-ai-hub-common
+        run: |
+          yarn pack -o package.tgz
+          npm publish package.tgz --access public
+
+      - name: Publish dev-ai-hub
+        working-directory: plugins/dev-ai-hub
+        run: |
+          yarn pack -o package.tgz
+          npm publish package.tgz --access public
+
+      - name: Publish dev-ai-hub-backend
+        working-directory: plugins/dev-ai-hub-backend
+        run: |
+          yarn pack -o package.tgz
+          npm publish package.tgz --access public

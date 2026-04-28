@@ -97,14 +97,16 @@ export class AssetParser {
     return Buffer.from(`${providerId}:${normalized}`).toString('base64url');
   }
 
-  /** True if the file is in a known asset directory */
+  /**
+   * True for any non-empty YAML file path anywhere in the repository.
+   * Asset validity is determined by parseYaml, which returns null for
+   * files that do not contain valid AI asset metadata.
+   */
   static isAssetFile(filePath: string): boolean {
     const normalized = filePath.replace(/\\/g, '/');
     return (
-      normalized.startsWith('instructions/') ||
-      normalized.startsWith('agents/') ||
-      normalized.startsWith('skills/') ||
-      normalized.startsWith('workflows/')
+      normalized.length > 0 &&
+      (normalized.endsWith('.yaml') || normalized.endsWith('.yml'))
     );
   }
 }
