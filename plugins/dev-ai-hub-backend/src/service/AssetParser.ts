@@ -97,21 +97,16 @@ export class AssetParser {
     return Buffer.from(`${providerId}:${normalized}`).toString('base64url');
   }
 
-  /** Known top-level directories that contain assets */
-  private static readonly ASSET_DIRS = [
-    'instructions/',
-    'agents/',
-    'skills/',
-    'workflows/',
-  ];
-
-  /** True if the file is in a known asset directory (root or .github/) */
+  /**
+   * True for any non-empty YAML file path anywhere in the repository.
+   * Asset validity is determined by parseYaml, which returns null for
+   * files that do not contain valid AI asset metadata.
+   */
   static isAssetFile(filePath: string): boolean {
     const normalized = filePath.replace(/\\/g, '/');
-    return AssetParser.ASSET_DIRS.some(
-      dir =>
-        normalized.startsWith(dir) ||
-        normalized.startsWith(`.github/${dir}`),
+    return (
+      normalized.length > 0 &&
+      (normalized.endsWith('.yaml') || normalized.endsWith('.yml'))
     );
   }
 }

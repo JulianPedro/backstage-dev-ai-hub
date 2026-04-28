@@ -156,15 +156,19 @@ describe('AssetParser.isAssetFile', () => {
     '.github/agents/my-agent.yaml',
     '.github/skills/my-skill.yaml',
     '.github/workflows/my-workflow.yaml',
+    'random/file.yaml',
+    'some/deeply/nested/path/asset.yaml',
+    'top-level.yaml',
+    'random/file.yml',
+    'some/deeply/nested/path/asset.yml',
+    'top-level.yml',
   ])('returns true for %s', filePath => {
     expect(AssetParser.isAssetFile(filePath)).toBe(true);
   });
 
   it.each([
-    'random/file.yaml',
     'README.md',
-    'instruction.yaml',
-    'some/instructions/nested.yaml',
+    'some/file.json',
     '',
   ])('returns false for %s', filePath => {
     expect(AssetParser.isAssetFile(filePath)).toBe(false);
@@ -175,6 +179,8 @@ describe('AssetParser.isAssetFile', () => {
     expect(AssetParser.isAssetFile('agents\\my-agent.yaml')).toBe(true);
     expect(AssetParser.isAssetFile('.github\\instructions\\my-rule.yaml')).toBe(true);
     expect(AssetParser.isAssetFile('.github\\agents\\my-agent.yaml')).toBe(true);
+    expect(AssetParser.isAssetFile('some\\deeply\\nested\\path\\asset.yaml')).toBe(true);
+    expect(AssetParser.isAssetFile('some\\deeply\\nested\\path\\asset.yml')).toBe(true);
   });
 });
 
