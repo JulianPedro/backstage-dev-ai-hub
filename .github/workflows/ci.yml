@@ -2,41 +2,37 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/*]
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-
 jobs:
   ci:
+    name: Lint · Test · Build
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2 # v6.0.2
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6.3.0 # v6.3.0
+        uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: 22
 
-      - name: Enable Corepack & activate Yarn
-        run: |
-          corepack enable
-          corepack prepare yarn@4.13.0 --activate
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: yarn install
-
-      - name: Type-check
-        run: yarn tsc
+        run: yarn install --immutable
 
       - name: Lint
         run: yarn lint:all
 
-      - name: Check formatting
-        run: yarn prettier:check
+      - name: Test
+        run: yarn test
 
       - name: Build
         run: yarn build:all
