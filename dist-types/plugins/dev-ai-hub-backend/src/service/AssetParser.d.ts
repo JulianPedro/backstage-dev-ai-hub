@@ -5,6 +5,8 @@ export interface ParsedAssetMeta {
     /** Resolved path of the .md content file within the repo tree */
     mdPath: string;
     yamlRaw: string;
+    /** False for bundle assets — .md is optional, not required */
+    requiresMd: boolean;
 }
 export declare class AssetParser {
     /**
@@ -18,6 +20,6 @@ export declare class AssetParser {
      */
     static buildAsset(parsed: ParsedAssetMeta, mdContent: string, providerId: string, repoUrl: string, branch: string, yamlFilePath: string, resourcesContent?: Record<string, string>): AiAssetInput;
     static buildId(providerId: string, yamlPath: string): string;
-    /** True if the file is in a known asset directory */
+    /** True if the file is in a known asset directory (including bundles/) */
     static isAssetFile(filePath: string): boolean;
 }

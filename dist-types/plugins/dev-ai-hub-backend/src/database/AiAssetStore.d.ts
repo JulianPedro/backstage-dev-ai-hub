@@ -24,6 +24,8 @@ export declare class AiAssetStore {
     getSyncStatus(providerId: string): Promise<SyncStatus | null>;
     getAllSyncStatuses(): Promise<SyncStatus[]>;
     getStats(): Promise<AiHubStats>;
+    /** Resolves raw bundle refs to BundleItem objects by looking up assets in the same provider. */
+    private resolveBundleItems;
     private rowToAssetSummary;
     private rowToAsset;
 }

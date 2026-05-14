@@ -1,5 +1,25 @@
-export type AssetType = 'instruction' | 'agent' | 'skill' | 'workflow';
+export type AssetType = 'instruction' | 'agent' | 'skill' | 'workflow' | 'bundle';
 export type AiTool = 'all' | 'github-copilot' | 'claude-code' | 'google-gemini' | 'cursor';
+export interface BundleItem {
+    ref: string;
+    assetId?: string;
+    name?: string;
+    label?: string;
+    type?: Exclude<AssetType, 'bundle'>;
+    description?: string;
+    tools?: AiTool[];
+}
+export interface McpCatalogEntry {
+    id: string;
+    name: string;
+    description?: string;
+    icon?: string;
+    type: 'http' | 'stdio';
+    url?: string;
+    command?: string;
+    args?: string[];
+    env?: Record<string, string>;
+}
 /** Lightweight summary returned by list endpoints — no markdown content. */
 export interface AiAssetSummary {
     id: string;
@@ -15,6 +35,8 @@ export interface AiAssetSummary {
     icon?: string;
     version: string;
     installCount: number;
+    /** Number of items in a bundle (only set for type === 'bundle'). */
+    itemCount?: number;
     syncedAt: string;
     createdAt: string;
     updatedAt: string;
@@ -47,6 +69,8 @@ export interface AiAsset {
      * Only populated for assets of type `skill` that declare `resources` in the envelope.
      */
     resourcesContent?: Record<string, string>;
+    /** Resolved bundle items — only populated for type === 'bundle'. */
+    items?: BundleItem[];
     /** Path of the .yaml file in the repository */
     yamlPath: string;
     /** Path of the .md file in the repository */

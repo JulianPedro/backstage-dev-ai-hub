@@ -2,7 +2,7 @@ import express from 'express';
 import type { LoggerService } from '@backstage/backend-plugin-api';
 import type { AiAssetStore } from './database/AiAssetStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
-import type { ProviderConfig } from './types';
+import type { ProviderConfig, McpCatalogEntry } from './types';
 interface RouterOptions {
     logger: LoggerService;
     store: AiAssetStore;
@@ -10,6 +10,8 @@ interface RouterOptions {
     providers: ProviderConfig[];
     /** Base URL of this plugin, e.g. http://backstage:7007/api/dev-ai-hub */
     baseUrl: string;
+    /** MCP servers from devAiHub.mcpCatalog config */
+    mcpCatalog?: McpCatalogEntry[];
 }
 export declare function createRouter(options: RouterOptions): express.Router;
 export {};

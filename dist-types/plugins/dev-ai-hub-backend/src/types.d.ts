@@ -1,4 +1,5 @@
-import type { AiAsset, AssetListFilter } from '@julianpedro/plugin-dev-ai-hub-common';
+import type { AiAsset, AssetListFilter, McpCatalogEntry } from '@julianpedro/plugin-dev-ai-hub-common';
+export type { McpCatalogEntry };
 export interface ProviderConfig {
     id: string;
     type: 'github' | 'bitbucket' | 'azure-devops' | 'gitlab' | 'git';
@@ -19,8 +20,12 @@ export interface ProviderConfig {
         types?: string[];
     };
 }
-export interface AiAssetInput extends Omit<AiAsset, 'id' | 'syncedAt' | 'createdAt' | 'updatedAt' | 'installCount'> {
+export interface AiAssetInput extends Omit<AiAsset, 'id' | 'syncedAt' | 'createdAt' | 'updatedAt' | 'installCount' | 'items'> {
     id: string;
+    /** Raw item refs for bundle-type assets. Stored in DB; resolved lazily at read time. */
+    bundleRefs?: Array<{
+        ref: string;
+    }>;
 }
 export interface SyncStatus {
     providerId: string;
