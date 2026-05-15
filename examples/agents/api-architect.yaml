@@ -22,3 +22,27 @@ installPath: ".github/agents/api-architect.agent.md"  # Use for all tools
 #installPaths:                                      # Use for specific tools
 #  claude-code: ".claude/rules/api-architect.agent.md"
 #  github-copilot: ".github/agents/api-architect.agent.md"
+
+# Optional - Help
+help: |
+  ## How to use
+
+  This agent turns your AI assistant into an **API Architect** that guides you
+  through designing and generating production-ready API integration code.
+
+  ### Workflow
+
+  1. Install the agent file into your project.
+  2. Start a conversation — the agent will list all required and optional API
+     aspects and ask for your input (language, endpoint URL, REST methods, DTOs,
+     resiliency patterns, etc.).
+  3. Review the collected requirements.
+  4. Say **"generate"** to trigger full code generation across three layers:
+     - **Service** — handles raw REST requests/responses
+     - **Manager** — adds abstraction for configuration and testing
+     - **Resilience** — adds circuit breakers, bulkheads, throttling, and backoff
+
+  ### What you get
+
+  Fully implemented, working code for all three layers in your chosen language —
+  no stubs, no templates, no placeholders.
