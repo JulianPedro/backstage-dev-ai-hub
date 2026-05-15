@@ -1,4 +1,4 @@
-import type { ElementType } from 'react';
+import { type ElementType, useState } from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -10,9 +10,12 @@ import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
 import AppsIcon from '@mui/icons-material/Apps';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AssetType, AiTool, AiHubProvider } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
+import { devAiHubTranslationRef } from '../../translation';
 
 const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Icon: ElementType }[] = [
   { value: 'all', label: 'All', color: '#64748b', Icon: AppsIcon },
@@ -20,6 +23,7 @@ const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Ico
   { value: 'agent', label: 'Agents', color: '#7C3AED', Icon: SmartToyIcon },
   { value: 'skill', label: 'Skills', color: '#059669', Icon: BuildIcon },
   { value: 'workflow', label: 'Workflows', color: '#D97706', Icon: AccountTreeIcon },
+  { value: 'bundle',   label: 'Bundles',   color: '#8B5CF6', Icon: Inventory2Icon },
 ];
 
 const AI_TOOLS: { value: AiTool | 'all'; label: string }[] = [
@@ -45,10 +49,25 @@ interface AssetFiltersProps {
   providers?: AiHubProvider[];
 }
 
+const TAG_LIMIT = 10;
+
 export function AssetFilters({ value, onChange, availableTags = [], providers }: AssetFiltersProps) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
   const selectedType = value.types.length === 1 ? value.types[0] : 'all';
   const selectedTool = value.tools.length === 1 ? value.tools[0] : 'all';
   const showProviderFilter = providers && providers.length > 1;
+
+  // Selected tags always appear first so they're never hidden when collapsed
+  const sortedTags = [...availableTags].sort((a, b) => {
+    const aSelected = value.tags.includes(a);
+    const bSelected = value.tags.includes(b);
+    if (aSelected && !bSelected) return -1;
+    if (!aSelected && bSelected) return 1;
+    return 0;
+  });
+  const visibleTags = tagsExpanded ? sortedTags : sortedTags.slice(0, TAG_LIMIT);
+  const hiddenCount = sortedTags.length - TAG_LIMIT;
 
   const handleTypeClick = (type: AssetType | 'all') => {
     onChange({ ...value, types: type === 'all' ? [] : [type] });
@@ -74,7 +93,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
       <TextField
         fullWidth
         size="small"
-        placeholder="Search assets by name, description or content…"
+        placeholder={t('assetFilters.searchPlaceholder')}
         value={value.search}
         onChange={e => onChange({ ...value, search: e.target.value })}
         InputProps={{
@@ -95,32 +114,33 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
         {/* Type filter */}
         <Box>
           <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            Type
+            {t('assetFilters.typeHeader')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-            {ASSET_TYPES.map(t => {
-              const isSelected = selectedType === t.value;
-              const TypeIcon = t.Icon;
+            {ASSET_TYPES.map(typ => {
+              const isSelected = selectedType === typ.value;
+              const TypeIcon = typ.Icon;
+              const label = typ.value === 'all' ? t('assetFilters.typeAll') : typ.label;
               return (
                 <Chip
-                  key={t.value}
-                  icon={<TypeIcon sx={{ fontSize: '0.9rem !important', color: isSelected ? '#fff !important' : t.color }} />}
-                  label={t.label}
+                  key={typ.value}
+                  icon={<TypeIcon sx={{ fontSize: '0.9rem !important', color: isSelected ? '#fff !important' : typ.color }} />}
+                  label={label}
                   size="small"
                   clickable
-                  onClick={() => handleTypeClick(t.value as AssetType | 'all')}
+                  onClick={() => handleTypeClick(typ.value as AssetType | 'all')}
                   sx={{
                     fontWeight: 600,
                     fontSize: '0.75rem',
                     borderRadius: 2,
                     border: '1.5px solid',
-                    borderColor: isSelected ? t.color : `${t.color}60`,
-                    backgroundColor: isSelected ? t.color : 'transparent',
-                    color: isSelected ? '#fff' : t.color,
+                    borderColor: isSelected ? typ.color : `${typ.color}60`,
+                    backgroundColor: isSelected ? typ.color : 'transparent',
+                    color: isSelected ? '#fff' : typ.color,
                     transition: 'all 0.15s ease',
                     '&:hover': {
-                      backgroundColor: isSelected ? t.color : `${t.color}18`,
-                      borderColor: t.color,
+                      backgroundColor: isSelected ? typ.color : `${typ.color}18`,
+                      borderColor: typ.color,
                     },
                   }}
                 />
@@ -132,22 +152,23 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
         {/* AI Tool filter */}
         <Box>
           <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            AI Tool
+            {t('assetFilters.aiToolHeader')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-            {AI_TOOLS.map(t => {
-              const isSelected = selectedTool === t.value;
-              const iconEl = t.value !== 'all'
-                ? <ToolIcon tool={t.value as AiTool} branded={!isSelected} sx={{ fontSize: '0.85rem !important', color: isSelected ? 'background.paper' : 'inherit' }} />
+            {AI_TOOLS.map(tool => {
+              const isSelected = selectedTool === tool.value;
+              const toolLabel = tool.value === 'all' ? t('assetFilters.allTools') : tool.label;
+              const iconEl = tool.value !== 'all'
+                ? <ToolIcon tool={tool.value as AiTool} branded={!isSelected} sx={{ fontSize: '0.85rem !important', color: isSelected ? 'background.paper' : 'inherit' }} />
                 : undefined;
               return (
                 <Chip
-                  key={t.value}
+                  key={tool.value}
                   icon={iconEl}
-                  label={t.label}
+                  label={toolLabel}
                   size="small"
                   clickable
-                  onClick={() => handleToolClick(t.value as AiTool | 'all')}
+                  onClick={() => handleToolClick(tool.value as AiTool | 'all')}
                   sx={{
                     fontWeight: 600,
                     fontSize: '0.75rem',
@@ -172,12 +193,12 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
         {showProviderFilter && (
           <Box>
             <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Provider
+              {t('assetFilters.providerHeader')}
             </Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
               <Chip
                 icon={<AppsIcon sx={{ fontSize: '0.9rem !important' }} />}
-                label="All"
+                label={t('assetFilters.typeAll')}
                 size="small"
                 clickable
                 onClick={() => handleProviderClick(undefined)}
@@ -232,10 +253,10 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
       {availableTags.length > 0 && (
         <Box>
           <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            Tags
+            {t('assetFilters.tagsHeader')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-            {availableTags.map(tag => (
+            {visibleTags.map(tag => (
               <Chip
                 key={tag}
                 label={`#${tag}`}
@@ -253,6 +274,42 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
                 }}
               />
             ))}
+            {!tagsExpanded && hiddenCount > 0 && (
+              <Chip
+                label={t('assetFilters.tagsShowMore', { count: hiddenCount })}
+                size="small"
+                clickable
+                onClick={() => setTagsExpanded(true)}
+                sx={{
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  borderRadius: 1.5,
+                  backgroundColor: 'transparent',
+                  color: 'text.disabled',
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  '&:hover': { color: 'text.secondary', borderColor: 'text.secondary' },
+                }}
+              />
+            )}
+            {tagsExpanded && availableTags.length > TAG_LIMIT && (
+              <Chip
+                label={t('assetFilters.tagsShowLess')}
+                size="small"
+                clickable
+                onClick={() => setTagsExpanded(false)}
+                sx={{
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  borderRadius: 1.5,
+                  backgroundColor: 'transparent',
+                  color: 'text.disabled',
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  '&:hover': { color: 'text.secondary', borderColor: 'text.secondary' },
+                }}
+              />
+            )}
           </Box>
         </Box>
       )}

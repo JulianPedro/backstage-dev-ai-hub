@@ -10,15 +10,20 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AiAssetSummary, AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
+import { devAiHubTranslationRef } from '../../translation';
 
 const POPULAR_THRESHOLD = 5;
-const NEW_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+const NEW_DAYS_MS     = 14 * 24 * 60 * 60 * 1000;
+const UPDATED_DAYS_MS =  7 * 24 * 60 * 60 * 1000;
 
 const TOOL_LABELS: Record<AiTool, string> = {
   'all':            'Universal',
@@ -33,21 +38,25 @@ const TYPE_CONFIG: Record<AssetType, { label: string; color: string; Icon: Eleme
   agent:       { label: 'Agent',       color: '#7C3AED', Icon: SmartToyIcon },
   skill:       { label: 'Skill',       color: '#059669', Icon: BuildIcon },
   workflow:    { label: 'Workflow',    color: '#D97706', Icon: AccountTreeIcon },
+  bundle:      { label: 'Bundle',      color: '#8B5CF6', Icon: Inventory2Icon },
 };
 
 interface AssetCardProps {
   asset: AiAssetSummary;
   onView: (id: string) => void;
   onInstall: (id: string) => void;
+  onHelp?: (id: string) => void;
 }
 
-export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
+export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const theme = useTheme();
   const isDark = (theme.palette as any).mode === 'dark' || (theme.palette as any).type === 'dark';
   const cfg = TYPE_CONFIG[asset.type];
   const TypeIcon = cfg.Icon;
   const isPopular = asset.installCount >= POPULAR_THRESHOLD;
-  const isNew = Date.now() - new Date(asset.updatedAt).getTime() < NEW_DAYS_MS;
+  const isNew     = Date.now() - new Date(asset.createdAt).getTime() < NEW_DAYS_MS;
+  const isUpdated = !isNew && Date.now() - new Date(asset.updatedAt).getTime() < UPDATED_DAYS_MS;
 
   return (
     <Card
@@ -104,7 +113,7 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
               </Typography>
               {isNew && (
                 <Chip
-                  label="New"
+                  label={t('assetCard.newBadge')}
                   size="small"
                   sx={{
                     height: 18,
@@ -112,9 +121,27 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
                     fontWeight: 700,
                     backgroundColor: alpha('#059669', isDark ? 0.25 : 0.14),
                     backdropFilter: 'blur(8px)',
-                    color: isDark ? '#fff' : '#059669',
+                    color: isDark ? '#6ee7b7' : '#059669',
                     border: '1px solid',
                     borderColor: alpha('#059669', isDark ? 0.5 : 0.3),
+                    borderRadius: 1,
+                    flexShrink: 0,
+                    '& .MuiChip-label': { px: '6px' },
+                  }}
+                />
+              )}
+              {isUpdated && (
+                <Chip
+                  label={t('assetCard.updatedBadge')}
+                  size="small"
+                  sx={{
+                    height: 18,
+                    fontSize: '0.6rem',
+                    fontWeight: 700,
+                    backgroundColor: alpha('#D97706', isDark ? 0.25 : 0.12),
+                    color: isDark ? '#fcd34d' : '#D97706',
+                    border: '1px solid',
+                    borderColor: alpha('#D97706', isDark ? 0.5 : 0.3),
                     borderRadius: 1,
                     flexShrink: 0,
                     '& .MuiChip-label': { px: '6px' },
@@ -132,6 +159,7 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
         <Typography
           variant="caption"
           color="text.secondary"
+          title={asset.description}
           sx={{
             mb: 1,
             display: '-webkit-box',
@@ -196,7 +224,9 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
       <CardActions sx={{ px: 1.5, py: 1, justifyContent: 'space-between', mt: 'auto', borderTop: '1px solid', borderColor: 'divider' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
-            v{asset.version} · {asset.author}
+            {asset.type === 'bundle' && asset.itemCount !== undefined
+              ? t('assetCard.bundleFooter', { count: asset.itemCount, author: asset.author })
+              : t('assetCard.versionFooter', { version: asset.version, author: asset.author })}
           </Typography>
           {asset.installCount > 0 && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
@@ -210,16 +240,23 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
           )}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.25 }}>
-          <Tooltip title="Install in editor">
+          <Tooltip title={t('assetCard.installTooltip')}>
             <IconButton size="small" onClick={() => onInstall(asset.id)} color="primary">
               <DownloadIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="View details">
+          <Tooltip title={t('assetCard.detailsTooltip')}>
             <IconButton size="small" onClick={() => onView(asset.id)}>
               <OpenInNewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          {asset.helpText && onHelp && (
+            <Tooltip title={t('assetCard.helpTooltip')}>
+              <IconButton size="small" onClick={() => onHelp(asset.id)}>
+                <HelpOutlineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </CardActions>
     </Card>

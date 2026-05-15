@@ -12,6 +12,13 @@ function toSlug(name: string): string {
  * Priority: installPaths[tool] > installPath > convention below.
  */
 const CONVENTIONS: Record<AssetType, Record<AiTool | 'default', (name: string) => string>> = {
+  bundle: {
+    'claude-code': () => '',
+    'github-copilot': () => '',
+    'google-gemini': () => '',
+    'cursor': () => '',
+    'all': () => '', 'default': () => '',
+  },
   instruction: {
     'claude-code':    name => `.claude/rules/${name}.md`,
     'github-copilot': name => `.github/instructions/${name}.instructions.md`,
@@ -82,6 +89,9 @@ export function getInstallPathsForAsset(
   name: string,
   overrides?: InstallPathOverrides,
 ): Record<string, string> {
+  // Bundles have no single install path — they're composed of individual items
+  if (type === 'bundle') return {};
+
   const ALL_TOOLS: AiTool[] = ['claude-code', 'github-copilot', 'google-gemini', 'cursor'];
   const resolvedTools = tools.includes('all') ? ALL_TOOLS : tools;
 

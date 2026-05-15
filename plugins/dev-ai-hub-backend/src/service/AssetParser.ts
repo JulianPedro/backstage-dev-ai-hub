@@ -9,6 +9,8 @@ export interface ParsedAssetMeta {
   /** Resolved path of the .md content file within the repo tree */
   mdPath: string;
   yamlRaw: string;
+  /** False for bundle assets — .md is optional, not required */
+  requiresMd: boolean;
 }
 
 export class AssetParser {
@@ -34,6 +36,9 @@ export class AssetParser {
 
     const meta = result.data;
 
+    // Bundles don't require a .md file — they describe a collection, not content
+    const requiresMd = meta.type !== 'bundle';
+
     // Resolve .md path: use the `content` field, or fall back to <same-name>.md
     const mdReference =
       meta.content ?? `${path.basename(yamlFilePath, '.yaml')}.md`;
@@ -42,7 +47,7 @@ export class AssetParser {
       mdReference,
     );
 
-    return { meta, mdPath, yamlRaw: yamlContent };
+    return { meta, mdPath, yamlRaw: yamlContent, requiresMd };
   }
 
   /**
@@ -66,6 +71,10 @@ export class AssetParser {
     if ((meta as any).mcpServers) metadata.mcpServers = (meta as any).mcpServers;
     if ((meta as any).steps) metadata.steps = (meta as any).steps;
 
+    const bundleRefs = meta.type === 'bundle' && (meta as any).items
+      ? ((meta as any).items as Array<{ ref: string }>)
+      : undefined;
+
     return {
       id: AssetParser.buildId(providerId, yamlFilePath),
       providerId,
@@ -83,7 +92,9 @@ export class AssetParser {
       content: mdContent,
       yamlRaw: parsed.yamlRaw,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+      helpText: meta.help,
       resourcesContent,
+      bundleRefs,
       yamlPath: yamlFilePath,
       mdPath: parsed.mdPath,
       repoUrl,
@@ -97,14 +108,15 @@ export class AssetParser {
     return Buffer.from(`${providerId}:${normalized}`).toString('base64url');
   }
 
-  /** True if the file is in a known asset directory */
+  /** True if the file is in a known asset directory (including bundles/) */
   static isAssetFile(filePath: string): boolean {
     const normalized = filePath.replace(/\\/g, '/');
     return (
       normalized.startsWith('instructions/') ||
       normalized.startsWith('agents/') ||
       normalized.startsWith('skills/') ||
-      normalized.startsWith('workflows/')
+      normalized.startsWith('workflows/') ||
+      normalized.startsWith('bundles/')
     );
   }
 }

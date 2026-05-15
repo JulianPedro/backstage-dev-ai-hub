@@ -7,6 +7,7 @@ import type {
   AiHubProvider,
   AiHubStats,
   AssetListFilter,
+  McpCatalogEntry,
 } from '@julianpedro/plugin-dev-ai-hub-common';
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -134,6 +135,27 @@ export function useStats() {
   }, [api]);
 
   return { stats, loading, error };
+}
+
+export function useMcpCatalog() {
+  const api = useApi(devAiHubApiRef);
+  const [catalog, setCatalog] = useState<McpCatalogEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    api
+      .getMcpCatalog()
+      .then(data => {
+        setCatalog(data);
+        setError(null);
+      })
+      .catch(err => setError(err))
+      .finally(() => setLoading(false));
+  }, [api]);
+
+  return { catalog, loading, error };
 }
 
 export function useCopyToClipboard() {

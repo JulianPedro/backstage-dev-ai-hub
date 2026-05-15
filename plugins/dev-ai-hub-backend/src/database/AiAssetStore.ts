@@ -52,6 +52,7 @@ export class AiAssetStore {
       metadata: input.metadata ? JSON.stringify(input.metadata) : null,
       resources_content: input.resourcesContent ? JSON.stringify(input.resourcesContent) : null,
       bundle_items: input.bundleRefs ? JSON.stringify(input.bundleRefs) : null,
+      help_text: input.helpText ?? null,
       yaml_path: input.yamlPath,
       md_path: input.mdPath,
       repo_url: input.repoUrl,
@@ -112,7 +113,7 @@ export class AiAssetStore {
 
     const rows = await query
       .select('id', 'provider_id', 'name', 'label', 'description', 'type', 'tools', 'tags',
-              'author', 'icon', 'version', 'install_count', 'bundle_items', 'synced_at', 'created_at', 'updated_at')
+              'author', 'icon', 'version', 'install_count', 'bundle_items', 'help_text', 'synced_at', 'created_at', 'updated_at')
       .orderByRaw("CASE WHEN type = 'bundle' THEN 0 ELSE 1 END, name ASC")
       .limit(pageSize)
       .offset((page - 1) * pageSize);
@@ -344,6 +345,7 @@ export class AiAssetStore {
       version: row.version as string,
       installCount: (row.install_count as number) ?? 0,
       itemCount,
+      helpText: (row.help_text as string | null) ?? undefined,
       syncedAt: row.synced_at as string,
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
@@ -375,6 +377,7 @@ export class AiAssetStore {
       resourcesContent: row.resources_content
         ? JSON.parse(row.resources_content as string)
         : undefined,
+      helpText: (row.help_text as string | null) ?? undefined,
       yamlPath: row.yaml_path as string,
       mdPath: row.md_path as string,
       repoUrl: row.repo_url as string,
