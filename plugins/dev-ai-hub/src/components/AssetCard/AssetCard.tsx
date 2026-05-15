@@ -17,7 +17,8 @@ import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
-import type { AiAssetSummary, AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
+import StorageIcon from '@mui/icons-material/Storage';
+import type { AiAssetSummary, AssetType, AiTool, McpCatalogEntry, McpRequirement } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import { devAiHubTranslationRef } from '../../translation';
 
@@ -41,14 +42,24 @@ const TYPE_CONFIG: Record<AssetType, { label: string; color: string; Icon: Eleme
   bundle:      { label: 'Bundle',      color: '#8B5CF6', Icon: Inventory2Icon },
 };
 
+function resolveMcp(req: McpRequirement, catalog: McpCatalogEntry[]): { name: string; icon?: string } {
+  const entry = catalog.find(e => e.id === req.id);
+  return {
+    name: req.name ?? entry?.name ?? req.id,
+    icon: req.icon ?? entry?.icon,
+  };
+}
+
 interface AssetCardProps {
   asset: AiAssetSummary;
   onView: (id: string) => void;
   onInstall: (id: string) => void;
   onHelp?: (id: string) => void;
+  onOpenMcpCatalog?: () => void;
+  mcpCatalog?: McpCatalogEntry[];
 }
 
-export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) {
+export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, mcpCatalog = [] }: AssetCardProps) {
   const { t } = useTranslationRef(devAiHubTranslationRef);
   const theme = useTheme();
   const isDark = (theme.palette as any).mode === 'dark' || (theme.palette as any).type === 'dark';
@@ -217,6 +228,53 @@ export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) 
                 +{asset.tags.length - 3}
               </Typography>
             )}
+          </Box>
+        )}
+
+        {/* Required MCPs — circular icon-only badges, below tags */}
+        {asset.mcps && asset.mcps.length > 0 && (
+          <Box sx={{ mt: 0.75, mb: 1 }}>
+            <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', mb: 0.5 }}>
+              {t('assetCard.mcpsRequired')}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {asset.mcps.map(req => {
+                const { name, icon } = resolveMcp(req, mcpCatalog);
+                return (
+                  <Box
+                    key={req.id}
+                    title={name}
+                    onClick={onOpenMcpCatalog}
+                    sx={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      backgroundColor: 'action.hover',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      overflow: 'hidden',
+                      cursor: onOpenMcpCatalog ? 'pointer' : 'default',
+                      transition: 'background-color 0.15s ease',
+                      '&:hover': onOpenMcpCatalog ? { backgroundColor: 'action.selected' } : {},
+                    }}
+                  >
+                    {icon ? (
+                      <Box
+                        component="img"
+                        src={icon}
+                        alt={name}
+                        sx={{ width: 18, height: 18, objectFit: 'contain' }}
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <StorageIcon sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
           </Box>
         )}
       </CardContent>

@@ -93,6 +93,9 @@ export class AssetParser {
       yamlRaw: parsed.yamlRaw,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       helpText: meta.help,
+      mcps: meta.mcps?.map(entry =>
+        typeof entry === 'string' ? { id: entry } : { id: entry.id, name: entry.name, icon: entry.icon },
+      ),
       resourcesContent,
       bundleRefs,
       yamlPath: yamlFilePath,

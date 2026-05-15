@@ -338,6 +338,8 @@ export function DevAiHubPage() {
                     onView={handleViewAsset}
                     onInstall={handleInstallAsset}
                     onHelp={handleHelpAsset}
+                    onOpenMcpCatalog={() => setMcpDialogOpen(true)}
+                    mcpCatalog={catalog}
                   />
                 </Grid>
               ))}

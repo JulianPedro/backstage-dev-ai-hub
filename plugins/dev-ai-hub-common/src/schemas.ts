@@ -45,6 +45,13 @@ export const AiAssetFrontmatterSchema = z
     items: z.array(z.object({ ref: z.string() })).optional(),
     // usage guide — markdown shown when the user clicks the help button
     help: z.string().optional(),
+    // MCP servers required by this agent/skill
+    mcps: z.array(
+      z.union([
+        z.string(),
+        z.object({ id: z.string(), name: z.string().optional(), icon: z.string().optional() }),
+      ]),
+    ).optional(),
   })
   .passthrough();
 

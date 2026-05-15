@@ -24,6 +24,15 @@ export interface McpCatalogEntry {
   env?: Record<string, string>;
 }
 
+/** A single MCP server requirement declared in the asset envelope. */
+export interface McpRequirement {
+  id: string;
+  /** Display name override — shown when the server is not in the MCP catalog. */
+  name?: string;
+  /** URL to a PNG icon for this MCP server. */
+  icon?: string;
+}
+
 /** Lightweight summary returned by list endpoints — no markdown content. */
 export interface AiAssetSummary {
   id: string;
@@ -43,6 +52,8 @@ export interface AiAssetSummary {
   itemCount?: number;
   /** Markdown usage guide defined in the YAML envelope. Present only when the author provided it. */
   helpText?: string;
+  /** MCP servers required by this asset (only set for agent/skill types). */
+  mcps?: McpRequirement[];
   syncedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -73,6 +84,8 @@ export interface AiAsset {
   metadata?: Record<string, unknown>;
   /** Markdown usage guide defined in the YAML envelope. Present only when the author provided it. */
   helpText?: string;
+  /** MCP servers required by this asset (only set for agent/skill types). */
+  mcps?: McpRequirement[];
   /**
    * Content of bundled resource files for skills (path → file content).
    * Only populated for assets of type `skill` that declare `resources` in the envelope.

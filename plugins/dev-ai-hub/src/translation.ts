@@ -12,6 +12,7 @@ export const devAiHubTranslationRef = createTranslationRef({
       installTooltip: 'Install in editor',
       detailsTooltip: 'View details',
       helpTooltip: 'Usage guide',
+      mcpsRequired: 'Required MCPs',
       bundleFooter: '{{count}} assets · {{author}}',
       versionFooter: 'v{{version}} · {{author}}',
       moreTags: '+{{count}}',

@@ -6,6 +6,7 @@ export default {
   'assetCard.installTooltip': 'Instalar en el editor',
   'assetCard.detailsTooltip': 'Ver detalles',
   'assetCard.helpTooltip': 'Guía de uso',
+  'assetCard.mcpsRequired': 'MCPs requeridos',
   'assetCard.bundleFooter': '{{count}} assets · {{author}}',
   'assetCard.versionFooter': 'v{{version}} · {{author}}',
   'assetCard.moreTags': '+{{count}}',
