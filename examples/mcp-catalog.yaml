@@ -1,0 +1,29 @@
+# A catalog of pre-configured external MCP servers (Jira, Figma, GitHub, etc.) accessible from the dialog. The catalog is managed in the Git provider repository.
+#
+# How it works:
+#
+# File mcp-catalog.yaml is placed at the root of the provider repository (same repo as the assets).
+# The "Configure MCP Server" dialog has a new "MCP Catalog" tab showing each entry with its name, description, type badge, and install buttons.
+# For http type entries, "Install in VSCode" and "Install in Cursor" buttons appear for one-click install.
+# For stdio type entries, the command is shown (manual config required).
+
+servers:
+  - id: jira
+    name: "Jira MCP"
+    description: "Manage Jira issues from your AI tool."
+    icon: "https://img.icons8.com/color/48/jira.png"
+    type: http
+    url: "https://mcp.atlassian.com/jira"
+
+  - id: github
+    name: "Github MCP"
+    description: "Connect with Github."
+    icon: "https://img.icons8.com/fluency/48/github.png"
+    type: http
+    url: "https://api.githubcopilot.com/mcp/"
+
+  - id: filesystem
+    name: "Filesystem MCP"
+    type: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]

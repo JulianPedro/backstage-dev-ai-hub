@@ -15,7 +15,8 @@
   <meta name="description"
     content="A centralized hub for AI assets — Instructions, Agents, Skills, and Workflows — for GitHub Copilot, Claude Code, Google Gemini, Cursor and more." />
   <meta property="og:title" content="Dev AI Hub — Backstage Plugin" />
-  <meta property="og:description" content="Centralized AI assets for your engineering team, embedded in Backstage." />
+  <meta property="og:description" 
+    content="A centralized hub for AI assets — Instructions, Agents, Skills, Workflows, and Bundles — for GitHub Copilot, Claude Code, Google Gemini, Cursor and more. Includes an embedded MCP server and MCP Catalog." />
   <meta property="og:type" content="website" />
   <link rel="icon" type="image/png" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
@@ -890,8 +891,8 @@
         <span class="grad">One Hub.</span>
       </h1>
       <p class="hero-desc">
-        A centralized hub for AI Instructions, Agents, Skills and Workflows — synced from Git, served via MCP, and
-        available to every AI tool your team uses.
+        A centralized hub for AI Instructions, Agents, Skills, Workflows and Bundles — synced from Git, served via MCP,
+        and available to every AI tool your team uses.
       </p>
       <div class="hero-actions">
         <a href="https://github.com/JulianPedro/backstage-dev-ai-hub" class="btn-primary" target="_blank"
@@ -1005,13 +1006,27 @@
           <div class="feature-icon" style="background: rgba(239,68,68,0.15);">🔍</div>
           <h3>Rich UI</h3>
           <p>Browse, search and filter assets by type, tool and tags. Markdown preview, raw YAML, metadata — all in one
-            panel.</p>
+            panel. "New" and "Updated" badges keep your team informed of fresh content.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon" style="background: rgba(139,92,246,0.15);">🗄️</div>
           <h3>Backstage Native</h3>
           <p>Uses Backstage database service with automatic migrations. SQLite for development, PostgreSQL for
             production. Zero manual setup.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(6,182,212,0.12);">🗂️</div>
+          <h3>MCP Server Catalog</h3>
+          <p>Curate a list of third-party MCP servers in a <code
+              style="font-family:'JetBrains Mono',monospace;font-size:0.85em;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">mcp-catalog.yaml</code>
+            file in your assets repo. One-click install for VSCode and Cursor — no Backstage deploy needed.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(234,179,8,0.15);">🌐</div>
+          <h3>Internationalization</h3>
+          <p>All UI strings are translatable via Backstage's native i18n system. Included locales: English, Brazilian
+            Portuguese and Spanish. Integrators can add extra languages in <code
+              style="font-family:'JetBrains Mono',monospace;font-size:0.85em;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">App.tsx</code>.</p>
         </div>
       </div>
     </div>
@@ -1023,9 +1038,9 @@
       <div class="asset-types-inner">
         <div>
           <p class="section-label">Asset Types</p>
-          <h2 class="section-title">Four types of AI assets</h2>
-          <p class="section-desc" style="margin-bottom:0">Each asset is two files: a YAML envelope with metadata and a
-            pure Markdown file with the content your AI tool consumes.</p>
+          <h2 class="section-title">Five types of AI assets</h2>
+          <p class="section-desc" style="margin-bottom:0">Each asset is a YAML envelope plus a Markdown file. Bundles
+            group multiple assets into a single installable unit with a step-by-step wizard.</p>
         </div>
         <div class="asset-cards-list">
           <div class="asset-type-card">
@@ -1054,6 +1069,14 @@
             <div>
               <h4>Workflows</h4>
               <p>Step-by-step processes that guide the AI through complex multi-stage tasks.</p>
+            </div>
+          </div>
+          <div class="asset-type-card" style="border-color:rgba(99,102,241,0.25);background:rgba(99,102,241,0.06)">
+            <div class="asset-type-icon" style="background:rgba(99,102,241,0.2)">📦</div>
+            <div>
+              <h4>Bundles <span style="font-size:0.7rem;font-weight:700;background:rgba(99,102,241,0.25);color:#a5b4fc;padding:2px 7px;border-radius:100px;vertical-align:middle;margin-left:6px;">NEW</span></h4>
+              <p>Group instructions, agents, skills and workflows into one installable unit. Install step-by-step via
+                wizard or download as a <code style="font-family:'JetBrains Mono',monospace;font-size:0.82em;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px">.zip</code>.</p>
             </div>
           </div>
         </div>
@@ -1087,6 +1110,14 @@
             <div class="mcp-tool">
               <span class="mcp-tool-name">install_asset</span>
               <span class="mcp-tool-desc">Get content + install path; model creates the file</span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">install_assets</span>
+              <span class="mcp-tool-desc">Batch-install multiple assets in one MCP call — prefer over N individual installs <span style="font-size:0.7rem;font-weight:700;background:rgba(99,102,241,0.2);color:#a5b4fc;padding:1px 6px;border-radius:100px;">NEW</span></span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">install_bundle</span>
+              <span class="mcp-tool-desc">Install all assets in a bundle at once — returns paths + curl commands for each file <span style="font-size:0.7rem;font-weight:700;background:rgba(99,102,241,0.2);color:#a5b4fc;padding:1px 6px;border-radius:100px;">NEW</span></span>
             </div>
             <div class="mcp-tool">
               <span class="mcp-tool-name">get_popular</span>
@@ -1210,7 +1241,7 @@
     <div class="container">
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-num">4</div>
+          <div class="stat-num">5</div>
           <div class="stat-label">Asset types</div>
         </div>
         <div class="stat-card">
@@ -1218,7 +1249,7 @@
           <div class="stat-label">AI tools supported</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num">7</div>
+          <div class="stat-num">10</div>
           <div class="stat-label">MCP tools</div>
         </div>
         <div class="stat-card">

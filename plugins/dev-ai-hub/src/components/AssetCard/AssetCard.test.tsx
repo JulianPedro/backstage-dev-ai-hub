@@ -7,6 +7,24 @@ jest.mock('../ToolIcon', () => ({
   ToolIcon: ({ tool }: { tool: string }) => <span data-testid={`tool-icon-${tool}`} />,
 }));
 
+jest.mock('@backstage/core-plugin-api/alpha', () => ({
+  ...jest.requireActual('@backstage/core-plugin-api/alpha'),
+  useTranslationRef: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const map: Record<string, string> = {
+        'assetCard.newBadge':       'New',
+        'assetCard.updatedBadge':   'Updated',
+        'assetCard.installTooltip': 'Install in editor',
+        'assetCard.detailsTooltip': 'View details',
+        'assetCard.moreTags':       `+${params?.count ?? ''}`,
+        'assetCard.bundleFooter':   `${params?.count ?? ''} assets · ${params?.author ?? ''}`,
+        'assetCard.versionFooter':  `v${params?.version ?? ''} · ${params?.author ?? ''}`,
+      };
+      return map[key] ?? key;
+    },
+  }),
+}));
+
 const NOW = new Date('2026-03-14T12:00:00Z').getTime();
 
 function makeAsset(overrides?: Partial<AiAssetSummary>): AiAssetSummary {
@@ -68,20 +86,88 @@ describe('AssetCard', () => {
   });
 
   describe('"New" badge', () => {
-    it('shows "New" badge when updatedAt is within 14 days', () => {
+    it('shows "New" badge when createdAt is within 14 days', () => {
       const recentDate = new Date(NOW - 5 * 24 * 60 * 60 * 1000).toISOString(); // 5 days ago
       render(
-        <AssetCard asset={makeAsset({ updatedAt: recentDate })} onView={jest.fn()} onInstall={jest.fn()} />,
+        <AssetCard asset={makeAsset({ createdAt: recentDate })} onView={jest.fn()} onInstall={jest.fn()} />,
       );
       expect(screen.getByText('New')).toBeInTheDocument();
     });
 
-    it('does not show "New" badge when updatedAt is older than 14 days', () => {
+    it('does not show "New" badge when createdAt is older than 14 days', () => {
       const oldDate = new Date(NOW - 20 * 24 * 60 * 60 * 1000).toISOString(); // 20 days ago
       render(
-        <AssetCard asset={makeAsset({ updatedAt: oldDate })} onView={jest.fn()} onInstall={jest.fn()} />,
+        <AssetCard asset={makeAsset({ createdAt: oldDate })} onView={jest.fn()} onInstall={jest.fn()} />,
       );
       expect(screen.queryByText('New')).not.toBeInTheDocument();
+    });
+
+    it('does not use updatedAt for the New badge (re-sync should not reset it)', () => {
+      const oldCreated = new Date(NOW - 20 * 24 * 60 * 60 * 1000).toISOString(); // 20 days ago
+      const recentUpdated = new Date(NOW - 1 * 24 * 60 * 60 * 1000).toISOString(); // 1 day ago
+      render(
+        <AssetCard
+          asset={makeAsset({ createdAt: oldCreated, updatedAt: recentUpdated })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
+      expect(screen.queryByText('New')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('"Updated" badge', () => {
+    const oldCreatedAt = new Date(NOW - 20 * 24 * 60 * 60 * 1000).toISOString(); // 20 days ago — not new
+
+    it('shows "Updated" badge when updatedAt is within 7 days and asset is not new', () => {
+      const recentUpdate = new Date(NOW - 3 * 24 * 60 * 60 * 1000).toISOString(); // 3 days ago
+      render(
+        <AssetCard
+          asset={makeAsset({ createdAt: oldCreatedAt, updatedAt: recentUpdate })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
+      expect(screen.getByText('Updated')).toBeInTheDocument();
+      expect(screen.queryByText('New')).not.toBeInTheDocument();
+    });
+
+    it('does not show "Updated" badge when updatedAt is older than 7 days', () => {
+      const oldUpdate = new Date(NOW - 10 * 24 * 60 * 60 * 1000).toISOString(); // 10 days ago
+      render(
+        <AssetCard
+          asset={makeAsset({ createdAt: oldCreatedAt, updatedAt: oldUpdate })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
+      expect(screen.queryByText('Updated')).not.toBeInTheDocument();
+    });
+
+    it('does not show "Updated" badge when asset is also new (New takes priority)', () => {
+      const recentDate = new Date(NOW - 5 * 24 * 60 * 60 * 1000).toISOString(); // 5 days ago
+      render(
+        <AssetCard
+          asset={makeAsset({ createdAt: recentDate, updatedAt: recentDate })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
+      expect(screen.getByText('New')).toBeInTheDocument();
+      expect(screen.queryByText('Updated')).not.toBeInTheDocument();
+    });
+
+    it('shows neither badge when both dates are old', () => {
+      const oldDate = new Date(NOW - 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days ago
+      render(
+        <AssetCard
+          asset={makeAsset({ createdAt: oldDate, updatedAt: oldDate })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
+      expect(screen.queryByText('New')).not.toBeInTheDocument();
+      expect(screen.queryByText('Updated')).not.toBeInTheDocument();
     });
   });
 

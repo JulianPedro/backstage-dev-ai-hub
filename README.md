@@ -260,6 +260,47 @@ Usage examples in chat:
 
 ---
 
+## MCP Catalog
+
+The **MCP Catalog** lets you expose a curated list of third-party MCP servers through the Dev AI Hub UI, with one-click install buttons for VSCode and Cursor. The catalog is defined in a `mcp-catalog.yaml` file at the **root of your provider repository** — the same repo that holds your AI assets. It is synced automatically by the asset scheduler; no Backstage deploy is needed to update it.
+
+### `mcp-catalog.yaml` format
+
+```yaml
+servers:
+  # HTTP servers — support one-click install in VSCode and Cursor
+  - id: jira
+    name: "Jira MCP"
+    description: "Search issues, manage sprints, and query Jira projects."
+    icon: "https://example.com/jira-icon.png"
+    type: http
+    url: "https://mcp.atlassian.com/jira"
+
+  - id: figma
+    name: "Figma MCP"
+    description: "Access Figma designs and components from your AI tool."
+    type: http
+    url: "https://www.figma.com/api/mcp"
+
+  - id: github
+    name: "GitHub MCP"
+    description: "Interact with GitHub repositories, issues, and pull requests."
+    type: http
+    url: "https://api.githubcopilot.com/mcp/"
+
+  # stdio servers — displayed in the catalog with manual config snippet only
+  - id: filesystem
+    name: "Filesystem MCP"
+    description: "Read and write files on the local filesystem."
+    type: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]
+```
+
+> **No `app-config.yaml` changes required.** The catalog is repo-driven — commit `mcp-catalog.yaml` to your assets repository and it will appear in the hub on the next sync.
+
+---
+
 ## REST API
 
 ```

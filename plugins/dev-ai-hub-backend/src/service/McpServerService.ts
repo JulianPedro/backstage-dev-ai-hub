@@ -95,7 +95,7 @@ export function createMcpServer(
     const resources = asset.resourcesContent
       ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
           path: filePath,
-          content: fileContent
+          content: fileContent,
         }))
       : undefined;
 
@@ -136,7 +136,7 @@ export function createMcpServer(
   // Only registered when proactiveEnabled=true (default).
 
   if (proactiveEnabled) {
-    server.prompt(
+      server.prompt(
       'check_for_assets',
       'Check Dev AI Hub for relevant instructions, agents, or skills before starting work on a project.',
       {
@@ -169,7 +169,7 @@ export function createMcpServer(
   // Only registered when proactiveEnabled=true (default).
 
   if (proactiveEnabled) {
-    server.tool(
+      server.tool(
       'suggest_assets',
       [
         'Proactively suggests relevant assets based on project context (language, framework, task).',
@@ -213,7 +213,7 @@ export function createMcpServer(
     ].join(' '),
     {
       query:    z.string().optional().describe('Full-text search across name, description and content'),
-      type:     z.enum(['instruction', 'agent', 'skill', 'workflow']).optional().describe('Filter by asset type'),
+      type:     z.enum(['instruction', 'agent', 'skill', 'workflow', 'bundle']).optional().describe('Filter by asset type'),
       tags:     z.array(z.string()).optional().describe('Filter by one or more tags'),
       page:     z.number().int().positive().default(1),
       pageSize: z.number().int().positive().max(100).default(20),
@@ -248,7 +248,7 @@ export function createMcpServer(
       'For context-aware recommendations, prefer suggest_assets instead.',
     ].join(' '),
     {
-      type:     z.enum(['instruction', 'agent', 'skill', 'workflow']).optional().describe('Filter by asset type'),
+      type:     z.enum(['instruction', 'agent', 'skill', 'workflow', 'bundle']).optional().describe('Filter by asset type'),
       page:     z.number().int().positive().default(1),
       pageSize: z.number().int().positive().max(100).default(20),
     },
@@ -480,6 +480,93 @@ export function createMcpServer(
             path_override_hint: 'Paths can be customised per-tool in the asset YAML: installPaths: { claude-code: ".claude/rules/custom.md" }',
             ...payload,
             related_assets: related,
+          }, null, 2),
+        }],
+      };
+    },
+  );
+
+  // ── install_bundle ────────────────────────────────────────────────────────
+  //
+  // Installs all assets belonging to a bundle in a single MCP call.
+  // The AI agent receives an array of files (each with path + content + curl command)
+  // and writes them all at once — no need to call install_asset N times.
+
+  server.tool(
+    'install_bundle',
+    [
+      'Install all assets in a bundle at once — one MCP call for the entire bundle.',
+      'Returns an array of files with recommended paths, content, and install commands.',
+      'Run each install_command via your terminal tool (execute, run_terminal, Bash).',
+      'Use list_assets with type="bundle" to discover available bundles first.',
+    ].join(' '),
+    {
+      id: z.string().describe('Bundle asset ID'),
+    },
+    async ({ id }) => {
+      const bundle = await store.getAsset(id);
+      if (!bundle || bundle.type !== 'bundle') {
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify({ error: `Bundle not found: ${id}` }) }],
+          isError: true,
+        };
+      }
+
+      const resolvedItems = bundle.items ?? [];
+      const files: Array<Record<string, unknown>> = [];
+      const notResolved: string[] = [];
+
+      for (const item of resolvedItems) {
+        if (!item.assetId) {
+          notResolved.push(item.ref);
+          continue;
+        }
+
+        const asset = await store.getAsset(item.assetId);
+        if (!asset) {
+          notResolved.push(item.ref);
+          continue;
+        }
+
+        await store.incrementInstallCount(asset.id);
+
+        const installPaths = getInstallPathsForAsset(asset.type as any, asset.tools, asset.name, {
+          installPath: asset.installPath,
+          installPaths: asset.installPaths,
+        });
+        const recommendedPath = toolParam
+          ? (installPaths[toolParam] ?? Object.values(installPaths)[0])
+          : Object.values(installPaths)[0];
+
+        files.push({
+          id: asset.id,
+          name: displayName(asset),
+          type: asset.type,
+          ...buildInstallPayload(asset, recommendedPath ?? asset.name),
+        });
+      }
+
+      await store.incrementInstallCount(bundle.id);
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            action_required: [
+              'For EACH file in files[], write the file. Choose the first available option:',
+              '  [A] Run install_command in your terminal tool — atomic, no content through the model.',
+              '  [B] Fetch raw_url and write to recommended_path.',
+              '  [C] Last resort: write the "content" field verbatim to recommended_path.',
+              'Process all files. Do not skip any.',
+            ].join('\n'),
+            bundle: {
+              id: bundle.id,
+              name: displayName(bundle),
+              description: bundle.description,
+            },
+            total: files.length,
+            not_resolved: notResolved.length > 0 ? notResolved : undefined,
+            files,
           }, null, 2),
         }],
       };

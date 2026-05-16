@@ -1,0 +1,18 @@
+# How it works:
+#
+# A bundle is a .yaml file in a bundles/ directory. It has no companion .md file.
+# The YAML items[] field lists other assets by relative path (ref).
+# During sync, item refs are stored as raw JSON in the DB. They are resolved lazily at read time via extra DB queries.
+# Each resolved item includes assetId, name, label, type, description, and tools.
+
+name: "Agentic Workflow Bundle"
+type: bundle
+description: "Every Agent, Skills and Instructions that you need in a single package."
+author: "Julian Pedro F. Braga"
+version: "1.0.0"
+tools:
+  - github-copilot
+items:
+  - ref: "agents/api-architect.yaml"
+  - ref: "skills/azure-devops-cli/azure-devops-cli.yaml"
+  - ref: "instructions/copilot-instructions.yaml"

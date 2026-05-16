@@ -13,6 +13,7 @@ export const AssetTypeEnum = z.enum([
   'agent',
   'skill',
   'workflow',
+  'bundle',
 ]);
 
 /**
@@ -40,7 +41,40 @@ export const AiAssetFrontmatterSchema = z
     installPaths: z.record(z.string()).optional(),
     // skill-specific
     resources: z.array(z.string()).optional(),
+    // bundle-specific
+    items: z.array(z.object({ ref: z.string() })).optional(),
+    // usage guide — markdown shown when the user clicks the help button
+    help: z.string().optional(),
+    // MCP servers required by this agent/skill
+    mcps: z.array(
+      z.union([
+        z.string(),
+        z.object({ id: z.string(), name: z.string().optional(), icon: z.string().optional() }),
+      ]),
+    ).optional(),
   })
   .passthrough();
 
 export type AiAssetFrontmatter = z.infer<typeof AiAssetFrontmatterSchema>;
+
+/**
+ * Schema for the mcp-catalog.yaml file placed at the root of a provider repository.
+ * Defines external MCP servers that users can install with one click.
+ */
+export const McpCatalogFileSchema = z.object({
+  servers: z.array(
+    z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+      description: z.string().optional(),
+      icon: z.string().optional(),
+      type: z.enum(['http', 'stdio']),
+      url: z.string().optional(),
+      command: z.string().optional(),
+      args: z.array(z.string()).optional(),
+      env: z.record(z.string()).optional(),
+    }),
+  ),
+});
+
+export type McpCatalogFile = z.infer<typeof McpCatalogFileSchema>;

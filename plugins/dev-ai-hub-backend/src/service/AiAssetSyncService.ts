@@ -1,3 +1,4 @@
+import yaml from 'js-yaml';
 import type {
   LoggerService,
   SchedulerService,
@@ -7,6 +8,7 @@ import type { AiAssetStore } from '../database/AiAssetStore';
 import type { ProviderConfig } from '../types';
 import type { AiAssetProvider } from '@julianpedro/plugin-dev-ai-hub-node';
 import { AssetParser } from './AssetParser';
+import { McpCatalogFileSchema } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface Options {
   logger: LoggerService;
@@ -110,6 +112,34 @@ export class AiAssetSyncService {
         fileMap.set(normalizePath(file.path), file);
       }
 
+      // ── Sync mcp-catalog.yaml if present ────────────────────────────────────
+      const mcpCatalogFile = fileMap.get('mcp-catalog.yaml');
+      if (mcpCatalogFile) {
+        try {
+          const raw = (await mcpCatalogFile.content()).toString('utf-8');
+          const parsed = McpCatalogFileSchema.safeParse(yaml.load(raw));
+          if (parsed.success) {
+            const entries = parsed.data.servers;
+            await store.upsertMcpCatalogEntries(entries, provider.id);
+            await store.deleteMcpCatalogEntriesNotIn(provider.id, entries.map(e => e.id));
+            logger.info(
+              `dev-ai-hub: synced ${entries.length} MCP catalog entries from provider "${provider.id}"`,
+            );
+          } else {
+            logger.warn(
+              `dev-ai-hub: invalid mcp-catalog.yaml in provider "${provider.id}": ${parsed.error.message}`,
+            );
+          }
+        } catch (err) {
+          logger.warn(
+            `dev-ai-hub: failed to parse mcp-catalog.yaml in provider "${provider.id}": ${err}`,
+          );
+        }
+      } else {
+        // No mcp-catalog.yaml — remove any previously synced entries for this provider
+        await store.deleteMcpCatalogEntriesNotIn(provider.id, []);
+      }
+
       const syncedIds: string[] = [];
 
       for (const [filePath, file] of fileMap) {
@@ -140,14 +170,14 @@ export class AiAssetSyncService {
         }
 
         const mdFile = fileMap.get(normalizePath(parsed.mdPath));
-        if (!mdFile) {
+        if (!mdFile && parsed.requiresMd) {
           logger.warn(
             `dev-ai-hub: .md not found for ${filePath} (expected ${parsed.mdPath}), skipping`,
           );
           continue;
         }
 
-        const mdContent = (await mdFile.content()).toString('utf-8');
+        const mdContent = mdFile ? (await mdFile.content()).toString('utf-8') : '';
 
         // For skills: read bundled resource files and store their content
         let resourcesContent: Record<string, string> | undefined;

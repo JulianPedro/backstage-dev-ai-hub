@@ -7,7 +7,7 @@ import Pagination from '@mui/material/Pagination';
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet';
+import ExtensionIcon from '@mui/icons-material/Extension';
 import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
@@ -15,15 +15,18 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import HubIcon from '@mui/icons-material/Hub';
 import { Content, Header, Page } from '@backstage/core-components';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
+import { devAiHubTranslationRef } from '../../translation';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
 import type { AssetFiltersValue } from '../AssetFilters';
 import { AssetDetailPanel } from '../AssetDetailPanel';
 import { AssetInstallDialog } from '../AssetInstallDialog';
+import { AssetHelpDialog } from '../AssetHelpDialog';
 import { McpConfigDialog } from '../McpConfigDialog';
 import { ToolIcon } from '../ToolIcon';
-import { useAssets, useStats, useProviders } from '../../hooks';
+import { useAssets, useStats, useProviders, useMcpCatalog } from '../../hooks';
 
 const SUPPORTED_TOOLS: AiTool[] = ['claude-code', 'github-copilot', 'google-gemini', 'cursor'];
 
@@ -35,13 +38,6 @@ const TOOL_LABELS: Record<AiTool, string> = {
   'cursor':         'Cursor',
 };
 
-function timeAgo(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
 
 const DEFAULT_FILTERS: AssetFiltersValue = {
   types: [],
@@ -65,13 +61,23 @@ const STATS_CONFIG = [
 ];
 
 export function DevAiHubPage() {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const [filters, setFilters] = useState<AssetFiltersValue>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
   const [mcpDialogOpen, setMcpDialogOpen] = useState(false);
 
+  function timeAgo(iso: string): string {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return t('devAiHubPage.timeJustNow');
+    if (diff < 3600) return t('devAiHubPage.timeMinutesAgo', { count: Math.floor(diff / 60) });
+    if (diff < 86400) return t('devAiHubPage.timeHoursAgo', { count: Math.floor(diff / 3600) });
+    return t('devAiHubPage.timeDaysAgo', { count: Math.floor(diff / 86400) });
+  }
+
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedAssetId = searchParams.get('assetId');
   const installAssetId = searchParams.get('installId');
+  const helpAssetId = searchParams.get('helpId');
 
   const handleViewAsset = (id: string) =>
     setSearchParams(p => { const n = new URLSearchParams(p); n.set('assetId', id); return n; });
@@ -85,8 +91,15 @@ export function DevAiHubPage() {
   const handleCloseInstall = () =>
     setSearchParams(p => { const n = new URLSearchParams(p); n.delete('installId'); return n; });
 
+  const handleHelpAsset = (id: string) =>
+    setSearchParams(p => { const n = new URLSearchParams(p); n.set('helpId', id); return n; });
+
+  const handleCloseHelp = () =>
+    setSearchParams(p => { const n = new URLSearchParams(p); n.delete('helpId'); return n; });
+
   const { stats } = useStats();
   const { providers } = useProviders();
+  const { catalog } = useMcpCatalog();
 
   const apiFilter = useMemo(
     () => ({
@@ -113,7 +126,7 @@ export function DevAiHubPage() {
   const availableTags = useMemo(() => {
     if (!result) return [];
     const tagSet = new Set<string>();
-    result.items.forEach(a => a.tags.forEach(t => tagSet.add(t)));
+    result.items.forEach(a => a.tags.forEach(tag => tagSet.add(tag)));
     return Array.from(tagSet).sort();
   }, [result]);
 
@@ -145,8 +158,12 @@ export function DevAiHubPage() {
               </Box>
               <Box sx={{ fontSize: '0.85rem', fontWeight: 400, color: 'rgba(255,255,255,0.75)', lineHeight: 1 }}>
                 {stats
-                  ? `${stats.totalAssets} assets · ${Object.keys(stats.byProvider).length} provider${Object.keys(stats.byProvider).length !== 1 ? 's' : ''}`
-                  : 'Centralized AI assets for your team'}
+                  ? (() => {
+                      const providerCount = Object.keys(stats.byProvider).length;
+                      const providerStr = t(providerCount === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { count: providerCount });
+                      return t('devAiHubPage.totalStats', { totalAssets: stats.totalAssets, providers: providerStr });
+                    })()
+                  : t('devAiHubPage.subtitle')}
               </Box>
             </Box>
           </Box>
@@ -180,7 +197,7 @@ export function DevAiHubPage() {
 
           {/* Last sync status */}
           {stats?.lastSync && (
-            <Tooltip title={`Last sync: ${new Date(stats.lastSync).toLocaleString()}`} arrow>
+            <Tooltip title={t('devAiHubPage.lastSync', { time: new Date(stats.lastSync).toLocaleString() })} arrow>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'default' }}>
                 <FiberManualRecordIcon sx={{ fontSize: '0.6rem', color: '#4ade80' }} />
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
@@ -190,29 +207,52 @@ export function DevAiHubPage() {
             </Tooltip>
           )}
 
-          {/* Configure MCP button */}
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<SettingsEthernetIcon />}
-            onClick={() => setMcpDialogOpen(true)}
-            sx={{
-              borderRadius: 2,
-              fontWeight: 700,
-              whiteSpace: 'nowrap',
-              background: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(4px)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              color: '#fff',
-              boxShadow: 'none',
-              '&:hover': {
-                background: 'rgba(255,255,255,0.25)',
+          {/* MCP Servers button */}
+          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<ExtensionIcon />}
+              onClick={() => setMcpDialogOpen(true)}
+              sx={{
+                borderRadius: 2,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                background: 'rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(4px)',
+                border: '1.5px solid rgba(255,255,255,0.45)',
+                color: '#fff',
                 boxShadow: 'none',
-              },
-            }}
-          >
-            Configure MCP
-          </Button>
+                '&:hover': {
+                  background: 'rgba(255,255,255,0.32)',
+                  borderColor: 'rgba(255,255,255,0.7)',
+                  boxShadow: '0 0 0 2px rgba(255,255,255,0.15)',
+                },
+              }}
+            >
+              {t('devAiHubPage.configMcp')}
+            </Button>
+            {catalog.length > 0 && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: -3,
+                  right: -3,
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  bgcolor: '#4ade80',
+                  boxShadow: '0 0 0 2px rgba(0,0,0,0.15)',
+                  animation: 'mcpPulse 2s ease-in-out infinite',
+                  '@keyframes mcpPulse': {
+                    '0%':   { boxShadow: '0 0 0 0 rgba(74,222,128,0.7), 0 0 0 2px rgba(0,0,0,0.15)' },
+                    '70%':  { boxShadow: '0 0 0 6px rgba(74,222,128,0),  0 0 0 2px rgba(0,0,0,0.15)' },
+                    '100%': { boxShadow: '0 0 0 0 rgba(74,222,128,0),    0 0 0 2px rgba(0,0,0,0.15)' },
+                  },
+                }}
+              />
+            )}
+          </Box>
         </Box>
       </Header>
 
@@ -279,7 +319,7 @@ export function DevAiHubPage() {
         {/* Results summary */}
         {result && !loading && (
           <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-            {result.totalCount} asset{result.totalCount !== 1 ? 's' : ''} found
+            {t(result.totalCount === 1 ? 'devAiHubPage.assetCountOne' : 'devAiHubPage.assetCountOther', { count: result.totalCount })}
           </Typography>
         )}
 
@@ -297,6 +337,9 @@ export function DevAiHubPage() {
                     asset={asset}
                     onView={handleViewAsset}
                     onInstall={handleInstallAsset}
+                    onHelp={handleHelpAsset}
+                    onOpenMcpCatalog={() => setMcpDialogOpen(true)}
+                    mcpCatalog={catalog}
                   />
                 </Grid>
               ))}
@@ -306,9 +349,9 @@ export function DevAiHubPage() {
         {!loading && result?.items.length === 0 && (
           <Box sx={{ py: 12, textAlign: 'center' }}>
             <Typography variant="h1" sx={{ mb: 2, opacity: 0.15, fontSize: '5rem' }}>🤖</Typography>
-            <Typography variant="h6" color="text.secondary" fontWeight={600}>No assets found</Typography>
+            <Typography variant="h6" color="text.secondary" fontWeight={600}>{t('devAiHubPage.noAssetsTitle')}</Typography>
             <Typography variant="body2" color="text.disabled" sx={{ mt: 0.5 }}>
-              Try adjusting your filters or search terms.
+              {t('devAiHubPage.noAssetsSubtitle')}
             </Typography>
           </Box>
         )}
@@ -335,6 +378,11 @@ export function DevAiHubPage() {
       <AssetInstallDialog
         assetId={installAssetId}
         onClose={handleCloseInstall}
+      />
+
+      <AssetHelpDialog
+        asset={helpAssetId ? (result?.items.find(a => a.id === helpAssetId) ?? null) : null}
+        onClose={handleCloseHelp}
       />
 
       <McpConfigDialog

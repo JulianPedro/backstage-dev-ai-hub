@@ -65,5 +65,10 @@
   },
   "peerDependencies": {
     "@backstage/backend-plugin-api": ">=1.40.0"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "@julianpedro/plugin-dev-ai-hub-backend/(.*)": "<rootDir>/../$1"
+    }
   }
 }

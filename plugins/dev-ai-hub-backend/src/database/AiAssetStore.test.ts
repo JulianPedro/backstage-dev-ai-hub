@@ -292,3 +292,57 @@ describe('getStats', () => {
     expect(stats.lastSync).toBeUndefined();
   });
 });
+
+describe('created_at and updated_at tracking', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('preserves created_at across re-syncs even when content changes', async () => {
+    await store.upsertAsset(makeInput({ content: '# v1' }));
+    const first = await store.getAsset('test-id');
+
+    jest.advanceTimersByTime(5_000);
+
+    await store.upsertAsset(makeInput({ content: '# v2' }));
+    const second = await store.getAsset('test-id');
+
+    expect(second!.createdAt).toBe(first!.createdAt);
+  });
+
+  it('does not update updated_at when content is unchanged', async () => {
+    await store.upsertAsset(makeInput({ content: '# Same' }));
+    const first = await store.getAsset('test-id');
+
+    jest.advanceTimersByTime(5_000);
+
+    await store.upsertAsset(makeInput({ content: '# Same', name: 'Renamed' }));
+    const second = await store.getAsset('test-id');
+
+    expect(second!.updatedAt).toBe(first!.updatedAt);
+  });
+
+  it('updates updated_at when content changes', async () => {
+    await store.upsertAsset(makeInput({ content: '# v1' }));
+    const first = await store.getAsset('test-id');
+
+    jest.advanceTimersByTime(5_000);
+
+    await store.upsertAsset(makeInput({ content: '# v2' }));
+    const second = await store.getAsset('test-id');
+
+    expect(new Date(second!.updatedAt) > new Date(first!.updatedAt)).toBe(true);
+  });
+
+  it('sets updated_at on first insert even when content is "unchanged" (no prior record)', async () => {
+    await store.upsertAsset(makeInput());
+    const asset = await store.getAsset('test-id');
+
+    expect(asset!.updatedAt).toBeDefined();
+    expect(asset!.createdAt).toBe(asset!.updatedAt);
+  });
+});
