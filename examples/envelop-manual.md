@@ -37,6 +37,7 @@ Defines the asset category and determines the default install paths per tool.
 | `agent` | Autonomous agent with defined behavior, tools, and scope |
 | `skill` | Reusable skill with a `SKILL.md` entry point and optional bundled resources |
 | `workflow` | Step-by-step sequence for automating a repeatable task |
+| `bundle` | A collection of assets that are meant to be installed together |
 
 ```yaml
 type: instruction
@@ -209,6 +210,23 @@ Overrides the install path **per tool**. Only the tools listed here are overridd
 installPaths:
   claude-code: ".claude/rules/python-style-guide.md"
   github-copilot: ".github/instructions/python-style.instructions.md"
+```
+
+---
+
+## Optional Fields — MCPs
+
+### `mcps`
+**Type:** `McpRequirement[]`
+
+List of MCPs required for the asset to function correctly. Each MCP is represented as an object with `id` (string, required) and optionally `name` (string) and `icon` (string URL).
+
+```yaml
+mcps:
+  - id: "jira"
+    name: "Jira MCP"
+    icon: "https://img.icons8.com/color/48/jira.png"
+  - id: "mcp-server-beta"  # When same MCP id has registered in mcp-catalog.yaml file, name and icon will be rescued from there.
 ```
 
 ---
