@@ -31,8 +31,10 @@ export const devAiHubPlugin = createBackendPlugin({
         httpRouter: coreServices.httpRouter,
         urlReader: coreServices.urlReader,
         discovery: coreServices.discovery,
+        httpAuth: coreServices.httpAuth,
+        permissions: coreServices.permissions,
       },
-      async init({ config, logger, database, scheduler, httpRouter, urlReader, discovery }) {
+      async init({ config, logger, database, scheduler, httpRouter, urlReader, discovery, httpAuth, permissions }) {
         const store = await AiAssetStore.create({ database });
 
         const providers: ProviderConfig[] = (
@@ -72,7 +74,7 @@ export const devAiHubPlugin = createBackendPlugin({
         await syncService.start();
 
         const baseUrl = await discovery.getBaseUrl('dev-ai-hub');
-        const router = createRouter({ logger, store, syncService, providers, baseUrl });
+        const router = createRouter({ logger, store, syncService, providers, baseUrl, httpAuth, permissions });
 
         httpRouter.use(router);
 

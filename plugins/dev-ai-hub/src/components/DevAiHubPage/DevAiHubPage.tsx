@@ -2,11 +2,17 @@ import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
 import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
 import Pagination from '@mui/material/Pagination';
 import Skeleton from '@mui/material/Skeleton';
+import Snackbar from '@mui/material/Snackbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import CloseIcon from '@mui/icons-material/Close';
 import ExtensionIcon from '@mui/icons-material/Extension';
 import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -14,9 +20,15 @@ import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import HubIcon from '@mui/icons-material/Hub';
+import SyncIcon from '@mui/icons-material/Sync';
+import CloudSyncIcon from '@mui/icons-material/CloudSync';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { Content, Header, Page } from '@backstage/core-components';
 import { useTranslationRef } from '@backstage/frontend-plugin-api';
+import { usePermission } from '@backstage/plugin-permission-react';
 import type { AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
+import { devAiHubSyncPermission } from '@julianpedro/plugin-dev-ai-hub-common';
 import { devAiHubTranslationRef } from '../../translation';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
@@ -26,7 +38,7 @@ import { AssetInstallDialog } from '../AssetInstallDialog';
 import { AssetHelpDialog } from '../AssetHelpDialog';
 import { McpConfigDialog } from '../McpConfigDialog';
 import { ToolIcon } from '../ToolIcon';
-import { useAssets, useStats, useProviders, useMcpCatalog } from '../../hooks';
+import { useAssets, useStats, useProviders, useMcpCatalog, useSyncProvider } from '../../hooks';
 
 const SUPPORTED_TOOLS: AiTool[] = ['claude-code', 'github-copilot', 'google-gemini', 'cursor'];
 
@@ -65,6 +77,11 @@ export function DevAiHubPage() {
   const [filters, setFilters] = useState<AssetFiltersValue>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
   const [mcpDialogOpen, setMcpDialogOpen] = useState(false);
+  const [syncSnackbar, setSyncSnackbar] = useState(false);
+  const [providersDrawerOpen, setProvidersDrawerOpen] = useState(false);
+
+  const { allowed: canSync } = usePermission({ permission: devAiHubSyncPermission });
+  const { syncing, triggerSync, triggerSyncAll } = useSyncProvider();
 
   function timeAgo(iso: string): string {
     const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -308,6 +325,27 @@ export function DevAiHubPage() {
           ))}
         </Grid>
 
+        {/* Providers icon button — discrete, opens Drawer */}
+        {providers.length > 0 && (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1, mt: -1 }}>
+            <Tooltip
+              title={t(providers.length === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { count: providers.length })}
+              placement="left"
+            >
+              <IconButton
+                size="small"
+                onClick={() => setProvidersDrawerOpen(true)}
+                sx={{
+                  color: providers.some(p => p.status === 'error') ? 'error.main' : 'text.disabled',
+                  '&:hover': { color: providers.some(p => p.status === 'error') ? 'error.dark' : 'text.secondary' },
+                }}
+              >
+                <CloudSyncIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+
         {/* Filters */}
         <AssetFilters
           value={filters}
@@ -389,6 +427,127 @@ export function DevAiHubPage() {
         open={mcpDialogOpen}
         onClose={() => setMcpDialogOpen(false)}
       />
+
+      <Snackbar
+        open={syncSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setSyncSnackbar(false)}
+        message={t('devAiHubPage.syncTriggered')}
+      />
+
+      {/* Providers Drawer */}
+      <Drawer
+        anchor="right"
+        open={providersDrawerOpen}
+        onClose={() => setProvidersDrawerOpen(false)}
+        PaperProps={{ sx: { width: { xs: '100vw', sm: 400 } } }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {/* Header */}
+          <Box
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: 1,
+              borderColor: 'divider',
+            }}
+          >
+            <Typography variant="h6" fontWeight={700}>
+              {t('devAiHubPage.providersSectionTitle')}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {canSync && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={providers.some(p => syncing[p.id]) ? <CircularProgress size={14} /> : <SyncIcon />}
+                  disabled={providers.some(p => syncing[p.id])}
+                  onClick={async () => {
+                    await triggerSyncAll(providers.map(p => p.id));
+                    setSyncSnackbar(true);
+                  }}
+                >
+                  {t('devAiHubPage.syncAllButton')}
+                </Button>
+              )}
+              <IconButton size="small" onClick={() => setProvidersDrawerOpen(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </Box>
+
+          {/* Provider list */}
+          <Box sx={{ flex: 1, overflow: 'auto' }}>
+            {providers.map((provider, idx) => (
+              <Box key={provider.id}>
+                <Box
+                  sx={{
+                    px: 2,
+                    py: 1.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                  }}
+                >
+                  {provider.status === 'error' ? (
+                    <Tooltip title={provider.error ?? t('devAiHubPage.providerStatusError')}>
+                      <ErrorOutlineIcon sx={{ fontSize: '1.1rem', color: 'error.main', flexShrink: 0 }} />
+                    </Tooltip>
+                  ) : provider.status === 'syncing' ? (
+                    <CircularProgress size={16} sx={{ flexShrink: 0 }} />
+                  ) : (
+                    <CheckCircleOutlineIcon sx={{ fontSize: '1.1rem', color: 'success.main', flexShrink: 0 }} />
+                  )}
+
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      noWrap
+                      title={provider.target}
+                      sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
+                    >
+                      {provider.target}
+                    </Typography>
+                    {provider.lastSync && (
+                      <Typography variant="caption" color="text.disabled">
+                        {timeAgo(provider.lastSync)}
+                      </Typography>
+                    )}
+                    {provider.status === 'error' && provider.error && (
+                      <Typography variant="caption" color="error" sx={{ display: 'block' }} noWrap title={provider.error}>
+                        {provider.error}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {canSync && (
+                    <Tooltip title={t('devAiHubPage.syncButton')}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          disabled={!!syncing[provider.id]}
+                          onClick={async () => {
+                            await triggerSync(provider.id);
+                            setSyncSnackbar(true);
+                          }}
+                        >
+                          {syncing[provider.id]
+                            ? <CircularProgress size={16} />
+                            : <SyncIcon fontSize="small" />}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  )}
+                </Box>
+                {idx < providers.length - 1 && <Divider />}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Drawer>
     </Page>
   );
 }

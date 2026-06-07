@@ -71,6 +71,7 @@
     "@backstage/core-plugin-api": ">=1.40.0",
     "@backstage/frontend-plugin-api": ">=1.40.0",
     "@backstage/plugin-app-react": ">=1.40.0",
+    "@backstage/plugin-permission-react": ">=1.40.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0"

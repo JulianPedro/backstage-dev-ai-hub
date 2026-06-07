@@ -112,4 +112,9 @@ export default {
   'devAiHubPage.timeMinutesAgo': 'há {{count}}min',
   'devAiHubPage.timeHoursAgo': 'há {{count}}h',
   'devAiHubPage.timeDaysAgo': 'há {{count}}d',
+  'devAiHubPage.providersSectionTitle': 'Providers',
+  'devAiHubPage.syncAllButton': 'Sincronizar Tudo',
+  'devAiHubPage.syncButton': 'Sincronizar',
+  'devAiHubPage.syncTriggered': 'Sincronização disparada',
+  'devAiHubPage.providerStatusError': 'Erro',
 };

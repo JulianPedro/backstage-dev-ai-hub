@@ -2,13 +2,14 @@ import { randomUUID } from 'crypto';
 import express from 'express';
 import archiver from 'archiver';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import type { LoggerService } from '@backstage/backend-plugin-api';
+import type { HttpAuthService, LoggerService, PermissionsService } from '@backstage/backend-plugin-api';
+import { AuthorizeResult } from '@backstage/plugin-permission-common';
 import type { AiAssetStore } from './database/AiAssetStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createMcpServer } from './service/McpServerService';
 import type { ProviderConfig, AssetListFilter } from './types';
 import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
-import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
+import { devAiHubSyncPermission, getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface RouterOptions {
   logger: LoggerService;
@@ -17,10 +18,12 @@ interface RouterOptions {
   providers: ProviderConfig[];
   /** Base URL of this plugin, e.g. http://backstage:7007/api/dev-ai-hub */
   baseUrl: string;
+  httpAuth: HttpAuthService;
+  permissions: PermissionsService;
 }
 
 export function createRouter(options: RouterOptions): express.Router {
-  const { store, syncService, providers, baseUrl } = options;
+  const { store, syncService, providers, baseUrl, httpAuth, permissions } = options;
   const router = express.Router();
 
   /** Active MCP sessions: sessionId → transport */
@@ -283,6 +286,15 @@ export function createRouter(options: RouterOptions): express.Router {
 
   router.post('/providers/:id/sync', async (req, res) => {
     try {
+      const credentials = await httpAuth.credentials(req);
+      const [decision] = await permissions.authorize(
+        [{ permission: devAiHubSyncPermission }],
+        { credentials },
+      );
+      if (decision.result !== AuthorizeResult.ALLOW) {
+        return res.status(403).json({ error: 'Insufficient permissions to trigger sync' });
+      }
+
       const provider = providers.find(p => p.id === req.params.id);
       if (!provider) return res.status(404).json({ error: 'Provider not found' });
 

@@ -158,6 +158,25 @@ export function useMcpCatalog() {
   return { catalog, loading, error };
 }
 
+export function useSyncProvider() {
+  const api = useApi(devAiHubApiRef);
+  const [syncing, setSyncing] = useState<Record<string, boolean>>({});
+
+  const triggerSync = useCallback(async (id: string) => {
+    setSyncing(s => ({ ...s, [id]: true }));
+    try { await api.triggerSync(id); }
+    finally { setSyncing(s => ({ ...s, [id]: false })); }
+  }, [api]);
+
+  const triggerSyncAll = useCallback(async (ids: string[]) => {
+    setSyncing(Object.fromEntries(ids.map(id => [id, true])));
+    try { await Promise.all(ids.map(id => api.triggerSync(id))); }
+    finally { setSyncing({}); }
+  }, [api]);
+
+  return { syncing, triggerSync, triggerSyncAll };
+}
+
 export function useCopyToClipboard() {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

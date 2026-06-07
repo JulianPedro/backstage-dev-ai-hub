@@ -44,6 +44,9 @@
   "dependencies": {
     "zod": "^3.22.0"
   },
+  "peerDependencies": {
+    "@backstage/plugin-permission-common": "*"
+  },
   "devDependencies": {
     "@backstage/cli": "*",
     "@types/jest": "^29.0.0",

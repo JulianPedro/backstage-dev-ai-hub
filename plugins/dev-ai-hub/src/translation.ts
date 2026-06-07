@@ -123,6 +123,11 @@ export const devAiHubTranslationRef = createTranslationRef({
       timeMinutesAgo: '{{count}}m ago',
       timeHoursAgo: '{{count}}h ago',
       timeDaysAgo: '{{count}}d ago',
+      providersSectionTitle: 'Providers',
+      syncAllButton: 'Sync All',
+      syncButton: 'Sync',
+      syncTriggered: 'Sync triggered',
+      providerStatusError: 'Error',
     },
   },
   translations: {
