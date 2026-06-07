@@ -1,0 +1,14 @@
+plugins/dev-ai-hub-backend/src/service/McpServerService.ts
+  h_3460858e8e4831 6,93,95,111,116-137,161-182,184-187,192-212,214-221,296,298-299,302-304,306,343-344,381,413,428,431-434,436,464-481,487-489,498-499,515,517,521-522,524,563,573,582,599,602-603,605,627,635,639-690,697
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "0788457aafff641e55765c5f75c59c4250660f1a",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
