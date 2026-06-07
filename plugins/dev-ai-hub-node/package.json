@@ -50,7 +50,7 @@
     "jest-environment-jsdom": "^29.0.0"
   },
   "peerDependencies": {
-    "@backstage/backend-plugin-api": ">=1.40.0"
+    "@backstage/backend-plugin-api": ">=1.7.0"
   },
   "module": "dist/index.esm.js"
 }

@@ -64,7 +64,7 @@
     "knex": "^3.1.0"
   },
   "peerDependencies": {
-    "@backstage/backend-plugin-api": ">=1.40.0"
+    "@backstage/backend-plugin-api": ">=1.7.0"
   },
   "jest": {
     "moduleNameMapper": {

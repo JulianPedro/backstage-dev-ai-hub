@@ -45,7 +45,7 @@
     "zod": "^3.22.0"
   },
   "peerDependencies": {
-    "@backstage/plugin-permission-common": "*"
+    "@backstage/plugin-permission-common": ">=0.9.0"
   },
   "devDependencies": {
     "@backstage/cli": "*",
