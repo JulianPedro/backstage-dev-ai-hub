@@ -21,7 +21,7 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import type { AiAsset, AiTool, BundleItem } from '@julianpedro/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import { devAiHubApiRef } from '../../api/DevAiHubClient';
 import { useAssetDetail } from '../../hooks';
 import { ToolIcon } from '../ToolIcon';

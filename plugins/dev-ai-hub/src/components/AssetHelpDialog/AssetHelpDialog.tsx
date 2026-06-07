@@ -10,7 +10,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CloseIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import type { AiAssetSummary } from '@julianpedro/plugin-dev-ai-hub-common';
 import { devAiHubTranslationRef } from '../../translation';
 

@@ -7,8 +7,8 @@ jest.mock('../ToolIcon', () => ({
   ToolIcon: ({ tool }: { tool: string }) => <span data-testid={`tool-icon-${tool}`} />,
 }));
 
-jest.mock('@backstage/core-plugin-api/alpha', () => ({
-  ...jest.requireActual('@backstage/core-plugin-api/alpha'),
+jest.mock('@backstage/frontend-plugin-api', () => ({
+  ...jest.requireActual('@backstage/frontend-plugin-api'),
   useTranslationRef: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
       const map: Record<string, string> = {

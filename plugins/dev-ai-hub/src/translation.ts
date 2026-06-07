@@ -1,4 +1,4 @@
-import { createTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { createTranslationRef, createTranslationResource } from '@backstage/frontend-plugin-api';
 
 export const devAiHubTranslationRef = createTranslationRef({
   id: 'dev-ai-hub',
@@ -127,6 +127,15 @@ export const devAiHubTranslationRef = createTranslationRef({
   },
   translations: {
     'pt-BR': () => import('./locales/pt-BR'),
-    'es': () => import('./locales/es'),
+    'es':    () => import('./locales/es'),
+  },
+});
+
+// Exported for manual registration in legacy apps (__experimentalTranslations.resources)
+export const devAiHubTranslationResource = createTranslationResource({
+  ref: devAiHubTranslationRef,
+  translations: {
+    'pt-BR': () => import('./locales/pt-BR'),
+    'es':    () => import('./locales/es'),
   },
 });

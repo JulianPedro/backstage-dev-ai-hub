@@ -22,7 +22,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FolderZipIcon from '@mui/icons-material/FolderZip';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
 import { useAssetDetail } from '../../hooks';
 import { devAiHubTranslationRef } from '../../translation';
@@ -114,11 +114,9 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                       label={asset.type}
                       size="small"
                       sx={{
-                        backgroundColor: `${TYPE_COLORS[asset.type]}22`,
-                        color: TYPE_COLORS[asset.type],
-                        border: '1px solid',
-                        borderColor: `${TYPE_COLORS[asset.type]}55`,
-                        fontWeight: 600,
+                        backgroundColor: TYPE_COLORS[asset.type],
+                        color: '#fff',
+                        fontWeight: 700,
                       }}
                     />
                   </Box>
@@ -194,11 +192,9 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                                   sx={{
                                     height: 18,
                                     fontSize: '0.65rem',
-                                    bgcolor: `${TYPE_COLORS[item.type as AssetType] ?? '#666'}22`,
-                                    color: TYPE_COLORS[item.type as AssetType] ?? 'text.secondary',
-                                    border: '1px solid',
-                                    borderColor: `${TYPE_COLORS[item.type as AssetType] ?? '#666'}55`,
-                                    fontWeight: 600,
+                                    bgcolor: TYPE_COLORS[item.type as AssetType] ?? '#64748b',
+                                    color: '#fff',
+                                    fontWeight: 700,
                                     flexShrink: 0,
                                   }}
                                 />

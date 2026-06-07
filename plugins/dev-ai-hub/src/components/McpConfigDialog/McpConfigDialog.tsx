@@ -16,7 +16,10 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -25,7 +28,7 @@ import OpenInBrowserIcon from '@mui/icons-material/OpenInBrowser';
 import AppsIcon from '@mui/icons-material/Apps';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useMcpCatalog, useProviders } from '../../hooks';
 import type { AiTool, McpCatalogEntry } from '@julianpedro/plugin-dev-ai-hub-common';
@@ -85,101 +88,119 @@ function CatalogEntryCard({ entry }: CatalogEntryCardProps) {
     (entry.type === 'stdio' && !!entry.command);
 
   return (
-    <Box
+    <Card
+      variant="outlined"
       sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
         borderLeft: `3px solid ${accent}`,
-        borderRadius: 2,
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1.25,
-        height: '100%',
-        minHeight: 148,
-        transition: 'all 0.15s ease',
+        transition: 'all 0.18s ease',
         '&:hover': {
-          boxShadow: `0 4px 16px ${accent}25`,
-          borderColor: `${accent}60`,
+          boxShadow: `0 6px 24px ${accent}30`,
+          borderColor: accent,
+          transform: 'translateY(-2px)',
         },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25 }}>
-        <Box
-          sx={{
-            width: 48,
-            height: 48,
-            borderRadius: 2,
-            backgroundColor: `${accent}18`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            boxShadow: `0 2px 8px ${accent}20`,
-          }}
-        >
-          {entry.icon ? (
-            <Box
-              component="img"
-              src={entry.icon}
-              alt={entry.name}
-              sx={{ width: 32, height: 32, objectFit: 'contain' }}
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-          ) : (
-            <StorageIcon sx={{ fontSize: '1.4rem', color: accent }} />
-          )}
-        </Box>
-
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25, flexWrap: 'wrap' }}>
-            <Typography variant="subtitle2" fontWeight={700} noWrap title={entry.name} sx={{ flex: 1 }}>
-              {entry.name}
-            </Typography>
-            <Chip
-              label={entry.type}
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: '0.6rem',
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                bgcolor: `${accent}18`,
-                color: accent,
-                border: '1px solid',
-                borderColor: `${accent}40`,
-              }}
-            />
+      <CardContent sx={{ p: 1.5, pb: '0 !important', flex: 1 }}>
+        {/* Header row — icon + name/type */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 1.5,
+              backgroundColor: alpha(accent, 0.12),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              boxShadow: `0 2px 8px ${accent}25`,
+            }}
+          >
+            {entry.icon ? (
+              <Box
+                component="img"
+                src={entry.icon}
+                alt={entry.name}
+                sx={{ width: 26, height: 26, objectFit: 'contain' }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            ) : (
+              <StorageIcon sx={{ color: accent, fontSize: '1.3rem' }} />
+            )}
           </Box>
-          {entry.description && (
-            <Typography variant="caption" color="text.secondary" title={entry.description} sx={{ display: 'block', lineHeight: 1.4 }}>
-              {entry.description}
+
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.2 }}>
+              <Typography variant="body2" fontWeight={700} noWrap title={entry.name} sx={{ lineHeight: 1.2, flex: 1 }}>
+                {entry.name}
+              </Typography>
+              <Chip
+                label={entry.type}
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: '0.6rem',
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  bgcolor: accent,
+                  color: '#fff',
+                  flexShrink: 0,
+                  '& .MuiChip-label': { px: '6px' },
+                }}
+              />
+            </Box>
+            <Typography variant="caption" sx={{ color: accent, fontWeight: 600 }}>
+              {entry.type === 'http' ? 'HTTP' : 'Stdio'}
             </Typography>
-          )}
-          {entry.type === 'http' && entry.url && (
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.68rem', color: 'text.disabled', mt: 0.25, wordBreak: 'break-all' }}
-            >
-              {entry.url}
-            </Typography>
-          )}
-          {entry.type === 'stdio' && entry.command && (
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.68rem', color: 'text.disabled', mt: 0.25 }}
-            >
-              {[entry.command, ...(entry.args ?? [])].join(' ')}
-            </Typography>
-          )}
+          </Box>
         </Box>
-      </Box>
+
+        {/* Description */}
+        {entry.description && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            title={entry.description}
+            sx={{
+              mb: 0.75,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              lineHeight: 1.4,
+            }}
+          >
+            {entry.description}
+          </Typography>
+        )}
+
+        {/* URL / command */}
+        {entry.type === 'http' && entry.url && (
+          <Typography
+            variant="caption"
+            sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.65rem', color: 'text.disabled', wordBreak: 'break-all' }}
+          >
+            {entry.url}
+          </Typography>
+        )}
+        {entry.type === 'stdio' && entry.command && (
+          <Typography
+            variant="caption"
+            sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.65rem', color: 'text.disabled' }}
+          >
+            {[entry.command, ...(entry.args ?? [])].join(' ')}
+          </Typography>
+        )}
+      </CardContent>
 
       {canInstall && (
-        <Divider sx={{ mt: 'auto' }} />
-      )}
-      {canInstall && (
-        <Box sx={{ display: 'flex', gap: 0.75 }}>
+        <CardActions sx={{ px: 1.5, py: 1, mt: 'auto', borderTop: '1px solid', borderColor: 'divider', gap: 0.75 }}>
           <Button
             size="small"
             variant="outlined"
@@ -187,12 +208,12 @@ function CatalogEntryCard({ entry }: CatalogEntryCardProps) {
             onClick={handleInstallVscode}
             fullWidth
             sx={{
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
               fontWeight: 700,
               py: 0.5,
-              borderColor: `${accent}50`,
+              borderColor: accent,
               color: accent,
-              '&:hover': { borderColor: accent, bgcolor: `${accent}0a` },
+              '&:hover': { borderColor: accent, bgcolor: alpha(accent, 0.08) },
             }}
           >
             {t('mcpConfigDialog.installInVscode')}
@@ -204,19 +225,19 @@ function CatalogEntryCard({ entry }: CatalogEntryCardProps) {
             onClick={handleInstallCursor}
             fullWidth
             sx={{
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
               fontWeight: 700,
               py: 0.5,
-              borderColor: `${accent}50`,
+              borderColor: accent,
               color: accent,
-              '&:hover': { borderColor: accent, bgcolor: `${accent}0a` },
+              '&:hover': { borderColor: accent, bgcolor: alpha(accent, 0.08) },
             }}
           >
             {t('mcpConfigDialog.installInCursor')}
           </Button>
-        </Box>
+        </CardActions>
       )}
-    </Box>
+    </Card>
   );
 }
 
