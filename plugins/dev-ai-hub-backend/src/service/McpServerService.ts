@@ -81,27 +81,51 @@ export function createMcpServer(
     return `IMPORTANT: Present the table below to the user exactly as formatted — do not convert to a list.\n\n${header}${table}\n\n**IDs for install_asset:**\n${ids}`;
   };
 
-  /** Returns the raw-content URL for an asset (empty string when baseUrl is not configured). */
+  /** Returns the raw-content URL for the main asset markdown. */
   const rawUrl = (assetId: string) =>
     baseUrl ? `${baseUrl}/assets/${encodeURIComponent(assetId)}/raw` : undefined;
 
+  /** Returns the URL for an individual resource file bundled with a skill asset. */
+  const resourceFileUrl = (assetId: string, resourcePath: string) => {
+    if (!baseUrl) return undefined;
+    const encodedPath = resourcePath.split('/').map(encodeURIComponent).join('/');
+    return `${baseUrl}/assets/${encodeURIComponent(assetId)}/resources/${encodedPath}`;
+  };
+
   /**
-   * Builds the install payload shared by install_asset and install_assets.
+   * Builds the install payload shared by install_asset, install_assets, and install_bundle.
+   *
+   * Each resource file now has its own raw_url and install_command (curl), mirroring
+   * the main asset. This makes resource installation deterministic — the LLM never
+   * needs to write file content verbatim, which prevents truncation and model alterations.
+   *
    * curl is built-in on Windows 10+ (since 2018), macOS, and Linux.
    * --create-dirs creates parent directories; -fsSL follows redirects silently.
    */
   const buildInstallPayload = (asset: AiAsset, recommendedPath: string, includeContent = false) => {
     const url = rawUrl(asset.id);
-    // Resource files have no individual raw URL — always include their content when present.
-    const resources = asset.resourcesContent
-      ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
-          path: filePath,
-          content: fileContent,
-        }))
-      : undefined;
-
     const curlCmd = url
       ? `curl -fsSL --create-dirs -o ${JSON.stringify(recommendedPath)} ${JSON.stringify(url)}`
+      : undefined;
+
+    // Skill directory is the parent of SKILL.md — resource files live alongside it.
+    const skillDir = recommendedPath.split('/').slice(0, -1).join('/');
+
+    const resources = asset.resourcesContent
+      ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => {
+          const installPath = skillDir ? `${skillDir}/${filePath}` : filePath;
+          const resUrl = resourceFileUrl(asset.id, filePath);
+          const resCurl = resUrl
+            ? `curl -fsSL --create-dirs -o ${JSON.stringify(installPath)} ${JSON.stringify(resUrl)}`
+            : undefined;
+          return {
+            path: filePath,
+            install_path: installPath,
+            raw_url: resUrl,
+            install_command: resCurl,
+            ...(includeContent ? { content: fileContent } : {}),
+          };
+        })
       : undefined;
 
     return {
@@ -485,8 +509,8 @@ export function createMcpServer(
           type: 'text' as const,
           text: JSON.stringify({
             action_required: payload.resources?.length
-              ? '[A] run install_command in terminal • [B] fetch raw_url → write to recommended_path • [C] write content field (last resort, pass include_content=true). Then write each file in resources[] to its path.'
-              : '[A] run install_command in terminal • [B] fetch raw_url → write to recommended_path • [C] write content field (last resort, pass include_content=true)',
+              ? 'For main file and each resources[] entry: [A] run install_command in terminal (preferred, atomic) • [B] fetch raw_url → write to install_path • [C] write content field (last resort, pass include_content=true)'
+              : '[A] run install_command in terminal (preferred, atomic) • [B] fetch raw_url → write to recommended_path • [C] write content field (last resort, pass include_content=true)',
             installed: {
               id: asset.id,
               name: displayName(asset),
@@ -570,7 +594,7 @@ export function createMcpServer(
         content: [{
           type: 'text' as const,
           text: JSON.stringify({
-            action_required: 'For each file in files[]: [A] run install_command in terminal • [B] fetch raw_url → write • [C] write content field (last resort, pass include_content=true). Process all files.',
+            action_required: 'For each entry in files[] (and each resources[] inside it): [A] run install_command in terminal (preferred, atomic) • [B] fetch raw_url → write to install_path • [C] write content field (last resort, pass include_content=true). Process all files.',
             bundle: {
               id: bundle.id,
               name: displayName(bundle),
