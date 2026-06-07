@@ -1,0 +1,38 @@
+plugins/dev-ai-hub/src/index.ts
+  h_3460858e8e4831 11
+plugins/dev-ai-hub/src/translation.ts
+  h_3460858e8e4831 1,133-141
+plugins/dev-ai-hub/src/components/AssetDetailPanel/AssetDetailPanel.tsx
+  h_3460858e8e4831 25,117-119,195-197
+plugins/dev-ai-hub/src/components/AssetCard/AssetCard.test.tsx
+  h_3460858e8e4831 10-11
+plugins/dev-ai-hub/package.json
+  h_3460858e8e4831 73
+plugins/dev-ai-hub/src/components/McpConfigDialog/McpConfigDialog.tsx
+  h_3460858e8e4831 19-22,31,91-92,94-97,101,103-105,109-111,114-117,122,130,134,139-142,151-159,164-178,182-187,195,198,200,203,211,214,216,228,231,233,238,240
+plugins/dev-ai-hub/src/components/AssetFilters/AssetFilters.tsx
+  h_3460858e8e4831 15
+plugins/dev-ai-hub/src/plugin.tsx
+  h_3460858e8e4831 9,12,32-34,39-40
+plugins/dev-ai-hub/src/components/AssetHelpDialog/AssetHelpDialog.tsx
+  h_3460858e8e4831 13
+plugins/dev-ai-hub/src/components/AssetInstallDialog/AssetInstallDialog.tsx
+  h_3460858e8e4831 24
+plugins/dev-ai-hub/src/components/AssetCard/AssetCard.tsx
+  h_3460858e8e4831 19
+plugins/dev-ai-hub/src/components/ToolIcon/ToolIcon.tsx
+  h_3460858e8e4831 5
+plugins/dev-ai-hub/src/components/DevAiHubPage/DevAiHubPage.tsx
+  h_3460858e8e4831 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "fbbc8a4d36eb6954e33a2b49143a1ef3df2f59d9",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
