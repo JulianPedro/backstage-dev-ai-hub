@@ -1,0 +1,36 @@
+plugins/dev-ai-hub/src/locales/es.ts
+  h_3460858e8e4831 120-123
+plugins/dev-ai-hub/src/translation.ts
+  h_3460858e8e4831 131-134
+plugins/dev-ai-hub/src/components/AssetsTab/index.ts
+  h_3460858e8e4831 1
+plugins/dev-ai-hub/src/locales/pt-BR.ts
+  h_3460858e8e4831 120-123
+plugins/dev-ai-hub/src/components/AssetsTab/AssetsTab.tsx
+  h_3460858e8e4831 1-242
+plugins/dev-ai-hub/src/plugin.tsx
+  h_3460858e8e4831 4,11-13,45-72,74
+plugins/dev-ai-hub/src/components/McpConfigDialog/McpConfigDialog.tsx
+  h_3460858e8e4831 11,47-48
+plugins/dev-ai-hub/src/components/AdminPage/index.ts
+  h_3460858e8e4831 1
+plugins/dev-ai-hub/src/components/McpPage/index.ts
+  h_3460858e8e4831 1
+plugins/dev-ai-hub/src/components/McpPage/McpPage.tsx
+  h_3460858e8e4831 1-480
+plugins/dev-ai-hub/src/components/DevAiHubPage/DevAiHubPage.tsx
+  h_3460858e8e4831 19-23,74-88,130,183,202,208,267,292,321,328,375-376,381,430-431,435-436,438-439,450
+plugins/dev-ai-hub/src/components/AdminPage/AdminPage.tsx
+  h_3460858e8e4831 1-143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "df2915e63ccebe2def474dea692209bd8b5c3a04",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
