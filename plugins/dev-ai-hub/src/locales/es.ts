@@ -117,4 +117,8 @@ export default {
   'devAiHubPage.syncButton': 'Sincronizar',
   'devAiHubPage.syncTriggered': 'Sincronización disparada',
   'devAiHubPage.providerStatusError': 'Error',
+  'devAiHubPage.noProvidersConfigured': 'No hay proveedores configurados.',
+  'devAiHubPage.tabAssets': 'Assets',
+  'devAiHubPage.tabMcp': 'MCP',
+  'devAiHubPage.tabAdmin': 'Admin',
 };

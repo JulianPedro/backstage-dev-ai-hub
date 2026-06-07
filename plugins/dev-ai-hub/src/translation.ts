@@ -128,6 +128,10 @@ export const devAiHubTranslationRef = createTranslationRef({
       syncButton: 'Sync',
       syncTriggered: 'Sync triggered',
       providerStatusError: 'Error',
+      noProvidersConfigured: 'No providers configured.',
+      tabAssets: 'Assets',
+      tabMcp: 'MCP',
+      tabAdmin: 'Admin',
     },
   },
   translations: {
