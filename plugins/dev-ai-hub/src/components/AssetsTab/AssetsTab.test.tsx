@@ -35,9 +35,9 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('../AssetCard', () => ({
   AssetCard: ({ asset, onView }: { asset: AiAssetSummary; onView: (id: string) => void }) => (
-    <div data-testid={`asset-card-${asset.id}`} onClick={() => onView(asset.id)}>
+    <button type="button" data-testid={`asset-card-${asset.id}`} onClick={() => onView(asset.id)}>
       {asset.name}
-    </div>
+    </button>
   ),
 }));
 
