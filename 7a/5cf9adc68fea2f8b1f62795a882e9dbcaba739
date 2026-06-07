@@ -1,0 +1,16 @@
+plugins/dev-ai-hub-backend/package.json
+  h_3460858e8e4831 46
+plugins/dev-ai-hub/src/components/AssetsTab/AssetsTab.test.tsx
+  h_3460858e8e4831 38,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "7a5cf9adc68fea2f8b1f62795a882e9dbcaba739",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
