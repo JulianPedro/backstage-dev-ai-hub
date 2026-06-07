@@ -152,6 +152,45 @@ export function createRouter(options: RouterOptions): express.Router {
   });
 
   /**
+   * Returns a single resource file (script, config, etc.) bundled with a skill asset.
+   * The path after /resources/ matches the key in resourcesContent exactly.
+   * Used by the MCP install_command for skill resources — curl fetches this directly,
+   * so the file is written atomically without passing through the model.
+   */
+  router.get('/assets/:id/resources/*', async (req, res) => {
+    try {
+      const asset = await store.getAsset(req.params.id);
+      if (!asset) return res.status(404).json({ error: 'Asset not found' });
+
+      const resourcePath = req.params[0] as string;
+      const content = asset.resourcesContent?.[resourcePath];
+      if (content === undefined) {
+        return res.status(404).json({ error: `Resource not found: ${resourcePath}` });
+      }
+
+      // Infer content-type from extension; default to octet-stream for unknown files
+      const ext = resourcePath.split('.').pop()?.toLowerCase();
+      const contentTypes: Record<string, string> = {
+        py:   'text/x-python; charset=utf-8',
+        js:   'application/javascript; charset=utf-8',
+        ts:   'application/typescript; charset=utf-8',
+        sh:   'text/x-sh; charset=utf-8',
+        yaml: 'text/yaml; charset=utf-8',
+        yml:  'text/yaml; charset=utf-8',
+        json: 'application/json; charset=utf-8',
+        md:   'text/markdown; charset=utf-8',
+        txt:  'text/plain; charset=utf-8',
+      };
+      res.setHeader('Content-Type', contentTypes[ext ?? ''] ?? 'application/octet-stream');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      return res.send(content);
+    } catch (err) {
+      options.logger.error('GET /assets/:id/resources/* failed', err as Error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  /**
    * For bundles: returns a zip with all item assets placed at their recommended paths.
    * For skills: returns a zip with the markdown + bundled resource files.
    * For other types: returns the markdown as a text file.
