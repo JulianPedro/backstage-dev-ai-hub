@@ -2217,7 +2217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@backstage/plugin-permission-common@npm:^0.9.9":
+"@backstage/plugin-permission-common@npm:*, @backstage/plugin-permission-common@npm:^0.9.9":
   version: 0.9.9
   resolution: "@backstage/plugin-permission-common@npm:0.9.9"
   dependencies:
@@ -3696,6 +3696,7 @@ __metadata:
     "@backstage/backend-defaults": "npm:*"
     "@backstage/backend-test-utils": "npm:*"
     "@backstage/cli": "npm:*"
+    "@backstage/plugin-permission-common": "npm:*"
     "@julianpedro/plugin-dev-ai-hub-common": "npm:^0.1.0"
     "@julianpedro/plugin-dev-ai-hub-node": "npm:^0.1.0"
     "@modelcontextprotocol/sdk": "npm:^1.5.0"
