@@ -1,0 +1,34 @@
+plugins/dev-ai-hub-common/src/index.ts
+  h_3460858e8e4831 4
+plugins/dev-ai-hub-common/src/permissions.ts
+  h_3460858e8e4831 1-8
+plugins/dev-ai-hub/src/translation.ts
+  h_3460858e8e4831 126-130
+plugins/dev-ai-hub-backend/src/plugin.ts
+  h_3460858e8e4831 34-35,37,77
+plugins/dev-ai-hub/src/components/DevAiHubPage/DevAiHubPage.tsx
+  h_3460858e8e4831 5-7,9,12,15,23-26,29,31,41,80-81,83-84,328-347,430-435,437-550
+plugins/dev-ai-hub/src/hooks/index.ts
+  h_3460858e8e4831 161-179
+plugins/dev-ai-hub-backend/src/router.ts
+  h_3460858e8e4831 5-6,12,21-22,26,289-297
+plugins/dev-ai-hub/src/locales/pt-BR.ts
+  h_3460858e8e4831 115-119
+plugins/dev-ai-hub-common/package.json
+  h_3460858e8e4831 47-49
+plugins/dev-ai-hub/package.json
+  h_3460858e8e4831 74
+plugins/dev-ai-hub/src/locales/es.ts
+  h_3460858e8e4831 115-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "3a24fb3d0c71851dbb8703b912ee193e8437921a",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
