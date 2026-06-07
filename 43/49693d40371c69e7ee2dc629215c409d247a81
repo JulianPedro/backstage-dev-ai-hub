@@ -1,0 +1,26 @@
+plugins/dev-ai-hub-backend/package.json
+  h_3460858e8e4831 67
+plugins/dev-ai-hub-common/package.json
+  h_3460858e8e4831 48
+plugins/dev-ai-hub/package.json
+  h_3460858e8e4831 70-74,78-85
+plugins/dev-ai-hub/src/components/AssetsTab/AssetsTab.test.tsx
+  h_3460858e8e4831 1-207
+plugins/dev-ai-hub/src/components/AdminPage/AdminPage.test.tsx
+  h_3460858e8e4831 1-186
+plugins/dev-ai-hub-node/package.json
+  h_3460858e8e4831 53
+plugins/dev-ai-hub/src/components/McpPage/McpPage.test.tsx
+  h_3460858e8e4831 1-196
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "4349693d40371c69e7ee2dc629215c409d247a81",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
