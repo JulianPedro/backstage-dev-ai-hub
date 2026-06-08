@@ -59,7 +59,7 @@ function provider(overrides?: object) {
     id: 'prov-1',
     target: 'github.com/org/repo',
     status: 'idle' as const,
-    lastSync: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 min ago
+    lastSync: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
     ...overrides,
   };
 }
@@ -88,14 +88,12 @@ describe('AdminPage', () => {
       expect(screen.getByText('github.com/org/repo')).toBeInTheDocument();
     });
 
-    it('shows success icon for idle provider', () => {
+    it('shows no error text for idle provider', () => {
       render(<AdminPage />);
-      // CheckCircleOutlineIcon renders — provider section exists
-      expect(screen.getByText('github.com/org/repo')).toBeInTheDocument();
       expect(screen.queryByText('Error')).not.toBeInTheDocument();
     });
 
-    it('shows error icon and message for provider with error status', () => {
+    it('shows error message for provider with error status', () => {
       mockUseProviders.mockReturnValue({
         providers: [provider({ status: 'error', error: 'Clone failed' })],
       });
@@ -126,13 +124,15 @@ describe('AdminPage', () => {
     it('does not render sync button when user lacks permission', () => {
       usePermission.mockReturnValue({ allowed: false });
       render(<AdminPage />);
-      expect(screen.queryByTitle('Sync')).not.toBeInTheDocument();
+      // No buttons when permission is denied (no Sync All either since only 1 provider)
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
 
     it('renders individual sync button when user has permission', () => {
       usePermission.mockReturnValue({ allowed: true });
       render(<AdminPage />);
-      expect(screen.getByRole('button', { name: /sync/i })).toBeInTheDocument();
+      // aria-label="Sync" is set directly on IconButton
+      expect(screen.getByRole('button', { name: 'Sync' })).toBeInTheDocument();
     });
 
     it('does not render Sync All button with a single provider even when allowed', () => {
@@ -158,7 +158,7 @@ describe('AdminPage', () => {
 
     it('calls triggerSync with provider id when sync button clicked', async () => {
       render(<AdminPage />);
-      fireEvent.click(screen.getByRole('button', { name: /sync/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'Sync' }));
       await waitFor(() => {
         expect(mockTriggerSync).toHaveBeenCalledWith('prov-1');
       });
@@ -166,7 +166,7 @@ describe('AdminPage', () => {
 
     it('shows snackbar after sync triggered', async () => {
       render(<AdminPage />);
-      fireEvent.click(screen.getByRole('button', { name: /sync/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'Sync' }));
       await waitFor(() => {
         expect(screen.getByText('Sync triggered')).toBeInTheDocument();
       });

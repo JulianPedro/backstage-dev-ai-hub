@@ -111,6 +111,7 @@ export function AdminPage() {
                       <span>
                         <IconButton
                           size="small"
+                          aria-label={t('devAiHubPage.syncButton') as string}
                           disabled={!!syncing[provider.id]}
                           onClick={async () => {
                             await triggerSync(provider.id);

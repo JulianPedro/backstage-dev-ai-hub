@@ -319,7 +319,7 @@ export function McpPage({ embedded = false }: McpPageProps) {
           />
         </Box>
 
-        <Collapse in={toolConfigExpanded}>
+        <Collapse in={toolConfigExpanded} mountOnEnter unmountOnExit>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
             {toolConfigs.map((toolCfg, i) => (
               <Tab
@@ -437,7 +437,7 @@ export function McpPage({ embedded = false }: McpPageProps) {
             />
           </Box>
 
-          <Collapse in={manualExpanded}>
+          <Collapse in={manualExpanded} mountOnEnter unmountOnExit>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 0.5 }}>
               {cfg.description}
             </Typography>
