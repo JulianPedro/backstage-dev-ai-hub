@@ -1,0 +1,20 @@
+plugins/dev-ai-hub/src/components/McpPage/McpPage.tsx
+  h_3460858e8e4831 322,440
+plugins/dev-ai-hub/src/components/AdminPage/AdminPage.tsx
+  h_3460858e8e4831 114
+plugins/dev-ai-hub/src/components/McpPage/McpPage.test.tsx
+  h_3460858e8e4831 2,65,67-74,99-100,104-105,111-112,116,118,122,126,130,132,136,140,146-148,152-154,158-163,167-169,172,176-178,180,184,188-189,193,200-201
+plugins/dev-ai-hub/src/components/AdminPage/AdminPage.test.tsx
+  h_3460858e8e4831 62,91,96,127-128,134-135,161,169
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "f042aea9f1a5f9373ed4eb21021659dc4bcefb6a",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
