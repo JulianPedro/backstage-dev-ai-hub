@@ -12,7 +12,7 @@
     "jsx": "react-jsx",
     "types": ["node", "jest"],
     "noUnusedLocals": false,
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "skipLibCheck": true
   }
 }

@@ -80,7 +80,6 @@ async function renderPage(props: { embedded?: boolean } = {}) {
 function makeCatalogEntry(overrides?: Partial<McpCatalogEntry>): McpCatalogEntry {
   return {
     id: 'mcp-1',
-    providerId: 'prov-1',
     name: 'My MCP Server',
     description: 'A test MCP server',
     type: 'http',

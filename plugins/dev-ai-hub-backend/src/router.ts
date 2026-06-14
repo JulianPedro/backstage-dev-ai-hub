@@ -168,7 +168,7 @@ export function createRouter(options: RouterOptions): express.Router {
       const asset = await store.getAsset(req.params.id);
       if (!asset) return res.status(404).json({ error: 'Asset not found' });
 
-      const resourcePath = req.params[0] as string;
+      const resourcePath = (req.params as Record<string, string>)['0'];
       const content = asset.resourcesContent?.[resourcePath];
       if (content === undefined) {
         return res.status(404).json({ error: `Resource not found: ${resourcePath}` });

@@ -171,8 +171,8 @@ export function DevAiHubPage() {
                 {stats
                   ? (() => {
                       const providerCount = Object.keys(stats.byProvider).length;
-                      const providerStr = t(providerCount === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { count: providerCount });
-                      return t('devAiHubPage.totalStats', { totalAssets: stats.totalAssets, providers: providerStr });
+                      const providerStr = t(providerCount === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { n: String(providerCount) });
+                      return t('devAiHubPage.totalStats', { totalAssets: String(stats.totalAssets), providers: providerStr });
                     })()
                   : t('devAiHubPage.subtitle')}
               </Box>
@@ -207,7 +207,7 @@ export function DevAiHubPage() {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'default' }}>
                 <FiberManualRecordIcon sx={{ fontSize: '0.6rem', color: '#4ade80' }} />
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
-                  {timeAgo(stats.lastSync, t)}
+                  {timeAgo(stats.lastSync, t as TFunc)}
                 </Typography>
               </Box>
             </Tooltip>
@@ -302,7 +302,7 @@ export function DevAiHubPage() {
         {providers.length > 0 && (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1, mt: -1 }}>
             <Tooltip
-              title={t(providers.length === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { count: providers.length })}
+              title={t(providers.length === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { n: String(providers.length) })}
               placement="left"
             >
               <IconButton
@@ -330,7 +330,7 @@ export function DevAiHubPage() {
         {/* Results count */}
         {result && !loading && (
           <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-            {t(result.totalCount === 1 ? 'devAiHubPage.assetCountOne' : 'devAiHubPage.assetCountOther', { count: result.totalCount })}
+            {t(result.totalCount === 1 ? 'devAiHubPage.assetCountOne' : 'devAiHubPage.assetCountOther', { n: String(result.totalCount) })}
           </Typography>
         )}
 
@@ -456,7 +456,7 @@ export function DevAiHubPage() {
                     </Typography>
                     {provider.lastSync && (
                       <Typography variant="caption" color="text.disabled">
-                        {timeAgo(provider.lastSync, t)}
+                        {timeAgo(provider.lastSync, t as TFunc)}
                       </Typography>
                     )}
                     {provider.status === 'error' && provider.error && (

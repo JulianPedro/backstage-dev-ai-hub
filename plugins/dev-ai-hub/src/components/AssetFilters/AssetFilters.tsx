@@ -278,7 +278,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
             ))}
             {!tagsExpanded && hiddenCount > 0 && (
               <Chip
-                label={t('assetFilters.tagsShowMore', { count: hiddenCount })}
+                label={t('assetFilters.tagsShowMore', { remaining: String(hiddenCount) })}
                 size="small"
                 clickable
                 onClick={() => setTagsExpanded(true)}

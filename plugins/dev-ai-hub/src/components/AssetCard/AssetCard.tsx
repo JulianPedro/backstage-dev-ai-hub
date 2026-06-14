@@ -304,7 +304,7 @@ export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
             {asset.type === 'bundle' && asset.itemCount !== undefined
-              ? t('assetCard.bundleFooter', { count: asset.itemCount, author: asset.author })
+              ? t('assetCard.bundleFooter', { itemCount: String(asset.itemCount), author: asset.author })
               : t('assetCard.versionFooter', { version: asset.version, author: asset.author })}
           </Typography>
           {asset.installCount > 0 && (

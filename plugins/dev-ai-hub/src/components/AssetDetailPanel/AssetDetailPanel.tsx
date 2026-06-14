@@ -48,6 +48,7 @@ const TYPE_COLORS: Record<AssetType, string> = {
   agent: '#7b1fa2',
   skill: '#388e3c',
   workflow: '#f57c00',
+  prompt: '#EC4899',
   bundle: '#8B5CF6',
 };
 
@@ -157,7 +158,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5 }}>
                       <Inventory2Icon sx={{ fontSize: '1rem', color: '#8B5CF6' }} />
                       <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
-                        {t('assetDetailPanel.bundlePreviewTitle', { count: asset.items?.length ?? 0 })}
+                        {t('assetDetailPanel.bundlePreviewTitle', { total: String(asset.items?.length ?? 0) })}
                       </Typography>
                     </Box>
                     {asset.description && (
@@ -393,7 +394,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
                             <Inventory2Icon sx={{ fontSize: '0.85rem', color: '#8B5CF6' }} />
                             <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                              {t('assetDetailPanel.bundleContents', { count: asset.items.length })}
+                              {t('assetDetailPanel.bundleContents', { total: String(asset.items.length) })}
                             </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>

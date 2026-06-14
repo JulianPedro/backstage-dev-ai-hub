@@ -160,7 +160,7 @@ export function AssetsTab() {
       {providers.length > 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1, mt: -1 }}>
           <Tooltip
-            title={t(providers.length === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { count: providers.length })}
+            title={t(providers.length === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { n: String(providers.length) })}
             placement="left"
           >
             <IconButton
@@ -188,7 +188,7 @@ export function AssetsTab() {
       {/* Results count */}
       {result && !loading && (
         <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-          {t(result.totalCount === 1 ? 'devAiHubPage.assetCountOne' : 'devAiHubPage.assetCountOther', { count: result.totalCount })}
+          {t(result.totalCount === 1 ? 'devAiHubPage.assetCountOne' : 'devAiHubPage.assetCountOther', { n: String(result.totalCount) })}
         </Typography>
       )}
 

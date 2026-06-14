@@ -44,7 +44,7 @@ export function AdminPage() {
               {t('devAiHubPage.providersSectionTitle')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {t(providers.length === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { count: providers.length })}
+              {t(providers.length === 1 ? 'devAiHubPage.providerCountOne' : 'devAiHubPage.providerCountOther', { n: String(providers.length) })}
             </Typography>
           </Box>
           {canSync && providers.length > 1 && (
@@ -96,7 +96,7 @@ export function AdminPage() {
                     </Typography>
                     {provider.lastSync && (
                       <Typography variant="caption" color="text.disabled">
-                        {timeAgo(provider.lastSync, t)}
+                        {timeAgo(provider.lastSync, t as TFunc)}
                       </Typography>
                     )}
                     {provider.status === 'error' && provider.error && (
