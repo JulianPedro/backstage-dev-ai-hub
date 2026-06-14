@@ -65,7 +65,7 @@ function getInitialConfig(): UiConfigValue {
 }
 
 function applyRemoteConfig(raw: { typeColors: Record<string, string>; statsCards: string[] }) {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(raw)); } catch {}
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(raw)); } catch (_e) { /* storage unavailable */ }
   currentConfig = {
     typeColors: buildTypeColors(raw.typeColors ?? {}),
     statsCards: buildStatsCards(raw.statsCards ?? []),

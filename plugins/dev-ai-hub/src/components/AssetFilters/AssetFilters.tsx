@@ -81,7 +81,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
 
   const handleTagToggle = (tag: string) => {
     const next = value.tags.includes(tag)
-      ? value.tags.filter(tagItem => tagItem !== tag)
+      ? value.tags.filter(tag_ => tag_ !== tag)
       : [...value.tags, tag];
     onChange({ ...value, tags: next });
   };

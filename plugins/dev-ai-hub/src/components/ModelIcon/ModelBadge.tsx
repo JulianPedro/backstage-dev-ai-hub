@@ -23,11 +23,19 @@ export function ModelBadge({ model }: ModelBadgeProps) {
   const family = detectFamily(model);
   const hex = family ? (BADGE_COLORS[family.label] ?? `#${family.hex}`) : undefined;
 
-  // Light mode: solid brand fill + white text (strong brand identity)
-  // Dark mode: translucent fill + brand-colored text (avoids harshness on dark bg)
-  const bg     = hex ? (isDark ? alpha(hex, 0.22) : hex)  : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)');
-  const fg     = hex ? (isDark ? hex : '#fff')             : (isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)');
-  const border = hex ? (isDark ? alpha(hex, 0.40) : hex)  : 'transparent';
+  // Light mode: solid brand fill + white text. Dark mode: translucent fill + brand text.
+  let bg: string;
+  let fg: string;
+  let border: string;
+  if (hex) {
+    bg     = isDark ? alpha(hex, 0.22) : hex;
+    fg     = isDark ? hex : '#fff';
+    border = isDark ? alpha(hex, 0.40) : hex;
+  } else {
+    bg     = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+    fg     = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
+    border = 'transparent';
+  }
 
   return (
     <Chip
