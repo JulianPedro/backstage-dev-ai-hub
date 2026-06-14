@@ -25,6 +25,18 @@ devAiHub:
           minutes: 60
         timeout:
           minutes: 5
+  # UI customization — uncomment and edit to test locally
+  # ui:
+  #   typeColors:
+  #     instruction: '#F54927'
+  #     agent:       '#004BED'
+  #     skill:       '#168272'
+  #     prompt:      '#EC4899'
+  #   statsCards:
+  #     - instruction
+  #     - agent
+  #     - skill
+  #     - prompt
 
 # GitHub integration — required for the sync to fetch files
 integrations:

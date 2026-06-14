@@ -8,13 +8,17 @@ import type { McpCatalogEntry } from '@julianpedro/plugin-dev-ai-hub-common';
 const mockGetBaseUrl = jest.fn().mockResolvedValue('http://localhost:7007/api/dev-ai-hub');
 
 jest.mock('@backstage/core-plugin-api', () => ({
-  ...jest.requireActual('@backstage/core-plugin-api'),
+  createApiRef: ({ id }: { id: string }) => ({ id }),
+  createPlugin: ({ id }: { id: string }) => ({ id }),
   useApi: (_ref: unknown) => ({ getBaseUrl: mockGetBaseUrl }),
-  discoveryApiRef: {},
+  discoveryApiRef: { id: 'core.discovery' },
+  configApiRef:    { id: 'core.config' },
+  fetchApiRef:     { id: 'core.fetch' },
 }));
 
 jest.mock('@backstage/frontend-plugin-api', () => ({
-  ...jest.requireActual('@backstage/frontend-plugin-api'),
+  createTranslationRef: (opts: { id: string }) => ({ id: opts.id }),
+  createTranslationResource: () => ({}),
   useTranslationRef: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
       const map: Record<string, string> = {

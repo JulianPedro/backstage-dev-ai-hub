@@ -45,6 +45,7 @@ export class AiAssetStore {
       author: input.author,
       icon: input.icon ?? null,
       version: input.version,
+      model: input.model ?? null,
       install_path: input.installPath ?? null,
       install_paths: input.installPaths ? JSON.stringify(input.installPaths) : null,
       content: input.content,
@@ -114,7 +115,7 @@ export class AiAssetStore {
 
     const rows = await query
       .select('id', 'provider_id', 'name', 'label', 'description', 'type', 'tools', 'tags',
-              'author', 'icon', 'version', 'install_count', 'bundle_items', 'help_text', 'mcps', 'synced_at', 'created_at', 'updated_at')
+              'author', 'icon', 'version', 'model', 'install_count', 'bundle_items', 'help_text', 'mcps', 'synced_at', 'created_at', 'updated_at')
       .orderByRaw("CASE WHEN type = 'bundle' THEN 0 ELSE 1 END, name ASC")
       .limit(pageSize)
       .offset((page - 1) * pageSize);
@@ -209,6 +210,7 @@ export class AiAssetStore {
       agent: 0,
       skill: 0,
       workflow: 0,
+      prompt: 0,
       bundle: 0,
     };
     const byTool: Record<string, number> = {};
@@ -344,6 +346,7 @@ export class AiAssetStore {
       author: row.author as string,
       icon: (row.icon as string | null) ?? undefined,
       version: row.version as string,
+      model: (row.model as string | null) ?? undefined,
       installCount: (row.install_count as number) ?? 0,
       itemCount,
       helpText: (row.help_text as string | null) ?? undefined,
@@ -367,6 +370,7 @@ export class AiAssetStore {
       author: row.author as string,
       icon: (row.icon as string | null) ?? undefined,
       version: row.version as string,
+      model: (row.model as string | null) ?? undefined,
       installPath: (row.install_path as string | null) ?? undefined,
       installPaths: row.install_paths
         ? JSON.parse(row.install_paths as string)

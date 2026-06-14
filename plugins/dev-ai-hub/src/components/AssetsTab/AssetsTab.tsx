@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { type ElementType, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { darken } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
@@ -11,6 +12,8 @@ import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import ChatIcon from '@mui/icons-material/Chat';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
 import CloudSyncIcon from '@mui/icons-material/CloudSync';
 import { Content } from '@backstage/core-components';
 import { useTranslationRef } from '@backstage/frontend-plugin-api';
@@ -22,7 +25,7 @@ import type { AssetFiltersValue } from '../AssetFilters';
 import { AssetDetailPanel } from '../AssetDetailPanel';
 import { AssetInstallDialog } from '../AssetInstallDialog';
 import { AssetHelpDialog } from '../AssetHelpDialog';
-import { useAssets, useStats, useProviders, useMcpCatalog } from '../../hooks';
+import { useAssets, useStats, useProviders, useMcpCatalog, useTypeConfig } from '../../hooks';
 
 const DEFAULT_FILTERS: AssetFiltersValue = {
   types: [],
@@ -34,16 +37,14 @@ const DEFAULT_FILTERS: AssetFiltersValue = {
 
 const PAGE_SIZE = 24;
 
-const STATS_CONFIG = [
-  { key: 'instruction' as AssetType, label: 'Instructions', Icon: ArticleIcon,
-    gradient: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', shadow: '#2563EB40' },
-  { key: 'agent' as AssetType, label: 'Agents', Icon: SmartToyIcon,
-    gradient: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', shadow: '#7C3AED40' },
-  { key: 'skill' as AssetType, label: 'Skills', Icon: BuildIcon,
-    gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)', shadow: '#05966940' },
-  { key: 'workflow' as AssetType, label: 'Workflows', Icon: AccountTreeIcon,
-    gradient: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)', shadow: '#D9770640' },
-];
+const STATS_META: Record<AssetType, { label: string; Icon: ElementType }> = {
+  instruction: { label: 'Instructions', Icon: ArticleIcon },
+  agent:       { label: 'Agents',       Icon: SmartToyIcon },
+  skill:       { label: 'Skills',       Icon: BuildIcon },
+  workflow:    { label: 'Workflows',    Icon: AccountTreeIcon },
+  prompt:      { label: 'Prompts',      Icon: ChatIcon },
+  bundle:      { label: 'Bundles',      Icon: Inventory2Icon },
+};
 
 export function AssetsTab() {
   const { t } = useTranslationRef(devAiHubTranslationRef);
@@ -77,6 +78,7 @@ export function AssetsTab() {
   const { stats } = useStats();
   const { providers } = useProviders();
   const { catalog } = useMcpCatalog();
+  const { typeColors, statsCards } = useTypeConfig();
 
   const apiFilter = useMemo(() => ({
     type: filters.types.length === 1 ? (filters.types[0] as AssetType) : undefined,
@@ -106,45 +108,52 @@ export function AssetsTab() {
 
   return (
     <Content>
-      {/* Stats cards */}
+      {/* Stats cards — configurable via devAiHub.ui.statsCards (max 4) */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        {STATS_CONFIG.map(({ key, label, Icon, gradient, shadow }) => (
-          <Grid item xs={6} sm={3} key={key}>
-            <Box
-              onClick={() => handleFiltersChange({ ...filters, types: filters.types[0] === key ? [] : [key] })}
-              sx={{
-                background: gradient,
-                borderRadius: 3,
-                p: 2,
-                cursor: 'pointer',
-                boxShadow: filters.types[0] === key ? `0 8px 24px ${shadow}` : `0 2px 8px ${shadow}`,
-                transform: filters.types[0] === key ? 'translateY(-2px)' : 'none',
-                transition: 'all 0.2s ease',
-                outline: filters.types[0] === key ? '2px solid rgba(255,255,255,0.6)' : 'none',
-                outlineOffset: 2,
-                '&:hover': { boxShadow: `0 8px 24px ${shadow}`, transform: 'translateY(-2px)' },
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Box>
-                  <Typography variant="h4" fontWeight={800} sx={{ color: '#fff', lineHeight: 1 }}>
-                    {stats ? (stats.byType[key] ?? 0) : <Skeleton width={32} sx={{ bgcolor: 'rgba(255,255,255,0.3)' }} />}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500, mt: 0.5 }}>
-                    {label}
-                  </Typography>
-                </Box>
-                <Box sx={{
-                  width: 40, height: 40, borderRadius: 2,
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Icon sx={{ color: '#fff', fontSize: '1.4rem' }} />
+        {statsCards.map(key => {
+          const { label, Icon } = STATS_META[key];
+          const color = typeColors[key];
+          const gradient = `linear-gradient(135deg, ${color} 0%, ${darken(color, 0.15)} 100%)`;
+          const shadow = `${color}40`;
+          const selected = filters.types[0] === key;
+          return (
+            <Grid item xs={6} sm={3} key={key}>
+              <Box
+                onClick={() => handleFiltersChange({ ...filters, types: selected ? [] : [key] })}
+                sx={{
+                  background: gradient,
+                  borderRadius: 3,
+                  p: 2,
+                  cursor: 'pointer',
+                  boxShadow: selected ? `0 8px 24px ${shadow}` : `0 2px 8px ${shadow}`,
+                  transform: selected ? 'translateY(-2px)' : 'none',
+                  transition: 'all 0.2s ease',
+                  outline: selected ? '2px solid rgba(255,255,255,0.6)' : 'none',
+                  outlineOffset: 2,
+                  '&:hover': { boxShadow: `0 8px 24px ${shadow}`, transform: 'translateY(-2px)' },
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box>
+                    <Typography variant="h4" fontWeight={800} sx={{ color: '#fff', lineHeight: 1 }}>
+                      {stats ? (stats.byType[key] ?? 0) : <Skeleton width={32} sx={{ bgcolor: 'rgba(255,255,255,0.3)' }} />}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500, mt: 0.5 }}>
+                      {label}
+                    </Typography>
+                  </Box>
+                  <Box sx={{
+                    width: 40, height: 40, borderRadius: 2,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icon sx={{ color: '#fff', fontSize: '1.4rem' }} />
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-          </Grid>
-        ))}
+            </Grid>
+          );
+        })}
       </Grid>
 
       {/* Providers icon — navigates to Admin tab */}

@@ -15,12 +15,15 @@ import ArticleIcon from '@mui/icons-material/Article';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import ChatIcon from '@mui/icons-material/Chat';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
-import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import StorageIcon from '@mui/icons-material/Storage';
+import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import type { AiAssetSummary, AssetType, AiTool, McpCatalogEntry, McpRequirement } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
+import { ModelBadge } from '../ModelIcon';
 import { devAiHubTranslationRef } from '../../translation';
+import { useTypeConfig } from '../../hooks';
 
 const POPULAR_THRESHOLD = 5;
 const NEW_DAYS_MS     = 14 * 24 * 60 * 60 * 1000;
@@ -34,12 +37,22 @@ const TOOL_LABELS: Record<AiTool, string> = {
   'cursor':         'Cursor',
 };
 
-const TYPE_CONFIG: Record<AssetType, { label: string; color: string; Icon: ElementType }> = {
-  instruction: { label: 'Instruction', color: '#2563EB', Icon: ArticleIcon },
-  agent:       { label: 'Agent',       color: '#7C3AED', Icon: SmartToyIcon },
-  skill:       { label: 'Skill',       color: '#059669', Icon: BuildIcon },
-  workflow:    { label: 'Workflow',    color: '#D97706', Icon: AccountTreeIcon },
-  bundle:      { label: 'Bundle',      color: '#8B5CF6', Icon: Inventory2Icon },
+const TYPE_LABELS: Record<AssetType, string> = {
+  instruction: 'Instruction',
+  agent:       'Agent',
+  skill:       'Skill',
+  workflow:    'Workflow',
+  prompt:      'Prompt',
+  bundle:      'Bundle',
+};
+
+const TYPE_ICONS: Record<AssetType, ElementType> = {
+  instruction: ArticleIcon,
+  agent:       SmartToyIcon,
+  skill:       BuildIcon,
+  workflow:    AccountTreeIcon,
+  prompt:      ChatIcon,
+  bundle:      Inventory2Icon,
 };
 
 function resolveMcp(req: McpRequirement, catalog: McpCatalogEntry[]): { name: string; icon?: string } {
@@ -62,9 +75,10 @@ interface AssetCardProps {
 export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, mcpCatalog = [] }: AssetCardProps) {
   const { t } = useTranslationRef(devAiHubTranslationRef);
   const theme = useTheme();
+  const { typeColors } = useTypeConfig();
   const isDark = (theme.palette as any).mode === 'dark' || (theme.palette as any).type === 'dark';
-  const cfg = TYPE_CONFIG[asset.type];
-  const TypeIcon = cfg.Icon;
+  const color = typeColors[asset.type];
+  const TypeIcon = TYPE_ICONS[asset.type];
   const isPopular = asset.installCount >= POPULAR_THRESHOLD;
   const isNew     = Date.now() - new Date(asset.createdAt).getTime() < NEW_DAYS_MS;
   const isUpdated = !isNew && Date.now() - new Date(asset.updatedAt).getTime() < UPDATED_DAYS_MS;
@@ -79,11 +93,11 @@ export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, 
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
-        borderLeft: `3px solid ${cfg.color}`,
+        borderLeft: `3px solid ${color}`,
         transition: 'all 0.18s ease',
         '&:hover': {
-          boxShadow: `0 6px 24px ${cfg.color}30`,
-          borderColor: cfg.color,
+          boxShadow: `0 6px 24px ${color}30`,
+          borderColor: color,
           transform: 'translateY(-2px)',
         },
       }}
@@ -96,12 +110,12 @@ export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, 
               width: 40,
               height: 40,
               borderRadius: 1.5,
-              backgroundColor: alpha(cfg.color, 0.12),
+              backgroundColor: alpha(color, 0.12),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              boxShadow: `0 2px 8px ${cfg.color}25`,
+              boxShadow: `0 2px 8px ${color}25`,
             }}
           >
             {asset.icon ? (
@@ -113,7 +127,7 @@ export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, 
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <TypeIcon sx={{ color: cfg.color, fontSize: '1.3rem' }} />
+              <TypeIcon sx={{ color, fontSize: '1.3rem' }} />
             )}
           </Box>
 
@@ -160,9 +174,16 @@ export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, 
                 />
               )}
             </Box>
-            <Typography variant="caption" sx={{ color: cfg.color, fontWeight: 600 }}>
-              {cfg.label}
-            </Typography>
+            <Box>
+              <Typography variant="caption" sx={{ color, fontWeight: 600 }}>
+                {TYPE_LABELS[asset.type]}
+              </Typography>
+              {asset.type === 'agent' && asset.model && (
+                <Box sx={{ mt: 0.3 }}>
+                  <ModelBadge model={asset.model} />
+                </Box>
+              )}
+            </Box>
           </Box>
         </Box>
 

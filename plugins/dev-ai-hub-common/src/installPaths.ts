@@ -17,7 +17,8 @@ const CONVENTIONS: Record<AssetType, Record<AiTool | 'default', (name: string) =
     'github-copilot': () => '',
     'google-gemini': () => '',
     'cursor': () => '',
-    'all': () => '', 'default': () => '',
+    'all': () => '',
+    'default': () => '',
   },
   instruction: {
     'claude-code':    name => `.claude/rules/${name}.md`,
@@ -50,6 +51,14 @@ const CONVENTIONS: Record<AssetType, Record<AiTool | 'default', (name: string) =
     'cursor':         name => `.cursor/rules/${name}.mdc`,
     'all':            name => `.ai/workflows/${name}.md`,
     'default':        name => `.ai/workflows/${name}.md`,
+  },
+  prompt: {
+    'claude-code':    name => `.claude/prompts/${name}.md`,
+    'github-copilot': name => `.github/prompts/${name}.md`,
+    'google-gemini':  name => `.gemini/prompts/${name}.md`,
+    'cursor':         name => `.cursor/prompts/${name}.md`,
+    'all':            name => `.ai/prompts/${name}.md`,
+    'default':        name => `.ai/prompts/${name}.md`,
   },
 };
 

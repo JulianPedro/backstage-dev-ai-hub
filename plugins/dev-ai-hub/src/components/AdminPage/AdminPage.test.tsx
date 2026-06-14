@@ -5,7 +5,8 @@ import { AdminPage } from './AdminPage';
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 jest.mock('@backstage/frontend-plugin-api', () => ({
-  ...jest.requireActual('@backstage/frontend-plugin-api'),
+  createTranslationRef: (opts: { id: string }) => ({ id: opts.id }),
+  createTranslationResource: () => ({}),
   useTranslationRef: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
       const map: Record<string, string> = {

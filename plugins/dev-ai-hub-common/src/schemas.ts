@@ -13,6 +13,7 @@ export const AssetTypeEnum = z.enum([
   'agent',
   'skill',
   'workflow',
+  'prompt',
   'bundle',
 ]);
 
@@ -45,6 +46,8 @@ export const AiAssetFrontmatterSchema = z
     items: z.array(z.object({ ref: z.string() })).optional(),
     // usage guide — markdown shown when the user clicks the help button
     help: z.string().optional(),
+    // agent-specific: model identifier (e.g. "claude-opus-4-5", "gpt-4o")
+    model: z.string().optional(),
     // MCP servers required by this agent/skill
     mcps: z.array(
       z.union([

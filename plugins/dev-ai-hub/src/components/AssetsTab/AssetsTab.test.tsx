@@ -2,12 +2,13 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AssetsTab } from './AssetsTab';
-import type { AiAssetSummary, AiStats } from '@julianpedro/plugin-dev-ai-hub-common';
+import { AiAssetSummary, AiHubStats } from '@julianpedro/plugin-dev-ai-hub-common';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 jest.mock('@backstage/frontend-plugin-api', () => ({
-  ...jest.requireActual('@backstage/frontend-plugin-api'),
+  createTranslationRef: (opts: { id: string }) => ({ id: opts.id }),
+  createTranslationResource: () => ({}),
   useTranslationRef: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
       const map: Record<string, string> = {
@@ -63,6 +64,13 @@ jest.mock('../../hooks', () => ({
   useStats:      () => mockUseStats(),
   useProviders:  () => mockUseProviders(),
   useMcpCatalog: () => mockUseMcpCatalog(),
+  useTypeConfig: () => ({
+    typeColors: {
+      instruction: '#2563EB', agent: '#7C3AED', skill: '#059669',
+      workflow: '#D97706',    prompt: '#EC4899', bundle: '#8B5CF6',
+    },
+    statsCards: ['instruction', 'agent', 'skill', 'workflow'],
+  }),
 }));
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
@@ -86,9 +94,9 @@ function makeAsset(overrides?: Partial<AiAssetSummary>): AiAssetSummary {
   };
 }
 
-const STATS: AiStats = {
+const STATS: AiHubStats = {
   totalAssets: 5,
-  byType: { instruction: 2, agent: 1, skill: 1, workflow: 1 },
+  byType: { instruction: 2, agent: 1, skill: 1, workflow: 1, prompt: 0, bundle: 0 },
   byTool: {},
   byProvider: { 'prov-1': 5 },
   lastSync: new Date().toISOString(),

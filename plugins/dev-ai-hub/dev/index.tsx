@@ -7,7 +7,6 @@ import type {
   AiHubProvider,
   AiHubStats,
   AssetListFilter,
-  McpCatalogEntry,
 } from '@julianpedro/plugin-dev-ai-hub-common';
 
 const MOCK_ASSETS: AiAsset[] = [
@@ -156,7 +155,6 @@ const MOCK_STATS: AiHubStats = {
     agent: MOCK_ASSETS.filter(a => a.type === 'agent').length,
     skill: MOCK_ASSETS.filter(a => a.type === 'skill').length,
     workflow: MOCK_ASSETS.filter(a => a.type === 'workflow').length,
-    bundle: MOCK_ASSETS.filter(a => a.type === 'bundle').length,
   },
   byTool: {
     'claude-code': MOCK_ASSETS.filter(a => a.tools.includes('claude-code') || a.tools.includes('all')).length,
@@ -224,9 +222,7 @@ createDevApp()
         await new Promise(r => setTimeout(r, 1000));
       },
       getStats: async (): Promise<AiHubStats> => MOCK_STATS,
-      getAgentMdUrl: async (id: string): Promise<string> =>
-        `/api/dev-ai-hub/assets/${encodeURIComponent(id)}/agent.md`,
-      getMcpCatalog: async (): Promise<McpCatalogEntry[]> => [],
+      getUiConfig: async () => ({ typeColors: {}, statsCards: [] }),
     }),
   })
   .addPage({

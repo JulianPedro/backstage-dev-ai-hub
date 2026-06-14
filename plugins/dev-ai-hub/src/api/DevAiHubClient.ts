@@ -16,6 +16,11 @@ export const devAiHubApiRef = createApiRef<DevAiHubApi>({
   id: 'plugin.dev-ai-hub.service',
 });
 
+export interface UiConfig {
+  typeColors: Partial<Record<string, string>>;
+  statsCards: string[];
+}
+
 export interface DevAiHubApi {
   listAssets(filter?: AssetListFilter): Promise<AiAssetListResponse>;
   getAsset(id: string): Promise<AiAsset>;
@@ -30,6 +35,7 @@ export interface DevAiHubApi {
   triggerSync(id: string): Promise<void>;
   getStats(): Promise<AiHubStats>;
   getMcpCatalog(): Promise<McpCatalogEntry[]>;
+  getUiConfig(): Promise<UiConfig>;
 }
 
 export class DevAiHubClient implements DevAiHubApi {
@@ -120,5 +126,9 @@ export class DevAiHubClient implements DevAiHubApi {
 
   async getMcpCatalog(): Promise<McpCatalogEntry[]> {
     return this.fetch<McpCatalogEntry[]>('/mcp-catalog');
+  }
+
+  async getUiConfig(): Promise<UiConfig> {
+    return this.fetch<UiConfig>('/ui-config');
   }
 }

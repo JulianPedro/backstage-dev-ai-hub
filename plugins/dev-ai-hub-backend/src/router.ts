@@ -11,6 +11,11 @@ import type { ProviderConfig, AssetListFilter } from './types';
 import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
 import { devAiHubSyncPermission, getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 
+interface UiConfig {
+  typeColors: Record<string, string>;
+  statsCards: string[];
+}
+
 interface RouterOptions {
   logger: LoggerService;
   store: AiAssetStore;
@@ -20,6 +25,7 @@ interface RouterOptions {
   baseUrl: string;
   httpAuth: HttpAuthService;
   permissions: PermissionsService;
+  uiConfig: UiConfig;
 }
 
 export function createRouter(options: RouterOptions): express.Router {
@@ -345,6 +351,12 @@ export function createRouter(options: RouterOptions): express.Router {
       options.logger.error('POST /providers/:id/sync failed', err as Error);
       return res.status(500).json({ error: 'Internal server error' });
     }
+  });
+
+  // ── UI Config ─────────────────────────────────────────────────────────────
+
+  router.get('/ui-config', (_req, res) => {
+    res.json(options.uiConfig);
   });
 
   // ── Stats ─────────────────────────────────────────────────────────────────

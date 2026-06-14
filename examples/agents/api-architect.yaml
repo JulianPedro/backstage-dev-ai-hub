@@ -14,6 +14,8 @@ tags:
   - api
   - architect
 
+model: "Claude Sonnet 4.6"
+
 # Optional - Content relative to the .yaml file
 content: api-architect.md
 

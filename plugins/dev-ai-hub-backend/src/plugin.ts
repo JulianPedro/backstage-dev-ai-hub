@@ -73,8 +73,22 @@ export const devAiHubPlugin = createBackendPlugin({
 
         await syncService.start();
 
+        const ALL_ASSET_TYPES = ['instruction', 'agent', 'skill', 'workflow', 'prompt', 'bundle'];
+        const uiColorsConfig = config.getOptionalConfig('devAiHub.ui.typeColors');
+        const uiTypeColors: Record<string, string> = {};
+        if (uiColorsConfig) {
+          for (const type of ALL_ASSET_TYPES) {
+            const color = uiColorsConfig.getOptionalString(type);
+            if (color) uiTypeColors[type] = color;
+          }
+        }
+        const uiConfig = {
+          typeColors: uiTypeColors,
+          statsCards: config.getOptionalStringArray('devAiHub.ui.statsCards') ?? [],
+        };
+
         const baseUrl = await discovery.getBaseUrl('dev-ai-hub');
-        const router = createRouter({ logger, store, syncService, providers, baseUrl, httpAuth, permissions });
+        const router = createRouter({ logger, store, syncService, providers, baseUrl, httpAuth, permissions, uiConfig });
 
         httpRouter.use(router);
 
@@ -83,6 +97,7 @@ export const devAiHubPlugin = createBackendPlugin({
         httpRouter.addAuthPolicy({ path: '/stats', allow: 'unauthenticated' });
         httpRouter.addAuthPolicy({ path: '/mcp', allow: 'unauthenticated' });
         httpRouter.addAuthPolicy({ path: '/mcp-catalog', allow: 'unauthenticated' });
+        httpRouter.addAuthPolicy({ path: '/ui-config', allow: 'unauthenticated' });
       },
     });
   },

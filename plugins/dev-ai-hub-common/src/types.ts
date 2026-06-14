@@ -1,4 +1,4 @@
-export type AssetType = 'instruction' | 'agent' | 'skill' | 'workflow' | 'bundle';
+export type AssetType = 'instruction' | 'agent' | 'skill' | 'workflow' | 'prompt' | 'bundle';
 
 export type AiTool = 'all' | 'github-copilot' | 'claude-code' | 'google-gemini' | 'cursor';
 
@@ -47,6 +47,8 @@ export interface AiAssetSummary {
   author: string;
   icon?: string;
   version: string;
+  /** Model identifier declared in the YAML envelope (e.g. "claude-opus-4-5"). Only set for agents. */
+  model?: string;
   installCount: number;
   /** Number of items in a bundle (only set for type === 'bundle'). */
   itemCount?: number;
@@ -72,6 +74,8 @@ export interface AiAsset {
   author: string;
   icon?: string;
   version: string;
+  /** Model identifier declared in the YAML envelope (e.g. "claude-opus-4-5"). Only set for agents. */
+  model?: string;
   /** Override the install path for all tools */
   installPath?: string;
   /** Override the install path per tool */
@@ -127,7 +131,7 @@ export interface AiHubProvider {
 
 export interface AiHubStats {
   totalAssets: number;
-  byType: Record<AssetType, number>;  // includes 'bundle' key
+  byType: Record<AssetType, number>;  // includes 'prompt' and 'bundle' keys
   byTool: Record<string, number>;
   byProvider: Record<string, number>;
   lastSync?: string;

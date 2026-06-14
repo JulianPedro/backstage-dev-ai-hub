@@ -87,6 +87,7 @@ export class AssetParser {
       author: meta.author ?? 'Unknown',
       icon: meta.icon,
       version: meta.version ?? '1.0.0',
+      model: (meta as any).model ?? undefined,
       installPath: meta.installPath,
       installPaths: meta.installPaths,
       content: mdContent,
@@ -111,7 +112,7 @@ export class AssetParser {
     return Buffer.from(`${providerId}:${normalized}`).toString('base64url');
   }
 
-  /** True if the file is in a known asset directory (including bundles/) */
+  /** True if the file is in a known asset directory (including prompts/ and bundles/) */
   static isAssetFile(filePath: string): boolean {
     const normalized = filePath.replace(/\\/g, '/');
     return (
@@ -119,6 +120,7 @@ export class AssetParser {
       normalized.startsWith('agents/') ||
       normalized.startsWith('skills/') ||
       normalized.startsWith('workflows/') ||
+      normalized.startsWith('prompts/') ||
       normalized.startsWith('bundles/')
     );
   }

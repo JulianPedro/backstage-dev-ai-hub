@@ -177,6 +177,8 @@ export function useSyncProvider() {
   return { syncing, triggerSync, triggerSyncAll };
 }
 
+export { useTypeConfig } from '../context/UiConfigContext';
+
 export function useCopyToClipboard() {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
