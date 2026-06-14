@@ -4,7 +4,14 @@ A centralized hub for AI assets — Instructions, Agents, Skills, and Workflows 
 
 The plugin syncs one or more Git repositories as the source of truth, stores assets in your Backstage database, exposes them via a UI, and serves them through an embedded **MCP (Model Context Protocol) server** so AI tools can discover and install assets automatically.
 
-![Project Screenshot](docs/screenshot.png)
+### NFS - Home
+![Project Screenshot NFS](docs/screenshot.png)
+
+### NFS - MCP Catalog
+![Project Screenshot NFS MCP](docs/mcp-catalog.png)
+
+### Backstage Legacy Frontend - Home
+![Project Screenshot Legacy](docs/screenshot-legacy.png)
 
 
 https://github.com/user-attachments/assets/5728807d-2587-408b-88f2-4c2853606285
