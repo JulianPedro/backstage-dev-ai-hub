@@ -1,0 +1,40 @@
+tsconfig.json
+  h_3460858e8e4831 15
+plugins/dev-ai-hub/src/components/AssetFilters/AssetFilters.tsx
+  h_3460858e8e4831 281
+plugins/dev-ai-hub/src/components/AssetCard/AssetCard.tsx
+  h_3460858e8e4831 307
+plugins/dev-ai-hub/src/components/AssetDetailPanel/AssetDetailPanel.tsx
+  h_3460858e8e4831 51,161,397
+plugins/dev-ai-hub/dev/index.tsx
+  h_3460858e8e4831 10,159-160,228-230
+package.json
+  h_3460858e8e4831 12
+plugins/dev-ai-hub/src/components/AdminPage/AdminPage.tsx
+  h_3460858e8e4831 47,99
+plugins/dev-ai-hub/src/components/DevAiHubPage/DevAiHubPage.tsx
+  h_3460858e8e4831 174-175,210,305,333,459
+plugins/dev-ai-hub-backend/src/router.ts
+  h_3460858e8e4831 171
+plugins/dev-ai-hub/src/translation.ts
+  h_3460858e8e4831 16,25,35,52,115-118
+plugins/dev-ai-hub/src/components/AssetsTab/AssetsTab.tsx
+  h_3460858e8e4831 163,191
+plugins/dev-ai-hub/src/locales/pt-BR.ts
+  h_3460858e8e4831 10,18,28,44,104-107
+plugins/dev-ai-hub/src/locales/es.ts
+  h_3460858e8e4831 10,18,28,44,104-107
+plugins/dev-ai-hub/src/components/AssetInstallDialog/AssetInstallDialog.tsx
+  h_3460858e8e4831 291,456
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "8d5e3164020f1decfcf9712d4c82add77267fbb5",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
