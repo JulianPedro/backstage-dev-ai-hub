@@ -1,0 +1,14 @@
+README.md
+  h_3460858e8e4831 7-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "f3486810dd56cc2cb6753fe18aa0ee8ef68c6d5d",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
