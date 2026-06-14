@@ -1,0 +1,18 @@
+plugins/dev-ai-hub/src/context/UiConfigContext.tsx
+  h_3460858e8e4831 68
+plugins/dev-ai-hub/src/components/AssetFilters/AssetFilters.tsx
+  h_3460858e8e4831 84
+plugins/dev-ai-hub/src/components/ModelIcon/ModelBadge.tsx
+  h_3460858e8e4831 26-30,33-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "8a0f79ed5ef51a78f6a0b4768869850602c45956",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
