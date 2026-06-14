@@ -1,0 +1,14 @@
+plugins/dev-ai-hub/src/components/AdminPage/AdminPage.test.tsx
+  h_3460858e8e4831 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "1fd9843ab9bf34b18a6463f1da43b8830a7118b8",
+  "prompts": {},
+  "humans": {
+    "h_3460858e8e4831": {
+      "author": "Julian Pedro F. Braga <julian.pedro@hotmail.com>"
+    }
+  }
+}
