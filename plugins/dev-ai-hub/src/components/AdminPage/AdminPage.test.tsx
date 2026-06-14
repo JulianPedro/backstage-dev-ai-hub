@@ -12,7 +12,7 @@ jest.mock('@backstage/frontend-plugin-api', () => ({
       const map: Record<string, string> = {
         'devAiHubPage.providersSectionTitle':  'Providers',
         'devAiHubPage.providerCountOne':       '1 provider',
-        'devAiHubPage.providerCountOther':     `${params?.count ?? ''} providers`,
+        'devAiHubPage.providerCountOther':     `${params?.n ?? ''} providers`,
         'devAiHubPage.syncAllButton':          'Sync All',
         'devAiHubPage.syncButton':             'Sync',
         'devAiHubPage.syncTriggered':          'Sync triggered',
