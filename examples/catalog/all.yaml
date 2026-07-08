@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: dev-ai-hub-examples
+  description: Seed AiResource entities for local development and automated tests (ADR-0004 — hand-authored only)
+spec:
+  targets:
+    - ./skill-approved-github-workflows.yaml
+    - ./agent-security-threat-modeller.yaml
+    - ./hook-post-edit-lint.yaml
+    - ./mcp-grafana.yaml
+    - ./plugin-secure-dev-bundle.yaml

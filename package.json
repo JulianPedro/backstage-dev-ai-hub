@@ -17,7 +17,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.36.1",
+    "@backstage/cli": "^0.36.2",
     "@backstage/cli-defaults": "^0.1.2",
     "@playwright/test": "^1.48.0",
     "husky": "^9.1.7",

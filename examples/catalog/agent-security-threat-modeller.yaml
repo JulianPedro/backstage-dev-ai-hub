@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: AiResource
+metadata:
+  name: security-threat-modeller
+  title: Security Threat Modeller Agent
+  description: An AI agent that performs structured threat modelling on system designs, producing STRIDE-based risk assessments and mitigation recommendations.
+  tags: [security, threat-modelling, stride]
+  annotations:
+    # TODO(#4): replace with a reachable URL once body resolution is wired
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main/examples/catalog/agent-security-threat-modeller.yaml
+    devaihub/compatible-frameworks: "claude-code"
+    devaihub/role: "security-threat-modeller"
+spec:
+  type: agent
+  lifecycle: experimental
+  owner: group:security-team

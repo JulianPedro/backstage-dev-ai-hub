@@ -36,6 +36,16 @@ devAiHub:
           minutes: 5
 
 
+catalog:
+  rules:
+    - allow: [Component, API, Resource, System, Domain, Location, AiResource]
+  locations:
+    # Local example AiResource entities — seeded for dev + test (ADR-0004: hand-authored only)
+    - type: file
+      target: ../../examples/catalog/all.yaml
+      rules:
+        - allow: [AiResource, Location]
+
 # GitHub integration — required for the sync to fetch files
 integrations:
   github:

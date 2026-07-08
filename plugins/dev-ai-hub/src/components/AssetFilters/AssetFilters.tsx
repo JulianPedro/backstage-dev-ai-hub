@@ -109,7 +109,10 @@ function TagsFilterBox({ selectedTags, availableTags, onChange }: {
     onChange(selectedTags.includes(tag) ? selectedTags.filter(t => t !== tag) : [...selectedTags, tag]);
   };
 
-  const triggerLabel = selectedTags.length > 0 ? `Tags (${selectedTags.length} selected)` : 'All Tags';
+  const triggerLabel = selectedTags.length > 0
+    ? selectedTags.map(t => `#${t}`).join(' ')
+    : 'All Tags';
+  const showZeroResultsHint = availableTags.length === 0 && selectedTags.length > 0;
 
   return (
     <div ref={containerRef} className={styles.tagsDropdown}>
@@ -124,6 +127,9 @@ function TagsFilterBox({ selectedTags, availableTags, onChange }: {
         <span>{triggerLabel}</span>
         <span className={styles.tagsDropdownArrow}>▾</span>
       </button>
+      {showZeroResultsHint && (
+        <p className={styles.tagsDropdownNoResults}>Clear tags to see results…</p>
+      )}
       {open && (
         <div className={styles.tagsDropdownPanel} role="dialog" aria-label="Filter by tags">
           <input

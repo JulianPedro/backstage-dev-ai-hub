@@ -1,6 +1,5 @@
 export declare const devAiHubPlugin: import("@backstage/frontend-plugin-api").OverridableFrontendPlugin<{
     root: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
-    mcpConfig: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
 }, {}, {
     "api:dev-ai-hub": import("@backstage/frontend-plugin-api").OverridableExtensionDefinition<{
         kind: "api";
@@ -10,27 +9,6 @@ export declare const devAiHubPlugin: import("@backstage/frontend-plugin-api").Ov
         output: import("@backstage/frontend-plugin-api").ExtensionDataRef<import("@backstage/frontend-plugin-api").AnyApiFactory, "core.api.factory", {}>;
         inputs: {};
         params: <TApi, TImpl extends TApi, TDeps extends { [name in string]: unknown; }>(params: import("@backstage/frontend-plugin-api").ApiFactory<TApi, TImpl, TDeps>) => import("@backstage/frontend-plugin-api").ExtensionBlueprintParams<import("@backstage/frontend-plugin-api").AnyApiFactory>;
-    }>;
-    "nav-item:dev-ai-hub": import("@backstage/frontend-plugin-api").OverridableExtensionDefinition<{
-        kind: "nav-item";
-        name: undefined;
-        config: {
-            title: string | undefined;
-        };
-        configInput: {
-            title?: string | undefined;
-        };
-        output: import("@backstage/frontend-plugin-api").ExtensionDataRef<{
-            title: string;
-            icon: import("@backstage/frontend-plugin-api").IconComponent;
-            routeRef: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
-        }, "core.nav-item.target", {}>;
-        inputs: {};
-        params: {
-            title: string;
-            icon: import("@backstage/frontend-plugin-api").IconComponent;
-            routeRef: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
-        };
     }>;
     "page:dev-ai-hub": import("@backstage/frontend-plugin-api").OverridableExtensionDefinition<{
         kind: "page";

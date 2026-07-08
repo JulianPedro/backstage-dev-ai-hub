@@ -167,7 +167,7 @@ test.describe('Asset Filters', () => {
     await page.getByRole('button', { name: 'Filter by tags' }).click();
     await page.getByRole('checkbox', { name: 'typescript' }).check();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('button', { name: 'Filter by tags' })).toContainText('Tags (1 selected)');
+    await expect(page.getByRole('button', { name: 'Filter by tags' })).toContainText('#typescript');
   });
 
   test('tags search input filters the checkbox list', async ({ page }) => {

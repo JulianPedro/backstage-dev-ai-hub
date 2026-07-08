@@ -48,10 +48,10 @@
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
-    "@backstage/core-components": "^0.18.9",
-    "@backstage/core-plugin-api": "^1.12.5",
-    "@backstage/frontend-plugin-api": "^0.16.2",
-    "@backstage/ui": "^0.14.3",
+    "@backstage/core-components": "^0.18.10",
+    "@backstage/core-plugin-api": "^1.12.6",
+    "@backstage/frontend-plugin-api": "^0.17.0",
+    "@backstage/ui": "^0.15.0",
     "@mui/icons-material": "^5.15.0",
     "@mui/material": "^5.15.0",
     "@nospt/plugin-dev-ai-hub-common": "workspace:^",
@@ -62,8 +62,8 @@
     "simple-icons": "^13.0.0"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.36.1",
-    "@backstage/dev-utils": "^1.1.22",
+    "@backstage/cli": "^0.36.2",
+    "@backstage/dev-utils": "^1.1.23",
     "@playwright/test": "^1.60.0",
     "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.0.0",

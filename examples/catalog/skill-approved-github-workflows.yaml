@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: AiResource
+metadata:
+  name: approved-github-workflows
+  title: Approved GitHub Workflows Skill
+  description: Ensures all GitHub Actions workflows are reviewed and approved before execution. Covers CI/CD hardening and security gate patterns.
+  tags: [security, github, ci-cd, review]
+  annotations:
+    # TODO(#4): replace with a reachable URL once body resolution is wired
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main/examples/catalog/skill-approved-github-workflows.yaml
+    devaihub/compatible-frameworks: "github-copilot,claude-code"
+    devaihub/version: "1.0.0"
+spec:
+  type: skill
+  lifecycle: production
+  owner: group:ai-platform-team
+  # Native skill subtype fields (alpha — @backstage/plugin-catalog-backend-module-ai-model)
+  agents:
+    - github-copilot
+    - claude-code
+  disciplines:
+    - devops
+    - security
+  categories:
+    - ci-cd
+    - review
+  usecases:
+    - "CI/CD hardening"
+    - "Workflow approval gate"
