@@ -7,4 +7,4 @@ export { DevAiHubPage } from './pluginLegacy';
 // Shared
 export { devAiHubApiRef } from './api/DevAiHubClient';
 export type { DevAiHubApi } from './api/DevAiHubClient';
-export { rootRouteRef, mcpConfigRouteRef } from './routes';
+export { rootRouteRef } from './routes';

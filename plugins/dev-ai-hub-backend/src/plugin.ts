@@ -77,7 +77,6 @@ export const devAiHubPlugin = createBackendPlugin({
         httpRouter.addAuthPolicy({ path: '/assets', allow: 'unauthenticated' });
         httpRouter.addAuthPolicy({ path: '/providers', allow: 'unauthenticated' });
         httpRouter.addAuthPolicy({ path: '/stats', allow: 'unauthenticated' });
-        httpRouter.addAuthPolicy({ path: '/mcp', allow: 'unauthenticated' });
       },
     });
   },

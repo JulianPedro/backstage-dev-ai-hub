@@ -9,13 +9,12 @@ import {
 } from '@backstage/frontend-plugin-api';
 import { RiRobot3Fill } from '@remixicon/react';
 import { devAiHubApiRef, DevAiHubClient } from './api/DevAiHubClient';
-import { rootRouteRef, mcpConfigRouteRef } from './routes';
+import { rootRouteRef } from './routes';
 
 export const devAiHubPlugin = createFrontendPlugin({
   pluginId: 'dev-ai-hub',
   routes: {
     root: rootRouteRef,
-    mcpConfig: mcpConfigRouteRef,
   },
   extensions: [
     ApiBlueprint.make({
@@ -44,16 +43,6 @@ export const devAiHubPlugin = createFrontendPlugin({
         title: 'Browse',
         loader: () =>
           import('./components/DevAiHubPage').then(m => <m.DevAiHubPage />),
-      },
-    }),
-    SubPageBlueprint.make({
-      name: 'mcp-config',
-      params: {
-        path: 'mcp-config',
-        title: 'Configure MCP',
-        routeRef: mcpConfigRouteRef,
-        loader: () =>
-          import('./components/McpConfigPage').then(m => <m.McpConfigPage />),
       },
     }),
   ],

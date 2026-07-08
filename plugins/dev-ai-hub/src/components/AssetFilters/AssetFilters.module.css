@@ -14,7 +14,7 @@
     display: flex;
     gap: var(--bui-space-6);
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: flex-end;
   }
 
   .filterLabel {
@@ -25,43 +25,155 @@
     font-weight: 600;
   }
 
-  .filterChips {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+  .filterBox {
+    min-width: 140px;
   }
 
-  .filterChip {
+  /* ── Icon select dropdown (Type / AI Tool) ───────────────────── */
+
+  .iconSelectTriggerContent {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    overflow: hidden;
+  }
+
+  .iconSelectItem {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    width: 100%;
+    padding: var(--bui-space-2) var(--bui-space-3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: CanvasText;
+    text-align: left;
+  }
+
+  .iconSelectItem:hover {
+    background: var(--bui-bg-neutral-2, color-mix(in srgb, CanvasText 8%, Canvas));
+  }
+
+  .iconSelectItemActive {
     font-weight: 600;
-    font-size: 0.75rem;
-    border-radius: var(--bui-radius-2);
-    border: 1.5px solid;
-    transition: all 0.15s ease;
-    cursor: pointer;
   }
 
-  .filterChip :global(.bui-ToggleButtonContent) {
+  .iconSelectItemIcon {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
   }
 
-  .filterChip svg {
+  .iconSelectCheck {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--bui-fg-primary);
+  }
+
+  /* ── Tags filter dropdown ─────────────────────────────────────── */
+
+  .tagsDropdown {
+    position: relative;
+  }
+
+  .tagsDropdownTrigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bui-space-2);
+    width: 100%;
+    min-width: 140px;
+    padding: 0 var(--bui-space-3);
+    height: 32px;
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-2);
+    background: Canvas;
+    color: CanvasText;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .tagsDropdownTrigger:hover {
+    border-color: var(--bui-fg-primary);
+  }
+
+  .tagsDropdownArrow {
+    font-size: 0.65rem;
+    color: var(--bui-fg-secondary);
+    flex-shrink: 0;
+  }
+
+  .tagsDropdownPanel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 220px;
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 200;
+    overflow: hidden;
+  }
+
+  .tagsDropdownSearch {
     display: block;
+    width: 100%;
+    padding: var(--bui-space-2) var(--bui-space-3);
+    border: none;
+    border-bottom: 1px solid var(--bui-border-1);
+    background: Canvas;
+    color: CanvasText;
+    font-size: 0.875rem;
+    outline: none;
+    box-sizing: border-box;
   }
 
-  .toolChipSelected {
+  .tagsDropdownSectionLabel {
+    padding: var(--bui-space-2) var(--bui-space-3) var(--bui-space-1);
+    font-size: 0.68rem;
     font-weight: 700;
+    color: var(--bui-fg-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
   }
 
-  .tagChip {
-    font-size: 0.7rem;
-    border-radius: var(--bui-radius-2);
-    border: 1px solid;
-    cursor: pointer;
+  .tagsDropdownList {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: var(--bui-space-1) 0;
   }
 
-  .tagChip :global(.bui-ToggleButtonContent) {
+  .tagsDropdownItem {
     display: flex;
     align-items: center;
+    gap: var(--bui-space-2);
+    padding: var(--bui-space-1) var(--bui-space-3);
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: CanvasText;
+    user-select: none;
+  }
+
+  .tagsDropdownItem:hover {
+    background: var(--bui-bg-neutral-2, color-mix(in srgb, CanvasText 8%, Canvas));
+  }
+
+  .tagsDropdownCheckbox {
+    cursor: pointer;
+    accent-color: var(--bui-fg-primary);
+    flex-shrink: 0;
+  }
+
+  .tagsDropdownNoResults {
+    padding: var(--bui-space-2) var(--bui-space-3);
+    color: CanvasText;
+    opacity: 0.6;
+    font-size: 0.875rem;
   }
 }

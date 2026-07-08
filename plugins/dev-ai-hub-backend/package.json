@@ -45,7 +45,6 @@
   },
   "dependencies": {
     "@backstage/backend-plugin-api": "^1.7.0",
-    "@modelcontextprotocol/sdk": "^1.5.0",
     "@nospt/plugin-dev-ai-hub-common": "workspace:^",
     "@nospt/plugin-dev-ai-hub-node": "workspace:^",
     "archiver": "^6.0.0",

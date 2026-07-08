@@ -1,25 +1,163 @@
-import type { ElementType } from 'react';
-import { Box, Flex, Text, SearchField, ToggleButton, ToggleButtonGroup } from '@backstage/ui';
-import { RiAppsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiDatabase2Line } from '@remixicon/react';
+import { useState, useRef, useEffect, type ReactNode, type ElementType } from 'react';
+import { Box, Flex, Text, SearchField } from '@backstage/ui';
+import { RiAppsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiCheckLine } from '@remixicon/react';
 import type { AssetType, AiTool, AiHubProvider } from '@nospt/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import styles from './AssetFilters.module.css';
 
-const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Icon: ElementType }[] = [
-  { value: 'all',         label: 'All',          color: '#DCDDE1', Icon: RiAppsLine },
-  { value: 'instruction', label: 'Instructions', color: '#54A0FF', Icon: RiArticleLine },
-  { value: 'agent',       label: 'Agents',       color: '#FF6B9D', Icon: RiRobot2Line },
-  { value: 'skill',       label: 'Skills',       color: '#6AB04C', Icon: RiToolsLine },
-  { value: 'workflow',    label: 'Workflows',    color: '#F9CA24', Icon: RiGitBranchLine },
+const ASSET_TYPE_OPTIONS: { value: AssetType | 'all'; label: string; color: string; Icon: ElementType }[] = [
+  { value: 'all',         label: 'All Types',     color: '#DCDDE1', Icon: RiAppsLine },
+  { value: 'instruction', label: 'Instructions',  color: '#54A0FF', Icon: RiArticleLine },
+  { value: 'agent',       label: 'Agents',        color: '#FF6B9D', Icon: RiRobot2Line },
+  { value: 'skill',       label: 'Skills',        color: '#6AB04C', Icon: RiToolsLine },
+  { value: 'workflow',    label: 'Workflows',     color: '#F9CA24', Icon: RiGitBranchLine },
 ];
 
-const AI_TOOLS: { value: AiTool | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Tools' },
-  { value: 'claude-code', label: 'Claude Code' },
+const AI_TOOL_OPTIONS: { value: AiTool | 'all'; label: string }[] = [
+  { value: 'all',            label: 'All Tools' },
+  { value: 'claude-code',    label: 'Claude Code' },
   { value: 'github-copilot', label: 'GitHub Copilot' },
-  { value: 'google-gemini', label: 'Google Gemini' },
-  { value: 'cursor', label: 'Cursor' },
+  { value: 'google-gemini',  label: 'Google Gemini' },
+  { value: 'cursor',         label: 'Cursor' },
 ];
+
+function useDropdownClose(ref: React.RefObject<HTMLElement | null>, onClose: () => void, open: boolean) {
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+
+    if (open) {
+      document.addEventListener('mousedown', handleClick);
+      document.addEventListener('keydown', handleKey);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open, ref, onClose]);
+}
+
+function IconSelectBox<T extends string>({ value: selected, options, onChange, ariaLabel }: {
+  value: T;
+  options: { value: T; label: string; icon: ReactNode }[];
+  onChange: (v: T) => void;
+  ariaLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  useDropdownClose(containerRef, () => setOpen(false), open);
+
+  const current = options.find(o => o.value === selected) ?? options[0];
+
+  return (
+    <div ref={containerRef} className={styles.tagsDropdown}>
+      <button
+        type="button"
+        className={styles.tagsDropdownTrigger}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+      >
+        <span className={styles.iconSelectTriggerContent}>
+          {current.icon}
+          <span>{current.label}</span>
+        </span>
+        <span className={styles.tagsDropdownArrow}>▾</span>
+      </button>
+      {open && (
+        <div className={styles.tagsDropdownPanel} role="listbox" aria-label={ariaLabel}>
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              role="option"
+              aria-selected={opt.value === selected}
+              className={`${styles.iconSelectItem} ${opt.value === selected ? styles.iconSelectItemActive : ''}`}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+            >
+              <span className={styles.iconSelectItemIcon}>{opt.icon}</span>
+              <span>{opt.label}</span>
+              {opt.value === selected && <RiCheckLine size={14} className={styles.iconSelectCheck} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TagsFilterBox({ selectedTags, availableTags, onChange }: {
+  selectedTags: string[];
+  availableTags: string[];
+  onChange: (tags: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  useDropdownClose(containerRef, () => setOpen(false), open);
+
+  const allTags = Array.from(new Set([...availableTags, ...selectedTags]));
+  const filtered = allTags.filter(t => t.toLowerCase().includes(search.toLowerCase()));
+
+  const toggleTag = (tag: string) => {
+    onChange(selectedTags.includes(tag) ? selectedTags.filter(t => t !== tag) : [...selectedTags, tag]);
+  };
+
+  const triggerLabel = selectedTags.length > 0 ? `Tags (${selectedTags.length} selected)` : 'All Tags';
+
+  return (
+    <div ref={containerRef} className={styles.tagsDropdown}>
+      <button
+        type="button"
+        className={styles.tagsDropdownTrigger}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-label="Filter by tags"
+        aria-haspopup="dialog"
+      >
+        <span>{triggerLabel}</span>
+        <span className={styles.tagsDropdownArrow}>▾</span>
+      </button>
+      {open && (
+        <div className={styles.tagsDropdownPanel} role="dialog" aria-label="Filter by tags">
+          <input
+            type="search"
+            className={styles.tagsDropdownSearch}
+            placeholder="Search tags…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
+          />
+          <div className={styles.tagsDropdownSectionLabel}>FILTER YOUR SEARCH</div>
+          <div className={styles.tagsDropdownList}>
+            {filtered.length === 0 && (
+              <div className={styles.tagsDropdownNoResults}>No tags found</div>
+            )}
+            {filtered.map(tag => (
+              <label key={tag} className={styles.tagsDropdownItem}>
+                <input
+                  type="checkbox"
+                  className={styles.tagsDropdownCheckbox}
+                  aria-label={tag}
+                  checked={selectedTags.includes(tag)}
+                  onChange={() => toggleTag(tag)}
+                />
+                <span>{tag}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export interface AssetFiltersValue {
   types: AssetType[];
@@ -41,24 +179,27 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
   const selectedTool = value.tools.length === 1 ? value.tools[0] : 'all';
   const showProviderFilter = providers && providers.length > 1;
 
-  const handleTypeClick = (type: AssetType | 'all') => {
-    onChange({ ...value, types: type === 'all' ? [] : [type] });
-  };
+  const providerOptions = [
+    { value: 'all', label: 'All Providers' },
+    ...(providers ?? []).map(p => ({
+      value: p.id,
+      label: p.target.split('/').slice(-1)[0]?.replace(/\.git$/, '') ?? p.id,
+    })),
+  ];
 
-  const handleToolClick = (tool: AiTool | 'all') => {
-    onChange({ ...value, tools: tool === 'all' ? [] : [tool] });
-  };
+  const typeSelectOptions = ASSET_TYPE_OPTIONS.map(t => ({
+    value: t.value,
+    label: t.label,
+    icon: <t.Icon size={14} style={{ color: t.color, flexShrink: 0 }} />,
+  }));
 
-  const handleTagToggle = (tag: string) => {
-    const next = value.tags.includes(tag)
-      ? value.tags.filter(t => t !== tag)
-      : [...value.tags, tag];
-    onChange({ ...value, tags: next });
-  };
-
-  const handleProviderClick = (id: string | undefined) => {
-    onChange({ ...value, providerId: id });
-  };
+  const toolSelectOptions = AI_TOOL_OPTIONS.map(t => ({
+    value: t.value,
+    label: t.label,
+    icon: t.value !== 'all'
+      ? <ToolIcon tool={t.value as AiTool} branded size={14} />
+      : <RiAppsLine size={14} style={{ color: 'var(--bui-fg-secondary)', flexShrink: 0 }} />,
+  }));
 
   return (
     <Flex className={styles.container}>
@@ -72,148 +213,64 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
 
       <Flex className={styles.filtersRow}>
         {/* Type filter */}
-        <Box>
+        <Box className={styles.filterBox}>
           <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
             Type
           </Text>
-          <Flex className={styles.filterChips}>
-              {ASSET_TYPES.map(t => {
-                const isSelected = selectedType === t.value;
-                const TypeIcon = t.Icon;
-                return (
-                  <ToggleButton
-                    key={t.value}
-                    id={t.value}
-                    size="small"
-                    className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ''}`}
-                    iconStart={<TypeIcon size={14} style={{ color: isSelected ? '#fff' : t.color }} />}
-                    isSelected={isSelected}
-                    onChange={() => handleTypeClick(t.value as AssetType | 'all')}
-                    style={{
-                      borderColor: isSelected ? t.color : `${t.color}30`,
-                      backgroundColor: isSelected ? t.color : `${t.color}10`,
-                      color: isSelected ? '#fff' : t.color,
-                    }}
-                  >
-                    {t.label}
-                  </ToggleButton>
-                );
-              })}
-            </Flex>
+          <IconSelectBox
+            ariaLabel="Filter by type"
+            value={selectedType}
+            options={typeSelectOptions}
+            onChange={key => onChange({ ...value, types: key === 'all' ? [] : [key as AssetType] })}
+          />
         </Box>
 
         {/* AI Tool filter */}
-        <Box>
+        <Box className={styles.filterBox}>
           <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
             AI Tool
           </Text>
-          <Flex className={styles.filterChips}>
-              {AI_TOOLS.map(t => {
-                const isSelected = selectedTool === t.value;
-                const iconEl = t.value !== 'all'
-                  ? <ToolIcon tool={t.value as AiTool} branded size={14} />
-                  : undefined;
-                return (
-                  <ToggleButton
-                    key={t.value}
-                    id={t.value}
-                    size="small"
-                    className={`${styles.filterChip} ${isSelected ? styles.toolChipSelected : ''}`}
-                    iconStart={iconEl}
-                    isSelected={isSelected}
-                    onChange={() => handleToolClick(t.value as AiTool | 'all')}
-                    style={{
-                      borderColor: isSelected ? 'var(--bui-fg-link)' : 'var(--bui-border-1)',
-                      backgroundColor: isSelected ? 'var(--bui-bg-accent-1)' : 'transparent',
-                      color: isSelected ? 'var(--bui-fg-link)' : 'var(--bui-fg-secondary)',
-                    }}
-                  >
-                    {t.label}
-                  </ToggleButton>
-                );
-              })}
-            </Flex>
+          <IconSelectBox
+            ariaLabel="Filter by AI tool"
+            value={selectedTool}
+            options={toolSelectOptions}
+            onChange={key => onChange({ ...value, tools: key === 'all' ? [] : [key as AiTool] })}
+          />
         </Box>
 
         {/* Provider filter — only shown when there are 2+ providers */}
         {showProviderFilter && (
-          <Box>
+          <Box className={styles.filterBox}>
             <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
               Provider
             </Text>
-            <Flex className={styles.filterChips}>
-                <ToggleButton
-                  id="all-providers"
-                  size="small"
-                  className={`${styles.filterChip} ${!value.providerId ? styles.filterChipSelected : ''}`}
-                  iconStart={<RiAppsLine size={14} />}
-                  isSelected={!value.providerId}
-                  onChange={() => handleProviderClick(undefined)}
-                  style={{
-                    borderColor: !value.providerId ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
-                    backgroundColor: !value.providerId ? 'var(--bui-fg-primary)' : 'transparent',
-                    color: !value.providerId ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
-                  }}
-                >
-                  All
-                </ToggleButton>
-                {providers.map(p => {
-                  const isSelected = value.providerId === p.id;
-                  const label = p.target.split('/').slice(-1)[0]?.replace(/\.git$/, '') ?? p.id;
-                  return (
-                    <ToggleButton
-                      key={p.id}
-                      id={p.id}
-                      size="small"
-                      className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ''}`}
-                      iconStart={<RiDatabase2Line size={14} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />}
-                      isSelected={isSelected}
-                      onChange={() => handleProviderClick(isSelected ? undefined : p.id)}
-                      style={{
-                        borderColor: isSelected ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
-                        backgroundColor: isSelected ? 'var(--bui-fg-primary)' : 'transparent',
-                        color: isSelected ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
-                      }}
-                    >
-                      {label}
-                    </ToggleButton>
-                  );
-                })}
-              </Flex>
+            <IconSelectBox
+              ariaLabel="Filter by provider"
+              value={value.providerId ?? 'all'}
+              options={providerOptions.map(p => ({
+                value: p.value,
+                label: p.label,
+                icon: <RiAppsLine size={14} style={{ color: 'var(--bui-fg-secondary)', flexShrink: 0 }} />,
+              }))}
+              onChange={key => onChange({ ...value, providerId: key === 'all' ? undefined : key })}
+            />
+          </Box>
+        )}
+
+        {/* Tags filter */}
+        {(availableTags.length > 0 || value.tags.length > 0) && (
+          <Box className={styles.filterBox}>
+            <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
+              Tags
+            </Text>
+            <TagsFilterBox
+              selectedTags={value.tags}
+              availableTags={availableTags}
+              onChange={tags => onChange({ ...value, tags })}
+            />
           </Box>
         )}
       </Flex>
-
-      {availableTags.length > 0 && (
-        <Box>
-          <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
-            Tags
-          </Text>
-          <Flex className={styles.filterChips}>
-              {availableTags.map(tag => {
-                const isActive = value.tags.includes(tag);
-                return (
-                  <ToggleButton
-                    key={tag}
-                    id={tag}
-                    size="small"
-                    className={`${styles.tagChip} ${isActive ? styles.tagChipSelected : ''}`}
-                    isSelected={isActive}
-                    onChange={() => handleTagToggle(tag)}
-                    style={{
-                      fontWeight: isActive ? 700 : 400,
-                      backgroundColor: isActive ? 'var(--bui-bg-solid)' : 'transparent',
-                      color: isActive ? '#fff' : 'var(--bui-fg-secondary)',
-                      borderColor: isActive ? 'var(--bui-bg-solid)' : 'var(--bui-border-1)',
-                    }}
-                  >
-                    #{tag}
-                  </ToggleButton>
-                );
-              })}
-            </Flex>
-        </Box>
-      )}
     </Flex>
   );
 }

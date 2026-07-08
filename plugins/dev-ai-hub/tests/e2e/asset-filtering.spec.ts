@@ -51,14 +51,15 @@ test.describe('Asset Filters', () => {
 
   // ── Type filter ───────────────────────────────────────────────────────────
 
-  test('all type-filter buttons are rendered', async ({ page }) => {
-    for (const label of ['All', 'Instructions', 'Agents', 'Skills', 'Workflows']) {
-      await expect(page.getByRole('button', { name: label }).first()).toBeVisible();
-    }
+  test('type filter dropdown is rendered with default "All Types"', async ({ page }) => {
+    const trigger = page.getByRole('button', { name: 'Filter by type' });
+    await expect(trigger).toBeVisible();
+    await expect(trigger).toContainText('All Types');
   });
 
-  test('"Instructions" button filters to instruction assets only', async ({ page }) => {
-    await page.getByRole('button', { name: 'Instructions', exact: true }).click();
+  test('"Instructions" option filters to instruction assets only', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by type' }).click();
+    await page.getByRole('option', { name: 'Instructions' }).click();
     // 2 instruction assets in the mock
     await expect(page.getByText('2 assets found')).toBeVisible();
     await expect(page.getByText('TypeScript Best Practices')).toBeVisible();
@@ -66,36 +67,41 @@ test.describe('Asset Filters', () => {
     await expect(page.getByText('Code Review Agent')).not.toBeVisible();
   });
 
-  test('"Skills" button filters to skill assets only', async ({ page }) => {
-    await page.getByRole('button', { name: 'Skills', exact: true }).click();
+  test('"Skills" option filters to skill assets only', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by type' }).click();
+    await page.getByRole('option', { name: 'Skills' }).click();
     await expect(page.getByText('1 asset found')).toBeVisible();
     await expect(page.getByText('Git Commit', { exact: true })).toBeVisible();
   });
 
-  test('"Workflows" button filters to workflow assets only', async ({ page }) => {
-    await page.getByRole('button', { name: 'Workflows', exact: true }).click();
+  test('"Workflows" option filters to workflow assets only', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by type' }).click();
+    await page.getByRole('option', { name: 'Workflows' }).click();
     await expect(page.getByText('1 asset found')).toBeVisible();
     await expect(page.getByText('Feature Development Workflow')).toBeVisible();
   });
 
-  test('"All" button clears the type filter', async ({ page }) => {
-    await page.getByRole('button', { name: 'Skills', exact: true }).click();
+  test('"All Types" option clears the type filter', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by type' }).click();
+    await page.getByRole('option', { name: 'Skills' }).click();
     await expect(page.getByText('1 asset found')).toBeVisible();
 
-    await page.getByRole('button', { name: 'All', exact: true }).click();
+    await page.getByRole('button', { name: 'Filter by type' }).click();
+    await page.getByRole('option', { name: 'All Types' }).click();
     await expect(page.getByText(`${DEV_ASSETS.length} assets found`)).toBeVisible();
   });
 
   // ── AI Tool filter ────────────────────────────────────────────────────────
 
-  test('all AI-tool filter buttons are rendered', async ({ page }) => {
-    for (const label of ['All Tools', 'Claude Code', 'GitHub Copilot', 'Google Gemini', 'Cursor']) {
-      await expect(page.getByRole('button', { name: label }).first()).toBeVisible();
-    }
+  test('AI tool filter dropdown is rendered with default "All Tools"', async ({ page }) => {
+    const trigger = page.getByRole('button', { name: 'Filter by AI tool' });
+    await expect(trigger).toBeVisible();
+    await expect(trigger).toContainText('All Tools');
   });
 
-  test('"Claude Code" tool filter shows only claude-code-compatible assets', async ({ page }) => {
-    await page.getByRole('button', { name: 'Claude Code' }).first().click();
+  test('"Claude Code" option shows only claude-code-compatible assets', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by AI tool' }).click();
+    await page.getByRole('option', { name: 'Claude Code' }).click();
     // claude-code: mock-1, mock-2, mock-3 (all), mock-5
     await expect(page.getByText('TypeScript Best Practices')).toBeVisible();
     await expect(page.getByText('Code Review Agent')).toBeVisible();
@@ -104,8 +110,9 @@ test.describe('Asset Filters', () => {
     await expect(page.getByText('Product Manager')).not.toBeVisible(); // github-copilot only
   });
 
-  test('"Cursor" tool filter shows only cursor-compatible assets', async ({ page }) => {
-    await page.getByRole('button', { name: 'Cursor' }).first().click();
+  test('"Cursor" option shows only cursor-compatible assets', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by AI tool' }).click();
+    await page.getByRole('option', { name: 'Cursor' }).click();
     // cursor: mock-4 (github-copilot, cursor), mock-3 (all)
     await expect(page.getByText('Feature Development Workflow')).toBeVisible();
     await expect(page.getByText('Git Commit', { exact: true })).toBeVisible(); // tools: ['all']
@@ -113,33 +120,60 @@ test.describe('Asset Filters', () => {
 
   // ── Tags ──────────────────────────────────────────────────────────────────
 
-  test('tag chips are rendered for the current result set', async ({ page }) => {
-    // 'typescript' tag is present in mock-1
-    await expect(page.getByRole('button', { name: '#typescript' }).first()).toBeVisible();
+  test('tags filter dropdown trigger is rendered', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Filter by tags' })).toBeVisible();
   });
 
-  test('clicking a tag chip filters by that tag', async ({ page }) => {
-    await page.getByRole('button', { name: '#git' }).first().click();
+  test('opening tags dropdown shows available tags as checkboxes', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by tags' }).click();
+    // 'typescript' tag is present in mock-1
+    await expect(page.getByRole('checkbox', { name: 'typescript' })).toBeVisible();
+  });
+
+  test('checking a tag filters by that tag', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by tags' }).click();
+    await page.getByRole('checkbox', { name: 'git' }).check();
+    await page.keyboard.press('Escape');
     // mock-3 has ['git', 'commits', 'conventional-commits']
     await expect(page.getByText('Git Commit', { exact: true })).toBeVisible();
     await expect(page.getByText('TypeScript Best Practices')).not.toBeVisible();
   });
 
-  test('clicking a second tag chip adds an AND condition', async ({ page }) => {
-    await page.getByRole('button', { name: '#typescript' }).first().click();
-    await page.getByRole('button', { name: '#best-practices' }).first().click();
+  test('checking a second tag adds an AND condition', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by tags' }).click();
+    await page.getByRole('checkbox', { name: 'typescript' }).check();
+    await page.getByRole('checkbox', { name: 'best-practices' }).check();
+    await page.keyboard.press('Escape');
     // Only mock-1 has both 'typescript' AND 'best-practices'
     await expect(page.getByText('TypeScript Best Practices')).toBeVisible();
     await expect(page.getByText('Security Guidelines')).not.toBeVisible();
   });
 
-  test('clicking an active tag chip deselects it', async ({ page }) => {
-    const tagBtn = page.getByRole('button', { name: '#typescript' }).first();
-    await tagBtn.click();
+  test('unchecking a tag deselects it', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by tags' }).click();
+    await page.getByRole('checkbox', { name: 'typescript' }).check();
+    await page.keyboard.press('Escape');
     await expect(page.getByText('TypeScript Best Practices')).toBeVisible();
     await expect(page.getByText('Code Review Agent')).not.toBeVisible();
 
-    await tagBtn.click(); // deselect
+    // Re-open and uncheck
+    await page.getByRole('button', { name: 'Filter by tags' }).click();
+    await page.getByRole('checkbox', { name: 'typescript' }).uncheck();
+    await page.keyboard.press('Escape');
     await expect(page.getByText('Code Review Agent')).toBeVisible();
+  });
+
+  test('trigger label shows selected count when tags are active', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by tags' }).click();
+    await page.getByRole('checkbox', { name: 'typescript' }).check();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Filter by tags' })).toContainText('Tags (1 selected)');
+  });
+
+  test('tags search input filters the checkbox list', async ({ page }) => {
+    await page.getByRole('button', { name: 'Filter by tags' }).click();
+    await page.getByPlaceholder('Search tags…').fill('git');
+    await expect(page.getByRole('checkbox', { name: 'git' })).toBeVisible();
+    await expect(page.getByRole('checkbox', { name: 'typescript' })).not.toBeVisible();
   });
 });

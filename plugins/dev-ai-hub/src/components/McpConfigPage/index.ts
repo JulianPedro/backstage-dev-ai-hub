@@ -1,1 +1,0 @@
-export { McpConfigPage } from './McpConfigPage';
