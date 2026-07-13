@@ -30,9 +30,12 @@ metadata:
   tags: [security, github, review]
 
   annotations:
-    # REQUIRED — where the body (markdown) lives in Git.
+    # REQUIRED — where the body lives in Git (CONTEXT.md: body, source-location).
     # Format: url:<scheme>://...  (the url: prefix is stripped by the resolver).
-    backstage.io/source-location: url:https://github.com/org/ai-assets/blob/main/skills/approved-github-workflows/SKILL.md
+    # A URL ending in a filename is a single-file body; a URL ending in `/` is a
+    # directory-shaped body (e.g. a skill with resources) — viewed via its entry
+    # file and downloaded as one zip.
+    backstage.io/source-location: url:https://github.com/org/ai-assets/tree/main/skills/approved-github-workflows/
 
     # Optional but recommended — managed-by annotations help operators trace ingestion.
     backstage.io/managed-by-location: file:./catalog-info.yaml
@@ -173,11 +176,13 @@ spec:
 metadata:
   annotations:
     devaihub.io/compatible-frameworks: "claude-code,cursor"
-    devaihub.io/mcp-type: "http"          # http | stdio | sse
-    devaihub.io/mcp-uri: "http://mcp.example.com/sse"
 ```
 
-**No native spec fields.** `devaihub.io/mcp-type` is **recommended** — drives whether the MCP card shows "HTTP", "STDIO", or "SSE". `devaihub.io/mcp-uri` is optional (used when the MCP server is externally addressable). The body of an `mcp` resource is typically `.mcp.json` or equivalent config.
+**No native spec fields.** The body of an `mcp` resource **is** the JSON snippet the
+user merges into `.mcp.json` (or equivalent), and it is **canonical for install** —
+transport and endpoint live only there (CONTEXT.md: body). The former
+`devaihub.io/mcp-type` / `devaihub.io/mcp-uri` annotations are retired: duplicating
+config in annotations invited drift with the body (issue #30 decision record).
 
 > **Design fork (§8.4 of the main spec):** an MCP server could alternatively be modelled as an `API` entity (`spec.type: mcp-server`). This spec follows the direct `AiResource:mcp` directive. If you need runtime endpoint semantics, emit an additional `API:mcp-server` and relate them.
 
@@ -217,9 +222,10 @@ All custom annotations use the `devaihub.io/` prefix. These are namespaced to av
 | `devaihub.io/role` | agent | Display subtitle (e.g. "security reviewer"). |
 | `devaihub.io/hook-event` | hook | Event name that triggers this hook. |
 | `devaihub.io/hook-matcher` | hook | Regex or glob for scope matching. |
-| `devaihub.io/mcp-type` | mcp | Transport type: `http`/`stdio`/`sse`. |
-| `devaihub.io/mcp-uri` | mcp | External endpoint URL (optional). |
 | `devaihub.io/plugin-manifest` | plugin | Boolean-ish flag; indicates a Claude Code `.claude-plugin/plugin.json` source. |
+
+> Retired: `devaihub.io/mcp-type` and `devaihub.io/mcp-uri` — mcp config lives only
+> in the body, which is canonical for install (issue #30 decision record).
 
 **Future:** if upstream structures a subtype for any of these, the annotation migrates into native spec and is deprecated (exit condition per ADR).
 
@@ -240,7 +246,7 @@ metadata:
   description: Ensures GitHub Actions workflows are reviewed before execution
   tags: [security, github, review]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/skills/approved-github-workflows/SKILL.md
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/tree/main-nos/examples/skills/approved-github-workflows/
     devaihub.io/compatible-frameworks: "github-copilot,cursor,claude"
     devaihub.io/version: "1.0.0"
 spec:
@@ -264,7 +270,7 @@ metadata:
   description: Subagent specialised in security threat modelling
   tags: [security, architecture]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/agents/security-threat-modeller.md
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/agents/security-threat-modeller.md
     devaihub.io/compatible-frameworks: "claude-code"
     devaihub.io/role: "security architect"
 spec:
@@ -284,7 +290,7 @@ metadata:
   description: Runs lint --fix after every Write/Edit tool use
   tags: [lint, quality]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/hooks/post-edit-lint.json
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/hooks/post-edit-lint.md
     devaihub.io/compatible-frameworks: "claude-code"
     devaihub.io/hook-event: "PostToolUse"
 spec:
@@ -304,10 +310,8 @@ metadata:
   description: MCP server providing Grafana dashboard and alerting tools
   tags: [observability, grafana]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/mcp/grafana-mcp/.mcp.json
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/mcp/grafana-mcp.json
     devaihub.io/compatible-frameworks: "claude-code,cursor"
-    devaihub.io/mcp-type: "http"
-    devaihub.io/mcp-uri: "http://grafana-mcp.example.com/sse"
 spec:
   type: mcp
   lifecycle: production
@@ -325,7 +329,7 @@ metadata:
   description: Bundled security skills, agents, hooks and MCP servers
   tags: [security, bundle]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/plugin/security-toolkit/.claude-plugin/plugin.json
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/plugins/secure-dev-bundle.md
     devaihub.io/compatible-frameworks: "github-copilot,claude-code"
     devaihub.io/version: "2.1.0"
     devaihub.io/plugin-manifest: "true"
@@ -348,7 +352,7 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 
 - [ ] `kind: AiResource` is used (not `Component`, not a custom kind).
 - [ ] `spec.type` is one of the five supported tokens.
-- [ ] `backstage.io/source-location` points at the **raw** markdown/config file in Git (not a directory).
+- [ ] `backstage.io/source-location` points at the body: a raw file URL for a single-file body, or a `/`-terminated directory URL for a resource-bearing body (viewed via its entry file, downloaded as one zip).
 - [ ] `devaihub.io/compatible-frameworks` lists at least one framework token (or `all`).
 - [ ] For `plugin` types, `spec.dependsOn` references child `AiResource` entity refs correctly.
 - [ ] For `skill` types, `spec.agents` is preferred over the annotation for frameworks.

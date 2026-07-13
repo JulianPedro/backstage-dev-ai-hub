@@ -6,8 +6,7 @@ metadata:
   description: A PostToolUse hook that automatically runs a linter after any file edit, catching style and syntax errors before they reach review.
   tags: [linting, quality, automation]
   annotations:
-    # TODO(#4): replace with a reachable URL once body resolution is wired
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main/examples/catalog/hook-post-edit-lint.yaml
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/hooks/post-edit-lint.md
     devaihub.io/compatible-frameworks: "claude-code"
     devaihub.io/hook-event: "PostToolUse"
     devaihub.io/hook-matcher: ".*Edit.*"

@@ -6,8 +6,7 @@ metadata:
   description: A Claude Code plugin that bundles the approved-github-workflows skill, security-threat-modeller agent, post-edit-lint hook, and grafana-mcp server into a single installable package for secure development workflows.
   tags: [security, bundle, plugin, workflow]
   annotations:
-    # TODO(#4): replace with a reachable URL once body resolution is wired
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main/examples/catalog/plugin-secure-dev-bundle.yaml
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/plugins/secure-dev-bundle.md
     devaihub.io/compatible-frameworks: "claude-code,github-copilot"
 spec:
   type: plugin

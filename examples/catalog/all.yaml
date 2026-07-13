@@ -6,7 +6,9 @@ metadata:
 spec:
   targets:
     - ./skill-approved-github-workflows.yaml
+    - ./skill-azure-devops-cli.yaml
     - ./agent-security-threat-modeller.yaml
+    - ./agent-api-architect.yaml
     - ./hook-post-edit-lint.yaml
     - ./mcp-grafana.yaml
     - ./plugin-secure-dev-bundle.yaml

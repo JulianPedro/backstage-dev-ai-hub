@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: AiResource
+metadata:
+  name: api-architect
+  title: API Architect Agent
+  description: Mentors engineers through API design and generates working client connectivity code from the API aspects they provide.
+  tags: [api, architect, codegen]
+  annotations:
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/agents/api-architect.md
+    devaihub.io/compatible-frameworks: "github-copilot"
+    devaihub.io/version: "1.0.0"
+spec:
+  type: agent
+  lifecycle: production
+  owner: group:ai-platform-team

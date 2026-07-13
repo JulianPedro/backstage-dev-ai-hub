@@ -17,10 +17,16 @@ interface ResourceCardProps {
  * (colour/icon/label from the registry), title, description, framework
  * badges, tags, version · owner footer, View source link.
  */
+const MAX_VISIBLE_TAGS = 3;
+
 export function ResourceCard({ resource, onView }: ResourceCardProps) {
   const meta = getTypeMeta(resource.type);
 
   const handleSourceClick = (e: MouseEvent) => e.stopPropagation();
+
+  const visibleTags = resource.tags.slice(0, MAX_VISIBLE_TAGS);
+  const hiddenTagCount = resource.tags.length - visibleTags.length;
+  const ownerLabel = resource.owner?.replace(/^(group|user):(default\/)?/, '');
 
   return (
     <div
@@ -62,7 +68,7 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
       </div>
 
       {resource.description && (
-        <Text variant="body-x-small" color="secondary" className={styles.description}>
+        <Text variant="body-small" color="secondary" className={styles.description}>
           {resource.description}
         </Text>
       )}
@@ -80,18 +86,23 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
 
       {resource.tags.length > 0 && (
         <div className={styles.tags}>
-          {resource.tags.map(t => (
+          {visibleTags.map(t => (
             <span key={t} className={styles.tag}>
               #{t}
             </span>
           ))}
+          {hiddenTagCount > 0 && (
+            <span className={styles.tag} title={resource.tags.slice(MAX_VISIBLE_TAGS).join(', ')}>
+              +{hiddenTagCount}
+            </span>
+          )}
         </div>
       )}
 
-      {(resource.version || resource.owner) && (
+      {(resource.version || ownerLabel) && (
         <div className={styles.footer}>
           <Text variant="body-x-small" color="secondary">
-            {[resource.version && `v${resource.version.replace(/^v/, '')}`, resource.owner]
+            {[resource.version && `v${resource.version.replace(/^v/, '')}`, ownerLabel]
               .filter(Boolean)
               .join(' · ')}
           </Text>

@@ -66,6 +66,7 @@ function makeApp({
     providers: [],
     catalog: catalog as any,
     httpAuth: httpAuth as any,
+    reader: { readUrl: jest.fn(), readTree: jest.fn() } as any,
   });
 
   const app = express();

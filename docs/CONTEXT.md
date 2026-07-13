@@ -42,16 +42,31 @@ fields the UI actually needs (`entityRef`, `name`, `title`, `description`, `tags
 Backstage `Entity` — it only knows `ResourceSummary` (architecture.md).
 
 ### body
-The markdown content of an `AiResource` — the actual skill instructions, agent
-definition, hook logic, etc. Bodies **stay in Git**; they are never stored in the
-plugin's database. Resolved on demand by the backend's body resolver via
+The consumable content of an `AiResource` — shaped by its `ResourceType`, not
+uniformly markdown: skill instructions, agent definition, and hook logic are
+markdown; an `mcp` body is the JSON snippet added to `.mcp.json`; a `plugin`
+body carries the install link. The body is **canonical for install** — copy,
+download, and install always deliver the body verbatim, never content
+reconstructed from annotations. Bodies **stay in Git**; they are never stored in
+the plugin's database. Resolved on demand by the backend's body resolver via
 `backstage.io/source-location` (ADR-0001, ADR-0002).
 
 ### source-location
 The `backstage.io/source-location` annotation on an `AiResource`. A pointer in
-the form `url:<scheme>://…` that tells the body resolver where the markdown body
-lives in Git. Required for "View body" / Install actions; without it the resource
-is browsable but not actionable.
+the form `url:<scheme>://…` that tells the body resolver where the **body itself**
+lives in Git — deliberately overloaded from the vanilla Backstage meaning
+("where the entity YAML was authored"). DevAI Hub has no separate body-location
+annotation. A URL ending in a filename points at a single-file body; a URL ending
+in `/` points at a directory (a resource-bearing body with multiple files).
+Required for "View body" / Install actions; without it the resource is browsable
+but not actionable.
+
+### entry file
+The single markdown file that *represents* a directory-shaped (resource-bearing)
+body when a human views or copies it. Resolved server-side by the body resolver:
+the only `.md` in the tree, else `SKILL.md`, else the `.md` named after the
+directory. Viewing shows the entry file; downloading/installing delivers the whole
+body (all files) as one archive.
 
 ### producer
 Any system or person that creates `AiResource` `catalog-info.yaml` files and

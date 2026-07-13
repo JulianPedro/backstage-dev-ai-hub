@@ -89,6 +89,7 @@ export const devAiHubPlugin = createBackendPlugin({
           providers,
           catalog,
           httpAuth,
+          reader: urlReader,
         });
 
         httpRouter.use(router);

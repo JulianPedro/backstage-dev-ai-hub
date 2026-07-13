@@ -6,11 +6,8 @@ metadata:
   description: An MCP server that exposes Grafana dashboards, alerts, and metrics queries as tools for AI agents. Supports HTTP transport.
   tags: [observability, grafana, metrics, mcp]
   annotations:
-    # TODO(#4): replace with a reachable URL once body resolution is wired
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main/examples/catalog/mcp-grafana.yaml
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/mcp/grafana-mcp.json
     devaihub.io/compatible-frameworks: "claude-code,cursor"
-    devaihub.io/mcp-type: "http"
-    devaihub.io/mcp-uri: "http://localhost:8080/mcp"
 spec:
   type: mcp
   lifecycle: production

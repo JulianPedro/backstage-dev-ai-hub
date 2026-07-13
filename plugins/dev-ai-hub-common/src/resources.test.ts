@@ -1,6 +1,8 @@
 import {
   ANNOTATION_COMPATIBLE_FRAMEWORKS,
+  getBodyShape,
   getFrameworks,
+  getResourceInstallPath,
   isResourceType,
   normalizeFramework,
   RESOURCE_TYPE_REGISTRY,
@@ -116,5 +118,47 @@ describe('isResourceType', () => {
 
   it.each(['rule', 'instruction', '', undefined, 42])('rejects %s', t => {
     expect(isResourceType(t)).toBe(false);
+  });
+});
+
+describe('getBodyShape', () => {
+  it('is json only for mcp', () => {
+    expect(getBodyShape('mcp')).toBe('json');
+    for (const t of ['skill', 'agent', 'hook', 'plugin'] as const) {
+      expect(getBodyShape(t)).toBe('markdown');
+    }
+  });
+});
+
+describe('getResourceInstallPath', () => {
+  it('resolves per-framework skill directories', () => {
+    expect(getResourceInstallPath('skill', 'claude-code', 'approved-github-workflows')).toBe(
+      '.claude/skills/approved-github-workflows/',
+    );
+    expect(getResourceInstallPath('skill', 'cursor', 'x')).toBe('.cursor/skills/x/');
+  });
+
+  it('normalises framework aliases', () => {
+    expect(getResourceInstallPath('agent', 'claude', 'threat-modeller')).toBe(
+      '.claude/agents/threat-modeller.md',
+    );
+  });
+
+  it('falls back to the default convention for unknown frameworks', () => {
+    expect(getResourceInstallPath('agent', 'zed', 'threat-modeller')).toBe(
+      '.ai/agents/threat-modeller.md',
+    );
+  });
+
+  it('points hook and mcp at their settings files', () => {
+    expect(getResourceInstallPath('hook', 'claude-code', 'post-edit-lint')).toBe(
+      '.claude/settings.json',
+    );
+    expect(getResourceInstallPath('mcp', 'claude-code', 'grafana-mcp')).toBe('.mcp.json');
+  });
+
+  it('is undefined where no convention exists', () => {
+    expect(getResourceInstallPath('plugin', 'claude-code', 'bundle')).toBeUndefined();
+    expect(getResourceInstallPath('hook', 'github-copilot', 'x')).toBeUndefined();
   });
 });

@@ -28,6 +28,50 @@
     border-bottom: 1px solid var(--bui-border-1);
   }
 
+  .actions {
+    display: flex;
+    gap: var(--bui-space-2);
+  }
+
+  .bodyLoading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-2);
+    margin-top: var(--bui-space-2);
+  }
+
+  .codeBlock {
+    margin: var(--bui-space-2) 0 0;
+    padding: var(--bui-space-3);
+    background-color: var(--bui-bg-neutral-2);
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-2);
+    font-size: 0.8125rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .markdown {
+    margin-top: var(--bui-space-2);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+
+  .markdown pre {
+    padding: var(--bui-space-3);
+    background-color: var(--bui-bg-neutral-2);
+    border-radius: var(--bui-radius-2);
+    overflow-x: auto;
+  }
+
+  .markdown h1,
+  .markdown h2,
+  .markdown h3 {
+    font-size: 1rem;
+    margin: var(--bui-space-3) 0 var(--bui-space-1);
+  }
+
   .iconBox {
     background: var(--card-accent-bg);
     color: var(--card-accent);

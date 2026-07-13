@@ -170,3 +170,65 @@ export interface ResourceSummary {
 export interface ResourceListResponse {
   items: ResourceSummary[];
 }
+
+/**
+ * The shape of a resource's body (CONTEXT.md: bodies are type-shaped, not
+ * uniformly markdown). Drives detail-panel rendering: markdown is rendered,
+ * json is shown as a copyable code block.
+ */
+export type BodyShape = 'markdown' | 'json';
+
+export function getBodyShape(type: ResourceType): BodyShape {
+  return type === 'mcp' ? 'json' : 'markdown';
+}
+
+/**
+ * Convention table: (type, framework) → workspace install path for the body.
+ * `undefined` means the combination has no filesystem path — a `plugin` body
+ * carries its own per-framework install links (ADR-0009), and a `hook`/`mcp`
+ * body is merged into a settings file rather than dropped in as a file.
+ */
+const INSTALL_PATHS: Record<
+  ResourceType,
+  Record<string, (name: string) => string>
+> = {
+  skill: {
+    'claude-code': name => `.claude/skills/${name}/`,
+    'github-copilot': name => `.claude/skills/${name}/`,
+    'google-gemini': name => `.claude/skills/${name}/`,
+    cursor: name => `.cursor/skills/${name}/`,
+    default: name => `.claude/skills/${name}/`,
+  },
+  agent: {
+    'claude-code': name => `.claude/agents/${name}.md`,
+    'github-copilot': name => `.github/agents/${name}.agent.md`,
+    'google-gemini': () => `GEMINI.md`,
+    cursor: name => `.cursor/rules/${name}.mdc`,
+    default: name => `.ai/agents/${name}.md`,
+  },
+  hook: {
+    'claude-code': () => `.claude/settings.json`,
+  },
+  mcp: {
+    'claude-code': () => `.mcp.json`,
+    'github-copilot': () => `.vscode/mcp.json`,
+    'google-gemini': () => `.gemini/settings.json`,
+    cursor: () => `.cursor/mcp.json`,
+  },
+  plugin: {},
+};
+
+/**
+ * The recommended workspace path to install a resource's body into, for one
+ * framework. Returns `undefined` when the (type, framework) pair has no
+ * filesystem convention.
+ */
+export function getResourceInstallPath(
+  type: ResourceType,
+  framework: string,
+  name: string,
+): string | undefined {
+  const conventions = INSTALL_PATHS[type];
+  const fn = conventions[normalizeFramework(framework)] ?? conventions.default;
+  return fn?.(name);
+}

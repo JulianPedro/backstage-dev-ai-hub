@@ -1,7 +1,31 @@
-import { Box, ButtonIcon, Flex, Link, Text } from '@backstage/ui';
-import { RiCloseLine, RiExternalLinkLine } from '@remixicon/react';
-import type { AiTool, ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
+import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import {
+  Box,
+  Button,
+  ButtonIcon,
+  Flex,
+  Link,
+  Skeleton,
+  Text,
+} from '@backstage/ui';
+import {
+  RiCloseLine,
+  RiDownloadLine,
+  RiExternalLinkLine,
+  RiFileCopyLine,
+  RiInstallLine,
+} from '@remixicon/react';
+import { useApi } from '@backstage/core-plugin-api';
+import {
+  getBodyShape,
+  type AiTool,
+  type ResourceSummary,
+} from '@nospt/plugin-dev-ai-hub-common';
+import { devAiHubResourceApiRef } from '../../api/DevAiHubResourceClient';
+import { useResourceBody } from '../../hooks/useResourceBody';
 import { ToolIcon } from '../ToolIcon';
+import { ResourceInstallDialog } from './ResourceInstallDialog';
 import { frameworkLabel, getTypeMeta } from './typeMeta';
 import styles from './ResourceDetailPanel.module.css';
 
@@ -11,14 +35,29 @@ interface ResourceDetailPanelProps {
 }
 
 /**
- * The detail drawer (legacy pattern, URL-param driven). Renders fully from
- * the catalog `ResourceSummary` — the body/copy/download/install actions
- * land in this same drawer with issue #30.
+ * The detail drawer (legacy pattern, URL-param driven). Metadata renders from
+ * the catalog `ResourceSummary`; the body is fetched lazily on open from the
+ * body resolver (issue #30) and rendered by shape. Resources without a
+ * source-location are browsable but not actionable — no action buttons.
  */
 export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelProps) {
+  const api = useApi(devAiHubResourceApiRef);
+  const actionable = !!resource?.sourceLocation;
+  const bodyState = useResourceBody(resource?.entityRef, actionable);
+  const [installOpen, setInstallOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   if (!resource) return null;
 
   const meta = getTypeMeta(resource.type);
+  const bodyShape = getBodyShape(resource.type);
+
+  const handleCopy = async () => {
+    if (!bodyState.body) return;
+    await navigator.clipboard.writeText(bodyState.body.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const metadataRows: [string, string | undefined][] = [
     ['Type', meta.label],
@@ -61,6 +100,80 @@ export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelPr
               {resource.description}
             </Text>
           )}
+
+          {actionable && (
+            <div className={styles.actions}>
+              <Button
+                size="small"
+                variant="secondary"
+                iconStart={<RiFileCopyLine />}
+                isDisabled={!bodyState.body}
+                onPress={handleCopy}
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+              <Button
+                size="small"
+                variant="secondary"
+                iconStart={<RiDownloadLine />}
+                onPress={() => api.downloadEntityBody(resource.entityRef)}
+              >
+                Download
+              </Button>
+              <Button
+                size="small"
+                variant="primary"
+                iconStart={<RiInstallLine />}
+                onPress={() => setInstallOpen(true)}
+              >
+                Install
+              </Button>
+            </div>
+          )}
+
+          <div className={styles.section}>
+            <Text variant="body-x-small" color="secondary" weight="bold">
+              Content
+            </Text>
+            {!actionable && (
+              <Text variant="body-small" as="p" color="secondary">
+                No content location published for this resource.
+              </Text>
+            )}
+            {actionable && bodyState.loading && (
+              <div className={styles.bodyLoading}>
+                <Skeleton width="100%" height={14} />
+                <Skeleton width="85%" height={14} />
+                <Skeleton width="60%" height={14} />
+              </div>
+            )}
+            {actionable && bodyState.error === 'not-found' && (
+              <Text variant="body-small" as="p" color="secondary">
+                Content not available — it may have been removed, or you may
+                not have access to it.
+              </Text>
+            )}
+            {actionable && bodyState.error === 'upstream' && (
+              <Flex align="center" gap="2">
+                <Text variant="body-small" as="p" color="secondary">
+                  Couldn’t fetch the content from its source.
+                </Text>
+                <Button size="small" variant="tertiary" onPress={bodyState.retry}>
+                  Retry
+                </Button>
+              </Flex>
+            )}
+            {bodyState.body && bodyShape === 'json' && (
+              <pre className={styles.codeBlock}>
+                <code>{bodyState.body.content}</code>
+              </pre>
+            )}
+            {bodyState.body && bodyShape === 'markdown' && (
+              <div className={styles.markdown}>
+                <ReactMarkdown>{bodyState.body.content}</ReactMarkdown>
+              </div>
+            )}
+          </div>
 
           {resource.frameworks.length > 0 && (
             <div className={styles.section}>
@@ -124,6 +237,13 @@ export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelPr
           )}
         </div>
       </div>
+
+      <ResourceInstallDialog
+        resource={resource}
+        body={bodyState.body}
+        isOpen={installOpen}
+        onOpenChange={setInstallOpen}
+      />
     </>
   );
 }

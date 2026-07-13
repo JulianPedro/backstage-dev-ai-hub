@@ -1,0 +1,67 @@
+@layer components {
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-4);
+  }
+
+  .codeBlock {
+    margin: 0;
+    padding: var(--bui-space-3);
+    background-color: var(--bui-bg-neutral-2);
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-2);
+    font-size: 0.8125rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .markdown {
+    font-size: 0.875rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+
+  .markdown pre {
+    padding: var(--bui-space-3);
+    background-color: var(--bui-bg-neutral-2);
+    border-radius: var(--bui-radius-2);
+    overflow-x: auto;
+  }
+
+  .pathList {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-2);
+  }
+
+  .pathRow {
+    display: flex;
+    align-items: baseline;
+    gap: var(--bui-space-3);
+  }
+
+  .pathRow dt {
+    flex-shrink: 0;
+    min-width: 120px;
+    font-size: 0.8125rem;
+    color: var(--bui-fg-secondary);
+  }
+
+  .pathRow dd {
+    margin: 0;
+  }
+
+  .pathRow code {
+    font-size: 0.8125rem;
+    background-color: var(--bui-bg-neutral-2);
+    padding: 2px var(--bui-space-2);
+    border-radius: var(--bui-radius-1);
+  }
+
+  .actions {
+    display: flex;
+    gap: var(--bui-space-2);
+  }
+}

@@ -60,8 +60,11 @@ describe('examples/catalog — AiResource fixture validation (#27)', () => {
     fixtures = loadEntityFiles();
   });
 
-  it('has exactly 5 entity files (one per ResourceType)', () => {
-    expect(fixtures).toHaveLength(5);
+  it('covers every ResourceType at least once', () => {
+    const types = new Set(fixtures.map(f => f.entity.spec?.type));
+    for (const type of VALID_TYPES) {
+      expect(types).toContain(type);
+    }
   });
 
   it.each(VALID_TYPES)('has a %s entity', type => {
@@ -102,7 +105,7 @@ describe('examples/catalog — AiResource fixture validation (#27)', () => {
     });
   });
 
-  it('all.yaml Location exists and targets the 5 entity files', () => {
+  it('all.yaml Location targets exactly the entity files that exist', () => {
     const allYaml = path.join(CATALOG_DIR, 'all.yaml');
     expect(fs.existsSync(allYaml)).toBe(true);
 
@@ -110,12 +113,9 @@ describe('examples/catalog — AiResource fixture validation (#27)', () => {
     const location = yaml.load(raw) as { kind: string; spec: { targets: string[] } };
 
     expect(location.kind).toBe('Location');
-    expect(location.spec.targets).toHaveLength(5);
 
-    // Every target must resolve to an existing file
-    for (const target of location.spec.targets) {
-      const resolved = path.join(CATALOG_DIR, target);
-      expect(fs.existsSync(resolved)).toBe(true);
-    }
+    const targeted = location.spec.targets.map(t => t.replace(/^\.\//, '')).sort();
+    const existing = fixtures.map(f => f.file).sort();
+    expect(targeted).toEqual(existing);
   });
 });

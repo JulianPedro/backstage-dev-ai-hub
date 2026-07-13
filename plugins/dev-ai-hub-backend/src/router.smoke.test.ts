@@ -117,6 +117,7 @@ function makeApp(storeOverrides: Partial<AiAssetStore> = {}) {
     catalog: {
       getEntities: jest.fn().mockResolvedValue({ items: [] }),
     } as any,
+    reader: { readUrl: jest.fn(), readTree: jest.fn() } as any,
     httpAuth: {
       credentials: jest.fn().mockResolvedValue({ principal: { type: 'user' } }),
     } as any,

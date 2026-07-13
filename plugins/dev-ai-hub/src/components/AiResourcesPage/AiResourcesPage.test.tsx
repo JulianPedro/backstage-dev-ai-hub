@@ -24,9 +24,31 @@ jest.mock('@backstage/ui', () => ({
     />
   ),
   Text: ({ children }: any) => <span>{children}</span>,
+  Button: ({ children, onPress, isDisabled }: any) => (
+    <button disabled={isDisabled} onClick={onPress}>
+      {children}
+    </button>
+  ),
+  Dialog: ({ children, isOpen }: any) =>
+    isOpen ? <div role="dialog">{children}</div> : null,
+  DialogHeader: ({ children }: any) => <div>{children}</div>,
+  DialogBody: ({ children }: any) => <div>{children}</div>,
+}));
+
+jest.mock('react-markdown', () => ({
+  __esModule: true,
+  default: ({ children }: any) => <div>{children}</div>,
+}));
+
+jest.mock('@backstage/core-plugin-api', () => ({
+  ...jest.requireActual('@backstage/core-plugin-api'),
+  useApi: () => ({ getEntityBody: jest.fn(), downloadEntityBody: jest.fn() }),
 }));
 
 jest.mock('../../hooks/useResources', () => ({ useResources: jest.fn() }));
+jest.mock('../../hooks/useResourceBody', () => ({
+  useResourceBody: () => ({ loading: false, retry: jest.fn() }),
+}));
 
 const mockUseResources = useResources as jest.Mock;
 
