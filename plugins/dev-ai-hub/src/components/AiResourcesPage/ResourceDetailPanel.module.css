@@ -1,0 +1,114 @@
+@layer components {
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    z-index: 1299;
+  }
+
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 520px;
+    max-width: 100vw;
+    background-color: var(--bui-bg-neutral-1);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+    z-index: 1300;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--bui-space-3);
+    padding: var(--bui-space-4);
+    border-bottom: 1px solid var(--bui-border-1);
+  }
+
+  .iconBox {
+    background: var(--card-accent-bg);
+    color: var(--card-accent);
+    border-radius: var(--bui-radius-2);
+    padding: var(--bui-space-2);
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .headerText {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .body {
+    padding: var(--bui-space-4);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-4);
+  }
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-2);
+  }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--bui-space-1);
+  }
+
+  .frameworkBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bui-space-1);
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-full, 999px);
+    padding: 0 var(--bui-space-2);
+    font-size: 0.75rem;
+    line-height: 1.8;
+  }
+
+  .tag {
+    background: var(--bui-bg-neutral-2);
+    border-radius: var(--bui-radius-1);
+    padding: 0 var(--bui-space-2);
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--bui-fg-secondary);
+  }
+
+  .metaList {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-1);
+  }
+
+  .metaRow {
+    display: flex;
+    gap: var(--bui-space-2);
+    font-size: 0.8rem;
+  }
+
+  .metaRow dt {
+    color: var(--bui-fg-secondary);
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+
+  .metaRow dd {
+    margin: 0;
+    word-break: break-all;
+  }
+
+  .sourceLinkContent {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bui-space-1);
+  }
+}

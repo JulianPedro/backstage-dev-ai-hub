@@ -1,0 +1,79 @@
+/*
+ * Plugin-owned colour tokens for the five ResourceType roles (ADR-0008).
+ * NOS company palette — do not substitute other colours (see docs/adr/0008).
+ * The ONLY place raw hex may appear for type identity; components reference
+ * the custom properties. Dark values keep the hue and tune lightness only.
+ */
+:global(:root),
+:global([data-theme-mode='light']) {
+  --devaihub-type-skill: #6ab04c;
+  --devaihub-type-agent: #ff6b9d;
+  --devaihub-type-hook: #f9ca24;
+  --devaihub-type-plugin: #54a0ff;
+  --devaihub-type-mcp: #00d2d3;
+
+  --devaihub-type-skill-bg: rgba(106, 176, 76, 0.14);
+  --devaihub-type-agent-bg: rgba(255, 107, 157, 0.14);
+  --devaihub-type-hook-bg: rgba(249, 202, 36, 0.16);
+  --devaihub-type-plugin-bg: rgba(84, 160, 255, 0.14);
+  --devaihub-type-mcp-bg: rgba(0, 210, 211, 0.14);
+
+}
+
+/*
+ * Stat-tile gradient pairs (start → deep), identical in both themes — the
+ * legacy boxes the tiles reproduce. Text on tiles is always white.
+ */
+:global(:root) {
+  --devaihub-tile-skill: #6ab04c;
+  --devaihub-tile-skill-deep: #4a8f2e;
+  --devaihub-tile-agent: #ff6b9d;
+  --devaihub-tile-agent-deep: #e0507a;
+  --devaihub-tile-hook: #f9ca24;
+  --devaihub-tile-hook-deep: #d4a800;
+  --devaihub-tile-plugin: #54a0ff;
+  --devaihub-tile-plugin-deep: #2980ff;
+  --devaihub-tile-mcp: #00d2d3;
+  --devaihub-tile-mcp-deep: #00a8a9;
+}
+
+:global([data-theme-mode='dark']) {
+  --devaihub-type-skill: #83c368;
+  --devaihub-type-agent: #ff85ae;
+  --devaihub-type-hook: #fbd54f;
+  --devaihub-type-plugin: #74b1ff;
+  --devaihub-type-mcp: #2fdedf;
+
+  --devaihub-type-skill-bg: rgba(131, 195, 104, 0.18);
+  --devaihub-type-agent-bg: rgba(255, 133, 174, 0.18);
+  --devaihub-type-hook-bg: rgba(251, 213, 79, 0.18);
+  --devaihub-type-plugin-bg: rgba(116, 177, 255, 0.18);
+  --devaihub-type-mcp-bg: rgba(47, 222, 223, 0.18);
+}
+
+@layer components {
+  .pageRoot {
+    padding: var(--bui-space-6);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--bui-space-4);
+  }
+
+  .paginationRow {
+    justify-content: center;
+    margin-top: var(--bui-space-5);
+  }
+
+  .emptyState {
+    text-align: center;
+    padding: var(--bui-space-9) 0;
+  }
+
+  .emptyEmoji {
+    font-size: 40px;
+    margin-bottom: var(--bui-space-2);
+  }
+}

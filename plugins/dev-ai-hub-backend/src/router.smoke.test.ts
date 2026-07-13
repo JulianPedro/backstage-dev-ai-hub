@@ -114,6 +114,12 @@ function makeApp(storeOverrides: Partial<AiAssetStore> = {}) {
     store,
     syncService,
     providers: [PROVIDER],
+    catalog: {
+      getEntities: jest.fn().mockResolvedValue({ items: [] }),
+    } as any,
+    httpAuth: {
+      credentials: jest.fn().mockResolvedValue({ principal: { type: 'user' } }),
+    } as any,
   });
 
   const app = express();

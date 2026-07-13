@@ -1,0 +1,180 @@
+/* Copied from the legacy AssetFilters design (AssetFilters.module.css). */
+@layer components {
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-4);
+    margin-bottom: var(--bui-space-6);
+  }
+
+  .searchField {
+    width: 100%;
+  }
+
+  .filtersRow {
+    display: flex;
+    gap: var(--bui-space-6);
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .filterLabel {
+    margin-bottom: var(--bui-space-2);
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .filterBox {
+    min-width: 140px;
+  }
+
+  /* ── Icon select dropdown (AI Tool) ──────────────────────────── */
+
+  .iconSelectTriggerContent {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    overflow: hidden;
+  }
+
+  .iconSelectItem {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    width: 100%;
+    padding: var(--bui-space-2) var(--bui-space-3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: CanvasText;
+    text-align: left;
+  }
+
+  .iconSelectItem:hover {
+    background: var(--bui-bg-neutral-2, color-mix(in srgb, CanvasText 8%, Canvas));
+  }
+
+  .iconSelectItemActive {
+    font-weight: 600;
+  }
+
+  .iconSelectItemIcon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .iconSelectCheck {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--bui-fg-primary);
+  }
+
+  /* ── Tags filter dropdown ─────────────────────────────────────── */
+
+  .tagsDropdown {
+    position: relative;
+  }
+
+  .tagsDropdownTrigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bui-space-2);
+    width: 100%;
+    min-width: 140px;
+    padding: 0 var(--bui-space-3);
+    height: 32px;
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-2);
+    background: Canvas;
+    color: CanvasText;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .tagsDropdownTrigger:hover {
+    border-color: var(--bui-fg-primary);
+  }
+
+  .tagsDropdownArrow {
+    font-size: 0.65rem;
+    color: var(--bui-fg-secondary);
+    flex-shrink: 0;
+  }
+
+  .tagsDropdownPanel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 220px;
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 200;
+    overflow: hidden;
+  }
+
+  .tagsDropdownSearch {
+    display: block;
+    width: 100%;
+    padding: var(--bui-space-2) var(--bui-space-3);
+    border: none;
+    border-bottom: 1px solid var(--bui-border-1);
+    background: Canvas;
+    color: CanvasText;
+    font-size: 0.875rem;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .tagsDropdownSectionLabel {
+    padding: var(--bui-space-2) var(--bui-space-3) var(--bui-space-1);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--bui-fg-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .tagsDropdownList {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: var(--bui-space-1) 0;
+  }
+
+  .tagsDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    padding: var(--bui-space-1) var(--bui-space-3);
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: CanvasText;
+    user-select: none;
+  }
+
+  .tagsDropdownItem:hover {
+    background: var(--bui-bg-neutral-2, color-mix(in srgb, CanvasText 8%, Canvas));
+  }
+
+  .tagsDropdownCheckbox {
+    cursor: pointer;
+    accent-color: var(--bui-fg-primary);
+    flex-shrink: 0;
+  }
+
+  .tagsDropdownNoResults {
+    padding: var(--bui-space-2) var(--bui-space-3);
+    color: CanvasText;
+    opacity: 0.6;
+    font-size: 0.875rem;
+  }
+}

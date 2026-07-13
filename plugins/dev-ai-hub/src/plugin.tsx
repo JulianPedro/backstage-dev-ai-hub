@@ -9,6 +9,10 @@ import {
 } from '@backstage/frontend-plugin-api';
 import { RiRobot3Fill } from '@remixicon/react';
 import { devAiHubApiRef, DevAiHubClient } from './api/DevAiHubClient';
+import {
+  devAiHubResourceApiRef,
+  DevAiHubResourceClient,
+} from './api/DevAiHubResourceClient';
 import { rootRouteRef } from './routes';
 
 export const devAiHubPlugin = createFrontendPlugin({
@@ -36,6 +40,18 @@ export const devAiHubPlugin = createFrontendPlugin({
         routeRef: rootRouteRef,
       },
     }),
+    ApiBlueprint.make({
+      name: 'resources',
+      params: defineParams =>
+        defineParams(
+          createApiFactory({
+            api: devAiHubResourceApiRef,
+            deps: { discoveryApi: discoveryApiRef, fetchApi: fetchApiRef },
+            factory: ({ discoveryApi, fetchApi }) =>
+              new DevAiHubResourceClient(discoveryApi, fetchApi),
+          }),
+        ),
+    }),
     SubPageBlueprint.make({
       name: 'browse',
       params: {
@@ -43,6 +59,17 @@ export const devAiHubPlugin = createFrontendPlugin({
         title: 'Browse',
         loader: () =>
           import('./components/DevAiHubPage').then(m => <m.DevAiHubPage />),
+      },
+    }),
+    // v2 catalog-backed page; replaces `browse` when the legacy silo is
+    // deleted (issue #34).
+    SubPageBlueprint.make({
+      name: 'resources',
+      params: {
+        path: 'resources',
+        title: 'Resources',
+        loader: () =>
+          import('./components/AiResourcesPage').then(m => <m.AiResourcesPage />),
       },
     }),
   ],

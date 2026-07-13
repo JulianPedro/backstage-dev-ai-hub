@@ -39,8 +39,8 @@ metadata:
     backstage.io/managed-by-origin-location: url:https://github.com/org/ai-assets
 
     # DevAI Hub custom annotations (namespace = devaihub; §4).
-    devaihub/compatible-frameworks: "github-copilot,cursor,claude"
-    devaihub/version: "1.2.0"
+    devaihub.io/compatible-frameworks: "github-copilot,cursor,claude"
+    devaihub.io/version: "1.2.0"
 
 spec:
   # Required — one of: skill, agent, hook, mcp, plugin
@@ -70,7 +70,7 @@ spec:
 | `metadata.title` | Recommended | `metadata.name` is displayed instead. |
 | `metadata.description` | Recommended | Card shows no description; search excludes it. |
 | `metadata.tags` | Recommended | No tags rendered; works fine. |
-| `devaihub/compatible-frameworks` | Recommended | No framework badges shown; filters exclude it. |
+| `devaihub.io/compatible-frameworks` | Recommended | No framework badges shown; filters exclude it. |
 
 ---
 
@@ -88,7 +88,7 @@ spec:
 
 Unsupported types are silently dropped by the consumer.
 
-### 2.2 `devaihub/compatible-frameworks` (annotation)
+### 2.2 `devaihub.io/compatible-frameworks` (annotation)
 
 Comma-separated list. Tokens are normalised by `normalizeFramework()` in `@julianpedro/plugin-dev-ai-hub-common`:
 
@@ -127,7 +127,7 @@ spec:
   allowedTools: ["read_file", "run_shell"]        # tool permissions
 ```
 
-**Compatibility framework for skills:** read from `spec.agents` (native). If `spec.agents` is empty, fall back to the `devaihub/compatible-frameworks` annotation.
+**Compatibility framework for skills:** read from `spec.agents` (native). If `spec.agents` is empty, fall back to the `devaihub.io/compatible-frameworks` annotation.
 
 ### 3.2 `agent` — default shape + annotations
 
@@ -139,11 +139,11 @@ spec:
 
 metadata:
   annotations:
-    devaihub/compatible-frameworks: "claude-code"
-    devaihub/role: "security-threat-modeller"
+    devaihub.io/compatible-frameworks: "claude-code"
+    devaihub.io/role: "security-threat-modeller"
 ```
 
-**No native spec fields.** The `devaihub/role` annotation is a display hint (optional, rendered as a subtitle on the card). The compatibility framework **must** come from `devaihub/compatible-frameworks`.
+**No native spec fields.** The `devaihub.io/role` annotation is a display hint (optional, rendered as a subtitle on the card). The compatibility framework **must** come from `devaihub.io/compatible-frameworks`.
 
 ### 3.3 `hook` — default shape + annotations
 
@@ -155,12 +155,12 @@ spec:
 
 metadata:
   annotations:
-    devaihub/compatible-frameworks: "claude-code"
-    devaihub/hook-event: "PostToolUse"
-    devaihub/hook-matcher: ".*"
+    devaihub.io/compatible-frameworks: "claude-code"
+    devaihub.io/hook-event: "PostToolUse"
+    devaihub.io/hook-matcher: ".*"
 ```
 
-**No native spec fields.** `devaihub/hook-event` is **recommended** — it tells the consumer which event triggers this hook (used for MCP server tool descriptions and card metadata). `devaihub/hook-matcher` is optional.
+**No native spec fields.** `devaihub.io/hook-event` is **recommended** — it tells the consumer which event triggers this hook (used for MCP server tool descriptions and card metadata). `devaihub.io/hook-matcher` is optional.
 
 ### 3.4 `mcp` — default shape + annotations
 
@@ -172,12 +172,12 @@ spec:
 
 metadata:
   annotations:
-    devaihub/compatible-frameworks: "claude-code,cursor"
-    devaihub/mcp-type: "http"          # http | stdio | sse
-    devaihub/mcp-uri: "http://mcp.example.com/sse"
+    devaihub.io/compatible-frameworks: "claude-code,cursor"
+    devaihub.io/mcp-type: "http"          # http | stdio | sse
+    devaihub.io/mcp-uri: "http://mcp.example.com/sse"
 ```
 
-**No native spec fields.** `devaihub/mcp-type` is **recommended** — drives whether the MCP card shows "HTTP", "STDIO", or "SSE". `devaihub/mcp-uri` is optional (used when the MCP server is externally addressable). The body of an `mcp` resource is typically `.mcp.json` or equivalent config.
+**No native spec fields.** `devaihub.io/mcp-type` is **recommended** — drives whether the MCP card shows "HTTP", "STDIO", or "SSE". `devaihub.io/mcp-uri` is optional (used when the MCP server is externally addressable). The body of an `mcp` resource is typically `.mcp.json` or equivalent config.
 
 > **Design fork (§8.4 of the main spec):** an MCP server could alternatively be modelled as an `API` entity (`spec.type: mcp-server`). This spec follows the direct `AiResource:mcp` directive. If you need runtime endpoint semantics, emit an additional `API:mcp-server` and relate them.
 
@@ -197,9 +197,9 @@ spec:
 
 metadata:
   annotations:
-    devaihub/compatible-frameworks: "github-copilot,claude-code"
-    devaihub/version: "2.0.0"
-    devaihub/plugin-manifest: "true"
+    devaihub.io/compatible-frameworks: "github-copilot,claude-code"
+    devaihub.io/version: "2.0.0"
+    devaihub.io/plugin-manifest: "true"
 ```
 
 **Rendering behaviour:** the `PluginCard` lists all `dependsOn` children, linking to each child's detail panel. The **inverse** relation (`dependencyOf`) lets a child card show "part of: security-toolkit".
@@ -208,18 +208,18 @@ metadata:
 
 ## 4. DevAI Hub annotation namespace
 
-All custom annotations use the `devaihub/` prefix. These are namespaced to avoid collisions with other plugins and upstream fields.
+All custom annotations use the `devaihub.io/` prefix. These are namespaced to avoid collisions with other plugins and upstream fields.
 
 | Annotation | Applies to | Meaning |
 |---|---|---|
-| `devaihub/compatible-frameworks` | all types | Comma-separated framework tokens (§2.2). |
-| `devaihub/version` | all types | Semantic version string; displayed on cards. |
-| `devaihub/role` | agent | Display subtitle (e.g. "security reviewer"). |
-| `devaihub/hook-event` | hook | Event name that triggers this hook. |
-| `devaihub/hook-matcher` | hook | Regex or glob for scope matching. |
-| `devaihub/mcp-type` | mcp | Transport type: `http`/`stdio`/`sse`. |
-| `devaihub/mcp-uri` | mcp | External endpoint URL (optional). |
-| `devaihub/plugin-manifest` | plugin | Boolean-ish flag; indicates a Claude Code `.claude-plugin/plugin.json` source. |
+| `devaihub.io/compatible-frameworks` | all types | Comma-separated framework tokens (§2.2). |
+| `devaihub.io/version` | all types | Semantic version string; displayed on cards. |
+| `devaihub.io/role` | agent | Display subtitle (e.g. "security reviewer"). |
+| `devaihub.io/hook-event` | hook | Event name that triggers this hook. |
+| `devaihub.io/hook-matcher` | hook | Regex or glob for scope matching. |
+| `devaihub.io/mcp-type` | mcp | Transport type: `http`/`stdio`/`sse`. |
+| `devaihub.io/mcp-uri` | mcp | External endpoint URL (optional). |
+| `devaihub.io/plugin-manifest` | plugin | Boolean-ish flag; indicates a Claude Code `.claude-plugin/plugin.json` source. |
 
 **Future:** if upstream structures a subtype for any of these, the annotation migrates into native spec and is deprecated (exit condition per ADR).
 
@@ -241,8 +241,8 @@ metadata:
   tags: [security, github, review]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/skills/approved-github-workflows/SKILL.md
-    devaihub/compatible-frameworks: "github-copilot,cursor,claude"
-    devaihub/version: "1.0.0"
+    devaihub.io/compatible-frameworks: "github-copilot,cursor,claude"
+    devaihub.io/version: "1.0.0"
 spec:
   type: skill
   lifecycle: production
@@ -265,8 +265,8 @@ metadata:
   tags: [security, architecture]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/agents/security-threat-modeller.md
-    devaihub/compatible-frameworks: "claude-code"
-    devaihub/role: "security architect"
+    devaihub.io/compatible-frameworks: "claude-code"
+    devaihub.io/role: "security architect"
 spec:
   type: agent
   lifecycle: experimental
@@ -285,8 +285,8 @@ metadata:
   tags: [lint, quality]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/hooks/post-edit-lint.json
-    devaihub/compatible-frameworks: "claude-code"
-    devaihub/hook-event: "PostToolUse"
+    devaihub.io/compatible-frameworks: "claude-code"
+    devaihub.io/hook-event: "PostToolUse"
 spec:
   type: hook
   lifecycle: production
@@ -305,9 +305,9 @@ metadata:
   tags: [observability, grafana]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/mcp/grafana-mcp/.mcp.json
-    devaihub/compatible-frameworks: "claude-code,cursor"
-    devaihub/mcp-type: "http"
-    devaihub/mcp-uri: "http://grafana-mcp.example.com/sse"
+    devaihub.io/compatible-frameworks: "claude-code,cursor"
+    devaihub.io/mcp-type: "http"
+    devaihub.io/mcp-uri: "http://grafana-mcp.example.com/sse"
 spec:
   type: mcp
   lifecycle: production
@@ -326,9 +326,9 @@ metadata:
   tags: [security, bundle]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-dev-ai-hub/blob/main/examples/plugin/security-toolkit/.claude-plugin/plugin.json
-    devaihub/compatible-frameworks: "github-copilot,claude-code"
-    devaihub/version: "2.1.0"
-    devaihub/plugin-manifest: "true"
+    devaihub.io/compatible-frameworks: "github-copilot,claude-code"
+    devaihub.io/version: "2.1.0"
+    devaihub.io/plugin-manifest: "true"
 spec:
   type: plugin
   lifecycle: production
@@ -349,7 +349,7 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 - [ ] `kind: AiResource` is used (not `Component`, not a custom kind).
 - [ ] `spec.type` is one of the five supported tokens.
 - [ ] `backstage.io/source-location` points at the **raw** markdown/config file in Git (not a directory).
-- [ ] `devaihub/compatible-frameworks` lists at least one framework token (or `all`).
+- [ ] `devaihub.io/compatible-frameworks` lists at least one framework token (or `all`).
 - [ ] For `plugin` types, `spec.dependsOn` references child `AiResource` entity refs correctly.
 - [ ] For `skill` types, `spec.agents` is preferred over the annotation for frameworks.
 - [ ] `metadata.name` is kebab-case and unique within the namespace.

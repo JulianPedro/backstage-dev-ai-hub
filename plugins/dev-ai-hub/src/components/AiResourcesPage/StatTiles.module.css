@@ -1,0 +1,64 @@
+@layer components {
+  /* Faithful to the legacy stat boxes: two-stop gradient, always-white text. */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: var(--bui-space-4);
+    margin-bottom: var(--bui-space-5);
+  }
+
+  .tile {
+    background: linear-gradient(135deg, var(--tile-color) 0%, var(--tile-deep) 100%);
+    border-radius: var(--bui-radius-3);
+    padding: var(--bui-space-4);
+    cursor: pointer;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--tile-color) 25%, transparent);
+    transition: all 0.2s ease;
+  }
+
+  .tile:hover {
+    transform: translateY(-2px);
+  }
+
+  .tileActive {
+    composes: tile;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--tile-color) 25%, transparent);
+    transform: translateY(-2px);
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 2px;
+  }
+
+  .tileInner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bui-space-2);
+  }
+
+  /* Scoped under .tile so they outrank BUI's Text colour rule regardless of
+     stylesheet injection order (same layer, same base specificity). */
+  .tile .tileValue {
+    color: #fff;
+    line-height: 1;
+    display: block;
+  }
+
+  .tile .tileLabel {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    margin-top: var(--bui-space-1);
+    display: block;
+  }
+
+  .tileIconBox {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--bui-radius-2);
+    background-color: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+}

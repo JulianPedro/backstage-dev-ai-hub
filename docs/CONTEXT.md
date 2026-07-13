@@ -66,9 +66,10 @@ creates, edits, or ingests entities.
 
 ### framework
 An AI tool that a resource is compatible with. Tracked by the
-`devaihub/compatible-frameworks` annotation (comma-separated). For `skill`
-entities, read from the native `spec.agents` field instead. Resolved to a
-canonical token by `getFrameworks(entity)` in `-common`. Known tokens: 
+`devaihub.io/compatible-frameworks` annotation (comma-separated). For `skill`
+entities, read from the native `spec.agents` field when non-empty, falling back
+to the annotation otherwise. Resolved to a canonical token by
+`getFrameworks(entity)` in `-common`. Known tokens: 
 `github-copilot`, `claude-code`, `cursor`, `google-gemini`, `all`.
 
 ### telemetry

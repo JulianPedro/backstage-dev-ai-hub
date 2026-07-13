@@ -8,8 +8,8 @@ metadata:
   annotations:
     # TODO(#4): replace with a reachable URL once body resolution is wired
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main/examples/catalog/skill-approved-github-workflows.yaml
-    devaihub/compatible-frameworks: "github-copilot,claude-code"
-    devaihub/version: "1.0.0"
+    devaihub.io/compatible-frameworks: "github-copilot,claude-code"
+    devaihub.io/version: "1.0.0"
 spec:
   type: skill
   lifecycle: production

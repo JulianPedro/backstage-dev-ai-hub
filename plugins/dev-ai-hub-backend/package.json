@@ -46,6 +46,7 @@
   "dependencies": {
     "@backstage/backend-plugin-api": "^1.9.1",
     "@backstage/catalog-model": "^1.9.0",
+    "@backstage/plugin-catalog-node": "^2.2.2",
     "@nospt/plugin-dev-ai-hub-common": "workspace:^",
     "@nospt/plugin-dev-ai-hub-node": "workspace:^",
     "archiver": "^6.0.0",
@@ -57,6 +58,8 @@
     "@backstage/backend-defaults": "^0.17.1",
     "@backstage/backend-test-utils": "^1.11.3",
     "@backstage/cli": "^0.36.2",
+    "@backstage/plugin-auth-backend": "0.29.0",
+    "@backstage/plugin-auth-backend-module-guest-provider": "0.2.10",
     "@backstage/plugin-catalog-backend": "^3.8.0",
     "@backstage/plugin-catalog-backend-module-ai-model": "^0.1.1",
     "@types/archiver": "^6.0.0",

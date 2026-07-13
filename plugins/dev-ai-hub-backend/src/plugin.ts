@@ -2,6 +2,7 @@ import {
   coreServices,
   createBackendPlugin,
 } from '@backstage/backend-plugin-api';
+import { catalogServiceRef } from '@backstage/plugin-catalog-node';
 import {
   devAiHubProviderExtensionPoint,
   type AiAssetProvider,
@@ -30,8 +31,19 @@ export const devAiHubPlugin = createBackendPlugin({
         scheduler: coreServices.scheduler,
         httpRouter: coreServices.httpRouter,
         urlReader: coreServices.urlReader,
+        httpAuth: coreServices.httpAuth,
+        catalog: catalogServiceRef,
       },
-      async init({ config, logger, database, scheduler, httpRouter, urlReader }) {
+      async init({
+        config,
+        logger,
+        database,
+        scheduler,
+        httpRouter,
+        urlReader,
+        httpAuth,
+        catalog,
+      }) {
         const store = await AiAssetStore.create({ database });
 
         const providers: ProviderConfig[] = (
@@ -70,7 +82,14 @@ export const devAiHubPlugin = createBackendPlugin({
 
         await syncService.start();
 
-        const router = createRouter({ logger, store, syncService, providers });
+        const router = createRouter({
+          logger,
+          store,
+          syncService,
+          providers,
+          catalog,
+          httpAuth,
+        });
 
         httpRouter.use(router);
 

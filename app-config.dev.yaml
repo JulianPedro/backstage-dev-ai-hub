@@ -36,6 +36,11 @@ devAiHub:
           minutes: 5
 
 
+# Guest sign-in for local dev — the v2 routes require Backstage auth (ADR-0005)
+auth:
+  providers:
+    guest: {}
+
 catalog:
   rules:
     - allow: [Component, API, Resource, System, Domain, Location, AiResource]

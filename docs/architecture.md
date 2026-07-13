@@ -67,7 +67,7 @@ interface ResourceSummary {
   version?: string;
   kind: string;
   childCount?: number;         // e.g. plugin dependsOn count
-  helpText?: string;           // parsed from devaihub/help annotation
+  helpText?: string;           // parsed from devaihub.io/help annotation
   annotations: Record<string, string>;
 }
 ```

@@ -1,22 +1,52 @@
 import express from 'express';
-import type { LoggerService } from '@backstage/backend-plugin-api';
+import type {
+  HttpAuthService,
+  LoggerService,
+} from '@backstage/backend-plugin-api';
+import type { CatalogService } from '@backstage/plugin-catalog-node';
 import type { AiAssetStore } from './database/AiAssetStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import type { ProviderConfig, AssetListFilter } from './types';
-import type { AssetType } from '@nospt/plugin-dev-ai-hub-common';
+import type { AssetType, ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
+import { toResourceSummary } from './service/toResourceSummary';
 
 interface RouterOptions {
   logger: LoggerService;
   store: AiAssetStore;
   syncService: AiAssetSyncService;
   providers: ProviderConfig[];
+  catalog: CatalogService;
+  httpAuth: HttpAuthService;
 }
 
 export function createRouter(options: RouterOptions): express.Router {
-  const { store, syncService, providers } = options;
+  const { store, syncService, providers, catalog, httpAuth } = options;
   const router = express.Router();
 
   router.use(express.json());
+
+  // ── Resources (v2 — catalog-backed, ADR-0001) ─────────────────────────────
+
+  router.get('/resources', async (req, res) => {
+    try {
+      const credentials = await httpAuth.credentials(req);
+      const { items: entities } = await catalog.getEntities(
+        { filter: { kind: 'AiResource' } },
+        { credentials },
+      );
+      const items = entities
+        .map(toResourceSummary)
+        .filter((s): s is ResourceSummary => s !== undefined);
+      res.json({ items });
+    } catch (error) {
+      if ((error as Error).name === 'AuthenticationError') {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
+      options.logger.error(`Failed to list resources: ${error}`);
+      res.status(500).json({ error: 'Failed to list resources' });
+    }
+  });
 
   // ── Assets ────────────────────────────────────────────────────────────────
 

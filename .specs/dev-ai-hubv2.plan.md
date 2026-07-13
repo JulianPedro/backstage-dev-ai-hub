@@ -37,7 +37,7 @@ From the ADRs + `architecture.md`:
 
 - **ADR-0001** Catalog is the sole source of truth; entities are metadata-only; body stays in Git.
 - **ADR-0002** The backend is intentionally thin: **body resolver + install telemetry + MCP**. No asset store, no REST CRUD, no Git enumeration.
-- **ADR-0003** Five `spec.type` values: `skill · agent · hook · mcp · plugin`. Framework read: skill → `spec.agents`; else → `devaihub/compatible-frameworks` annotation; else `[]`.
+- **ADR-0003** Five `spec.type` values: `skill · agent · hook · mcp · plugin`. Framework read: skill → `spec.agents`; else → `devaihub.io/compatible-frameworks` annotation; else `[]`.
 - **ADR-0004** Ingestion is hand-authored `catalog-info.yaml` (+ `examples/`), never plugin-owned.
 - **ADR-0005** All backend routes require Backstage authentication.
 - **ADR-0006** Body reads re-fetch the entity **as the calling user** — body inherits catalog visibility.
@@ -209,13 +209,14 @@ flowchart LR
 | # | Question | Disposition |
 |---|---|---|
 | Q1 | Target v1.51 patch + upgrade path (single bump vs stepwise) | Decide at Phase 0 start; prefer `backstage-cli versions:bump` to the latest ≤1.5x that carries AiResource |
-| Q2 | Final annotation namespace (`devaihub/…` vs reverse-DNS) | Pick before Phase 1 ends |
-| Q3 | BUI colour tokens for the five card roles | Bind in Phase 3 |
+| Q2 | Final annotation namespace | **Resolved (slice 2): `devaihub.io/…`** — DNS-shaped per Backstage convention; docs + examples updated |
+| Q3 | BUI colour tokens for the five card roles | **Resolved (ADR-0008): plugin-owned `--devaihub-type-*` tokens** layered on BUI's `[data-theme-mode]` attribute — BUI 0.15 has only four semantic colours, so five roles cannot bind to BUI tokens directly |
 | Q4 | `plugin` children mechanism (native `dependsOn` relations vs annotation convention) | Verify in Phase 2; add a tiny processor only if hand-authored convention is insufficient |
 | Q5 | Keep `packages/backend` stale `dist/` or delete | House-keeping; delete when convenient |
 | Q6 | Which GitHub fields enrich the card (last-updated · README excerpt · repo stars/forks · contributors · extra frontmatter) — **excludes title/description, which are catalog fields** | Decide at Phase 5 start; ship the smallest useful set first |
 | Q7 | Enrichment cache: in-memory TTL vs a small persisted cache table (with TTL, still not truth) | Prefer in-memory TTL first; add a cache table only if GitHub rate limits bite |
 | Q8 | Enrichment auth to GitHub: per-user token vs a shared integration token | Prefer the configured `integrations` token via `UrlReader`; per-user only if private-repo visibility must be enforced per caller |
+| Q9 | Server-side pagination/search for `/resources` | Deferred — the browse page loads the full summary list and paginates/searches client-side (24/page, slice 3); revisit if real catalogs outgrow a single response |
 
 ## 6. Issue slices (locked — tracer bullets)
 

@@ -1,0 +1,108 @@
+@layer components {
+  .card {
+    background: var(--bui-bg-neutral-1);
+    border: 1px solid var(--bui-border-1);
+    border-left: 3px solid var(--card-accent);
+    border-radius: var(--bui-radius-2);
+    padding: var(--bui-space-4);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-2);
+    transition: box-shadow 120ms ease, transform 120ms ease;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--card-accent) 20%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--bui-space-2);
+  }
+
+  .iconBox {
+    background: var(--card-accent-bg);
+    color: var(--card-accent);
+    border-radius: var(--bui-radius-2);
+    padding: var(--bui-space-2);
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .headerText {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .typeLabel {
+    color: var(--card-accent);
+    font-weight: 600;
+  }
+
+  .sourceLink {
+    color: var(--bui-fg-secondary);
+    display: flex;
+    padding: var(--bui-space-1);
+    border-radius: var(--bui-radius-1);
+  }
+
+  .sourceLink:hover {
+    color: var(--card-accent);
+    background: var(--card-accent-bg);
+  }
+
+  .description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--bui-space-1);
+  }
+
+  .frameworkBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bui-space-1);
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-full, 999px);
+    padding: 0 var(--bui-space-2);
+    font-size: 0.75rem;
+    line-height: 1.8;
+    color: var(--bui-fg-primary);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--bui-space-1);
+  }
+
+  .tag {
+    background: var(--bui-bg-neutral-2);
+    border-radius: var(--bui-radius-1);
+    padding: 0 var(--bui-space-2);
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--bui-fg-secondary);
+  }
+
+  .footer {
+    margin-top: auto;
+    padding-top: var(--bui-space-1);
+  }
+}

@@ -9,8 +9,9 @@ Because the plugin is a pure consumer, it cannot guarantee that non-skill entiti
 framework metadata. "Compatible frameworks" is therefore read **best-effort**, via a single
 `getFrameworks(entity)` resolver shared by the cards and the MCP server:
 
-1. `spec.type === 'skill'` → read native `spec.agents`;
-2. otherwise → parse the `devaihub/compatible-frameworks` annotation (comma-separated);
+1. `spec.type === 'skill'` **and** `spec.agents` is non-empty → read native `spec.agents`;
+2. otherwise → parse the `devaihub.io/compatible-frameworks` annotation (comma-separated) —
+   this is also the fallback for a `skill` whose `spec.agents` is empty or absent;
 3. otherwise → empty (render no badges, but still show the entity).
 
 Unknown framework tokens pass through and display as-is rather than being dropped, since
