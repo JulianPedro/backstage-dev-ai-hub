@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: AiResource
+metadata:
+  name: nos-plugin-marketplace
+  title: NOS Plugin Marketplace
+  description: Curated marketplace of approved NOS plugins for AI coding tools. Add it once to your tool, then install its plugins from it.
+  tags: [marketplace, curated]
+  annotations:
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.md
+    devaihub.io/compatible-frameworks: "claude-code,github-copilot"
+    devaihub.io/version: "1.0.0"
+spec:
+  type: marketplace
+  lifecycle: production
+  owner: group:ai-platform-team
+  dependsOn:
+    - airesource:default/secure-dev-bundle

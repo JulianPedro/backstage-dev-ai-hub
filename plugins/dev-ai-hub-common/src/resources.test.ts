@@ -2,7 +2,15 @@ import {
   ANNOTATION_COMPATIBLE_FRAMEWORKS,
   getBodyShape,
   getFrameworks,
+  getMarketplaceAddCommands,
+  getMarketplaceInstallTemplate,
+  getMarketplaceRepoSlug,
+  getMarketplaceTeamSnippet,
   getResourceInstallPath,
+  getAgentInstallLinks,
+  getMcpInstallLinks,
+  hasCopyableBody,
+  hasDownloadableArtifact,
   isResourceType,
   normalizeFramework,
   RESOURCE_TYPE_REGISTRY,
@@ -112,7 +120,7 @@ describe('RESOURCE_TYPE_REGISTRY', () => {
 });
 
 describe('isResourceType', () => {
-  it.each(['skill', 'agent', 'hook', 'mcp', 'plugin'])('accepts %s', t => {
+  it.each(['skill', 'agent', 'hook', 'mcp', 'plugin', 'marketplace'])('accepts %s', t => {
     expect(isResourceType(t)).toBe(true);
   });
 
@@ -124,7 +132,7 @@ describe('isResourceType', () => {
 describe('getBodyShape', () => {
   it('is json only for mcp', () => {
     expect(getBodyShape('mcp')).toBe('json');
-    for (const t of ['skill', 'agent', 'hook', 'plugin'] as const) {
+    for (const t of ['skill', 'agent', 'hook', 'plugin', 'marketplace'] as const) {
       expect(getBodyShape(t)).toBe('markdown');
     }
   });
@@ -160,5 +168,221 @@ describe('getResourceInstallPath', () => {
   it('is undefined where no convention exists', () => {
     expect(getResourceInstallPath('plugin', 'claude-code', 'bundle')).toBeUndefined();
     expect(getResourceInstallPath('hook', 'github-copilot', 'x')).toBeUndefined();
+    expect(getResourceInstallPath('marketplace', 'claude-code', 'nos')).toBeUndefined();
+  });
+});
+
+describe('hasDownloadableArtifact', () => {
+  it('is true only where the body is the artifact itself', () => {
+    for (const t of ['skill', 'agent', 'hook', 'mcp'] as const) {
+      expect(hasDownloadableArtifact(t)).toBe(true);
+    }
+  });
+
+  it('is false for the pointer-shaped bodies (plugin, marketplace)', () => {
+    expect(hasDownloadableArtifact('plugin')).toBe(false);
+    expect(hasDownloadableArtifact('marketplace')).toBe(false);
+  });
+});
+
+describe('hasCopyableBody', () => {
+  it('is false only for marketplace — its actionable copies are the journey commands', () => {
+    for (const t of ['skill', 'agent', 'hook', 'mcp', 'plugin'] as const) {
+      expect(hasCopyableBody(t)).toBe(true);
+    }
+    expect(hasCopyableBody('marketplace')).toBe(false);
+  });
+});
+
+describe('getMarketplaceRepoSlug', () => {
+  it('derives owner/repo from a GitHub blob URL', () => {
+    expect(
+      getMarketplaceRepoSlug(
+        'url:https://github.com/nosportugal/ai-marketplace/blob/main/docs/marketplace.md',
+      ),
+    ).toBe('nosportugal/ai-marketplace');
+  });
+
+  it('derives owner/repo without the url: prefix', () => {
+    expect(getMarketplaceRepoSlug('https://github.com/org/repo')).toBe('org/repo');
+  });
+
+  it('strips a .git suffix', () => {
+    expect(getMarketplaceRepoSlug('url:https://github.com/org/repo.git')).toBe('org/repo');
+  });
+
+  it.each([
+    [undefined],
+    [''],
+    ['not a url'],
+    ['url:https://gitlab.com/org/repo/-/blob/main/m.md'],
+    ['url:https://github.com/only-owner'],
+  ])('is undefined for %s (body-only fallback)', input => {
+    expect(getMarketplaceRepoSlug(input as string | undefined)).toBeUndefined();
+  });
+});
+
+describe('getMarketplaceAddCommands', () => {
+  it('produces one command per capable framework', () => {
+    const commands = getMarketplaceAddCommands(
+      ['claude-code', 'github-copilot'],
+      'org/repo',
+    );
+    expect(commands.map(({ framework, command }) => ({ framework, command }))).toEqual([
+      { framework: 'claude-code', command: '/plugin marketplace add org/repo' },
+      { framework: 'github-copilot', command: 'copilot plugin marketplace add org/repo' },
+    ]);
+  });
+
+  it('carries a prefill deep link for Claude Code; Copilot is copy-only', () => {
+    const [claude, copilot] = getMarketplaceAddCommands(
+      ['claude-code', 'github-copilot'],
+      'org/repo',
+    );
+    expect(claude.deepLinks).toEqual([
+      {
+        label: 'Claude',
+        href: `claude-cli://open?q=${encodeURIComponent('/plugin marketplace add org/repo')}`,
+      },
+    ]);
+    expect(copilot.deepLinks).toEqual([]);
+  });
+
+  it('expands "all" and an empty list to every capable framework', () => {
+    for (const frameworks of [['all'], []]) {
+      expect(getMarketplaceAddCommands(frameworks, 'org/repo').map(c => c.framework)).toEqual([
+        'claude-code',
+        'github-copilot',
+      ]);
+    }
+  });
+
+  it('produces no row for frameworks without a marketplace concept', () => {
+    expect(getMarketplaceAddCommands(['cursor', 'google-gemini'], 'org/repo')).toEqual([]);
+  });
+
+  it('normalises aliases', () => {
+    const commands = getMarketplaceAddCommands(['claude'], 'org/repo');
+    expect(commands).toHaveLength(1);
+    expect(commands[0]).toMatchObject({
+      framework: 'claude-code',
+      command: '/plugin marketplace add org/repo',
+    });
+  });
+});
+
+describe('getAgentInstallLinks', () => {
+  it('builds Claude, VS Code, and Insiders install links from a GitHub blob URL', () => {
+    const rawUrl =
+      'https://raw.githubusercontent.com/nosportugal/backstage-plugin-dev-ai-hub/main-nos/examples/agents/api-architect.md';
+    const encodedRawUrl = encodeURIComponent(rawUrl);
+    expect(
+      getAgentInstallLinks(
+        'url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/agents/api-architect.md',
+        'api-architect',
+      ),
+    ).toEqual([
+      {
+        label: 'Claude',
+        href: `claude-cli://open?q=${encodeURIComponent(
+          `Install this agent: fetch ${rawUrl} and save it to .claude/agents/api-architect.md`,
+        )}`,
+      },
+      { label: 'VS Code', href: `vscode:chat-agent/install?url=${encodedRawUrl}` },
+      {
+        label: 'VS Code Insiders',
+        href: `vscode-insiders:chat-agent/install?url=${encodedRawUrl}`,
+      },
+    ]);
+  });
+
+  it.each([
+    [undefined],
+    ['not a url'],
+    ['url:https://gitlab.com/org/repo/-/blob/main/a.md'],
+    ['url:https://github.com/org/repo'],
+    ['url:https://github.com/org/repo/tree/main/agents'],
+    ['url:https://github.com/org/repo/blob/main'],
+  ])('is empty for %s (copy/download fallback)', input => {
+    expect(getAgentInstallLinks(input as string | undefined, 'x')).toEqual([]);
+  });
+});
+
+describe('getMcpInstallLinks', () => {
+  const body = JSON.stringify({
+    mcpServers: { grafana: { type: 'http', url: 'http://localhost:8080/mcp' } },
+  });
+  const config = '{"type":"http","url":"http://localhost:8080/mcp"}';
+
+  it('derives host links from the mcpServers body, following frameworks', () => {
+    expect(getMcpInstallLinks(['claude-code', 'cursor'], 'grafana-mcp', body)).toEqual([
+      {
+        label: 'Claude',
+        href: `claude-cli://open?q=${encodeURIComponent(
+          `Install this MCP server by running: claude mcp add-json grafana '${config}'`,
+        )}`,
+      },
+      {
+        label: 'Cursor',
+        href: `cursor://anysphere.cursor-deeplink/mcp/install?name=grafana&config=${btoa(config)}`,
+      },
+    ]);
+  });
+
+  it('produces the VS Code pair for github-copilot with the name folded in', () => {
+    const links = getMcpInstallLinks(['github-copilot'], 'grafana-mcp', body);
+    const vsConfig = encodeURIComponent(
+      '{"name":"grafana","type":"http","url":"http://localhost:8080/mcp"}',
+    );
+    expect(links).toEqual([
+      { label: 'VS Code', href: `vscode:mcp/install?${vsConfig}` },
+      { label: 'VS Code Insiders', href: `vscode-insiders:mcp/install?${vsConfig}` },
+    ]);
+  });
+
+  it('expands empty, "all", and unknown-only framework lists to every capable host', () => {
+    for (const frameworks of [[], ['all'], ['google-gemini']]) {
+      expect(getMcpInstallLinks(frameworks, 'grafana-mcp', body).map(l => l.label)).toEqual(
+        ['Claude', 'VS Code', 'VS Code Insiders', 'Cursor'],
+      );
+    }
+  });
+
+  it('accepts a bare config body, naming the server after the resource', () => {
+    const links = getMcpInstallLinks(['cursor'], 'grafana-mcp', config);
+    expect(links).toEqual([
+      {
+        label: 'Cursor',
+        href: `cursor://anysphere.cursor-deeplink/mcp/install?name=grafana-mcp&config=${btoa(config)}`,
+      },
+    ]);
+  });
+
+  it.each([
+    [undefined],
+    ['not json'],
+    ['"just a string"'],
+    ['{"unrelated":true}'],
+    [JSON.stringify({ mcpServers: {} })],
+    [JSON.stringify({ mcpServers: { a: { url: 'x' }, b: { url: 'y' } } })],
+  ])('is empty for body %s (copy fallback)', input => {
+    expect(getMcpInstallLinks([], 'grafana-mcp', input as string | undefined)).toEqual([]);
+  });
+});
+
+describe('marketplace step-two helpers', () => {
+  it('templates the plugin-install command on the marketplace name', () => {
+    expect(getMarketplaceInstallTemplate('nos-marketplace')).toBe(
+      '/plugin install <plugin>@nos-marketplace',
+    );
+  });
+
+  it('builds a valid extraKnownMarketplaces settings snippet', () => {
+    const snippet = getMarketplaceTeamSnippet('nos-marketplace', 'org/repo');
+    expect(JSON.parse(snippet)).toEqual({
+      extraKnownMarketplaces: {
+        'nos-marketplace': { source: { source: 'github', repo: 'org/repo' } },
+      },
+    });
   });
 });

@@ -1,6 +1,7 @@
 /*
- * Plugin-owned colour tokens for the five ResourceType roles (ADR-0008).
- * NOS company palette — do not substitute other colours (see docs/adr/0008).
+ * Plugin-owned colour tokens for the six ResourceType roles (ADR-0008,
+ * ADR-0010). NOS company palette — do not substitute other colours (see
+ * docs/adr/0008; marketplace coral is NOS Coral from the brand reference).
  * The ONLY place raw hex may appear for type identity; components reference
  * the custom properties. Dark values keep the hue and tune lightness only.
  */
@@ -11,12 +12,14 @@
   --devaihub-type-hook: #f9ca24;
   --devaihub-type-plugin: #54a0ff;
   --devaihub-type-mcp: #00d2d3;
+  --devaihub-type-marketplace: #f26b43;
 
   --devaihub-type-skill-bg: rgba(106, 176, 76, 0.14);
   --devaihub-type-agent-bg: rgba(255, 107, 157, 0.14);
   --devaihub-type-hook-bg: rgba(249, 202, 36, 0.16);
   --devaihub-type-plugin-bg: rgba(84, 160, 255, 0.14);
   --devaihub-type-mcp-bg: rgba(0, 210, 211, 0.14);
+  --devaihub-type-marketplace-bg: rgba(242, 107, 67, 0.14);
 
 }
 
@@ -35,6 +38,8 @@
   --devaihub-tile-plugin-deep: #2980ff;
   --devaihub-tile-mcp: #00d2d3;
   --devaihub-tile-mcp-deep: #00a8a9;
+  --devaihub-tile-marketplace: #f26b43;
+  --devaihub-tile-marketplace-deep: #dc4618;
 }
 
 :global([data-theme-mode='dark']) {
@@ -43,12 +48,32 @@
   --devaihub-type-hook: #fbd54f;
   --devaihub-type-plugin: #74b1ff;
   --devaihub-type-mcp: #2fdedf;
+  --devaihub-type-marketplace: #f58f70;
 
   --devaihub-type-skill-bg: rgba(131, 195, 104, 0.18);
   --devaihub-type-agent-bg: rgba(255, 133, 174, 0.18);
   --devaihub-type-hook-bg: rgba(251, 213, 79, 0.18);
   --devaihub-type-plugin-bg: rgba(116, 177, 255, 0.18);
   --devaihub-type-mcp-bg: rgba(47, 222, 223, 0.18);
+  --devaihub-type-marketplace-bg: rgba(245, 143, 112, 0.18);
+}
+
+/*
+ * NOS corporate brand accent — the real NOS Teal, kept separate from the
+ * per-type palette above (that palette is functional/informational, not
+ * a brand statement; ADR-0008 still owns type identity). Used sparingly
+ * as a "touch of NOS" on neutral plugin chrome (e.g. the detail drawer).
+ * Source: NOS presentation brand reference
+ * (.github/skills/nos-presenting-colors/references/branding.md).
+ */
+:global(:root),
+:global([data-theme-mode='light']) {
+  --devaihub-brand-teal: #00b3ad;
+}
+
+:global([data-theme-mode='dark']) {
+  /* Light Teal — the palette's own "highlights" shade, for dark backgrounds */
+  --devaihub-brand-teal: #00e6e1;
 }
 
 @layer components {

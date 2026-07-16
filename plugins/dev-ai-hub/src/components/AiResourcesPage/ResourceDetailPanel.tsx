@@ -19,6 +19,8 @@ import {
 import { useApi } from '@backstage/core-plugin-api';
 import {
   getBodyShape,
+  hasCopyableBody,
+  hasDownloadableArtifact,
   type AiTool,
   type ResourceSummary,
 } from '@nospt/plugin-dev-ai-hub-common';
@@ -70,7 +72,12 @@ export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelPr
   return (
     <>
       <div className={styles.overlay} onClick={onClose} role="presentation" />
-      <div className={styles.drawer} role="dialog" aria-label={resource.title ?? resource.name}>
+      <div
+        className={styles.drawer}
+        style={{ '--drawer-accent': meta.color } as React.CSSProperties}
+        role="dialog"
+        aria-label={resource.title ?? resource.name}
+      >
         <Flex className={styles.header}>
           <div
             className={styles.iconBox}
@@ -103,23 +110,27 @@ export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelPr
 
           {actionable && (
             <div className={styles.actions}>
-              <Button
-                size="small"
-                variant="secondary"
-                iconStart={<RiFileCopyLine />}
-                isDisabled={!bodyState.body}
-                onPress={handleCopy}
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </Button>
-              <Button
-                size="small"
-                variant="secondary"
-                iconStart={<RiDownloadLine />}
-                onPress={() => api.downloadEntityBody(resource.entityRef)}
-              >
-                Download
-              </Button>
+              {hasCopyableBody(resource.type) && (
+                <Button
+                  size="small"
+                  variant="secondary"
+                  iconStart={<RiFileCopyLine />}
+                  isDisabled={!bodyState.body}
+                  onPress={handleCopy}
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </Button>
+              )}
+              {hasDownloadableArtifact(resource.type) && (
+                <Button
+                  size="small"
+                  variant="secondary"
+                  iconStart={<RiDownloadLine />}
+                  onPress={() => api.downloadEntityBody(resource.entityRef)}
+                >
+                  Download
+                </Button>
+              )}
               <Button
                 size="small"
                 variant="primary"

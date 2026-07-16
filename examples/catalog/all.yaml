@@ -12,3 +12,4 @@ spec:
     - ./hook-post-edit-lint.yaml
     - ./mcp-grafana.yaml
     - ./plugin-secure-dev-bundle.yaml
+    - ./marketplace-nos-plugin-marketplace.yaml

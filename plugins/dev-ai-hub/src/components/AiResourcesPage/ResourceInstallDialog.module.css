@@ -62,6 +62,134 @@
 
   .actions {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--bui-space-2);
+  }
+
+  .journey {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-3);
+  }
+
+  .stepTitle {
+    font-weight: 600;
+  }
+
+  .commandList {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    /* between one framework's block and the next */
+    gap: var(--bui-space-4);
+  }
+
+  .commandRow {
+    display: flex;
+    flex-direction: column;
+    /* between the label, the command box, and the launch buttons */
+    gap: 6px;
+  }
+
+  .commandLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    font-size: 0.8125rem;
+    color: var(--bui-fg-secondary);
+  }
+
+  .commandCell {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-1);
+    min-width: 0;
+    background-color: var(--bui-bg-neutral-2);
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-2);
+    padding: var(--bui-space-1);
+  }
+
+  .deepLinks {
+    margin: 0;
+    /* extra breathing room between the command box and the launch buttons,
+       on top of the row gap */
+    margin-block-start: 3px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--bui-space-2);
+  }
+
+  /* Claude's brand terracotta (simple-icons siClaude hex); doubled selector
+     outranks the BUI button variant styles in the same cascade layer. */
+  .claudeLaunch.claudeLaunch {
+    background-color: #d97757;
+    border-color: #d97757;
+    color: #1a1310;
+  }
+
+  .claudeLaunch.claudeLaunch:hover {
+    background-color: color-mix(in srgb, #d97757 85%, black);
+    border-color: color-mix(in srgb, #d97757 85%, black);
+  }
+
+  /* VS Code brand blue (stable product icon). */
+  .vscodeLaunch.vscodeLaunch {
+    background-color: #007acc;
+    border-color: #007acc;
+    color: #ffffff;
+  }
+
+  .vscodeLaunch.vscodeLaunch:hover {
+    background-color: color-mix(in srgb, #007acc 85%, black);
+    border-color: color-mix(in srgb, #007acc 85%, black);
+  }
+
+  /* VS Code Insiders brand teal (Insiders product icon); dark ink for contrast. */
+  .insidersLaunch.insidersLaunch {
+    background-color: #00b294;
+    border-color: #00b294;
+    color: #0e1f1a;
+  }
+
+  .insidersLaunch.insidersLaunch:hover {
+    background-color: color-mix(in srgb, #00b294 85%, black);
+    border-color: color-mix(in srgb, #00b294 85%, black);
+  }
+
+  /* Cursor's monochrome brand: inverted against the theme (black-on-light,
+     white-on-dark), via the theme-adaptive foreground/background tokens. */
+  .cursorLaunch.cursorLaunch {
+    background-color: var(--bui-fg-primary);
+    border-color: var(--bui-fg-primary);
+    color: var(--bui-bg-app);
+  }
+
+  .cursorLaunch.cursorLaunch:hover {
+    background-color: color-mix(in srgb, var(--bui-fg-primary) 80%, var(--bui-bg-app));
+    border-color: color-mix(in srgb, var(--bui-fg-primary) 80%, var(--bui-bg-app));
+  }
+
+  .commandCell code {
+    flex: 1;
+    font-size: 0.8125rem;
+    padding-left: var(--bui-space-1);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .teamSection summary {
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--bui-fg-secondary);
+  }
+
+  .teamSection[open] summary {
+    margin-bottom: var(--bui-space-2);
+  }
+
+  .teamSection pre {
+    margin: var(--bui-space-2) 0;
   }
 }

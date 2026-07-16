@@ -9,7 +9,7 @@
 
 ---
 
-## 1. Common shape (all five types)
+## 1. Common shape (all six types)
 
 Every `AiResource` entity — regardless of `spec.type` — carries this minimum shape. The plugin drops entities that deviate.
 
@@ -46,7 +46,7 @@ metadata:
     devaihub.io/version: "1.2.0"
 
 spec:
-  # Required — one of: skill, agent, hook, mcp, plugin
+  # Required — one of: skill, agent, hook, mcp, plugin, marketplace
   type: skill
 
   # Required — standard Backstage lifecycle.
@@ -88,6 +88,7 @@ spec:
 | `hook` | Event handler (e.g. `PostToolUse`). |
 | `mcp` | An MCP server configuration. |
 | `plugin` | A composite container (Claude Code plugin) that bundles other resources. |
+| `marketplace` | A distribution point for plugins (e.g. a Claude Code plugin marketplace repo). Bundles `plugin` resources only (ADR-0010). |
 
 Unsupported types are silently dropped by the consumer.
 
@@ -208,6 +209,46 @@ metadata:
 ```
 
 **Rendering behaviour:** the `PluginCard` lists all `dependsOn` children, linking to each child's detail panel. The **inverse** relation (`dependencyOf`) lets a child card show "part of: security-toolkit".
+
+### 3.6 `marketplace` — plugin distribution point (ADR-0010)
+
+```yaml
+spec:
+  type: marketplace
+  lifecycle: production
+  owner: group:ai-platform-team
+  # Relations: the marketplace *distributes* these plugins — plugin children ONLY.
+  dependsOn:
+    - airesource:default/security-toolkit
+
+metadata:
+  annotations:
+    devaihub.io/compatible-frameworks: "claude-code,github-copilot"
+    devaihub.io/version: "1.0.0"
+```
+
+**No native spec fields.** A marketplace mirrors an AI-tool plugin marketplace (e.g. a Git repo
+carrying `.claude-plugin/marketplace.json`): the user installs the marketplace into their tool
+(`/plugin marketplace add org/repo`) and can then install its plugins.
+
+- **Children are `plugin` resources only** — mirroring the real `marketplace.json`, which lists
+  plugins. This is a rendering convention, not hard validation: non-plugin children are silently
+  not rendered as children. Wrap a loose skill in a plugin if you want it in a marketplace.
+- **The body is a markdown doc** carrying the marketplace-add command, the repo link, and usage
+  notes — never the `marketplace.json` manifest itself (users register the repo; they don't copy
+  the manifest). `source-location` points at that markdown file.
+- **The body doc MUST live inside the marketplace repo itself**, and **`metadata.name` MUST
+  equal the `name` field in `marketplace.json`**. The consumer derives the repo slug from
+  `source-location` to generate copyable add commands (Claude Code + Copilot CLI — both read
+  the same `.claude-plugin/marketplace.json` format), the
+  `/plugin install <plugin>@<marketplace-name>` template, and a team
+  `extraKnownMarketplaces` snippet. Violate either rule and the dialog degrades to the
+  rendered body alone (ADR-0010).
+- **Install is command-based** like `plugin`: no filesystem install path. There is no
+  `devaihub.io/marketplace-url` annotation — the repo reference lives only in the body and
+  `source-location` (issue #30 precedent: annotations duplicating install config invite drift).
+- Child plugins appear in DevAI Hub only if the producer also authors their entities and links
+  them via `dependsOn` (the plugin remains a pure consumer, ADR-0004).
 
 ---
 
@@ -344,6 +385,28 @@ spec:
     - airesource:default/grafana-mcp
 ```
 
+### marketplace
+
+```yaml
+apiVersion: backstage.io/v1alpha1
+kind: AiResource
+metadata:
+  name: nos-plugin-marketplace
+  title: NOS Plugin Marketplace
+  description: Curated marketplace of approved NOS plugins for AI coding tools
+  tags: [marketplace, curated]
+  annotations:
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.md
+    devaihub.io/compatible-frameworks: "claude-code,github-copilot"
+    devaihub.io/version: "1.0.0"
+spec:
+  type: marketplace
+  lifecycle: production
+  owner: group:ai-platform-team
+  dependsOn:
+    - airesource:default/security-toolkit
+```
+
 ---
 
 ## 6. Producer checklist
@@ -351,10 +414,12 @@ spec:
 Before submitting a new `AiResource` catalog-info.yaml, verify:
 
 - [ ] `kind: AiResource` is used (not `Component`, not a custom kind).
-- [ ] `spec.type` is one of the five supported tokens.
+- [ ] `spec.type` is one of the six supported tokens.
 - [ ] `backstage.io/source-location` points at the body: a raw file URL for a single-file body, or a `/`-terminated directory URL for a resource-bearing body (viewed via its entry file, downloaded as one zip).
 - [ ] `devaihub.io/compatible-frameworks` lists at least one framework token (or `all`).
 - [ ] For `plugin` types, `spec.dependsOn` references child `AiResource` entity refs correctly.
+- [ ] For `marketplace` types, `spec.dependsOn` references `plugin`-type children only, and the body is a markdown doc with the marketplace-add command (not the `marketplace.json`).
+- [ ] For `marketplace` types, the body doc lives **inside the marketplace repo** and `metadata.name` equals the `name` in `marketplace.json` (the consumer derives add commands from `source-location`).
 - [ ] For `skill` types, `spec.agents` is preferred over the annotation for frameworks.
 - [ ] `metadata.name` is kebab-case and unique within the namespace.
 
@@ -364,7 +429,7 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 
 | If upstream ships… | Then DevAI Hub should… |
 |---|---|
-| Structured subtype for `agent` / `hook` / `mcp` / `plugin` | Migrate annotation fields into native spec fields; drop annotations. |
+| Structured subtype for `agent` / `hook` / `mcp` / `plugin` / `marketplace` | Migrate annotation fields into native spec fields; drop annotations. |
 | Content-in-catalog reference (backstage/backstage#34318) | Drop the bespoke body resolver; serve body from catalog directly. |
 | AiResource graduates from alpha | Remove `/alpha` imports; drop type-guard adapters. |
 

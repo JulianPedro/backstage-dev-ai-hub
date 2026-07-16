@@ -3,12 +3,12 @@
  *
  * Parses every AiResource yaml in examples/catalog/ and asserts:
  *   - kind is AiResource
- *   - spec.type is one of the five canonical ResourceTypes
- *   - all five types are represented (one file each)
+ *   - spec.type is one of the canonical ResourceTypes (RESOURCE_TYPES)
+ *   - all canonical types are represented (one file each)
  *   - required fields are present per AIRESOURCE-SPEC.md
  *   - backstage.io/source-location annotation is present
  *
- * This is the CI floor for criterion 6 ("5 entities returned by
+ * This is the CI floor for criterion 6 ("one entity per type returned by
  * getEntities kind=AiResource"). A live catalog-boot test would be
  * stronger but depends on the alpha ai-model module being stable enough
  * to boot in jest — deferred to a follow-up if needed.
@@ -17,12 +17,12 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
+import { RESOURCE_TYPES, type ResourceType } from '@nospt/plugin-dev-ai-hub-common';
 
 // Path relative to this file: ../../../examples/catalog/
 const CATALOG_DIR = path.resolve(__dirname, '../../../examples/catalog');
 
-const VALID_TYPES = ['skill', 'agent', 'hook', 'mcp', 'plugin'] as const;
-type ResourceType = (typeof VALID_TYPES)[number];
+const VALID_TYPES = RESOURCE_TYPES;
 
 interface ParsedEntity {
   apiVersion: string;

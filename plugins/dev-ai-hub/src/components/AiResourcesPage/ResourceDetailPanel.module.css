@@ -14,6 +14,9 @@
     width: 520px;
     max-width: 100vw;
     background-color: var(--bui-bg-neutral-1);
+    /* The accent mirrors the open resource's type colour (set inline by the
+       component); brand teal is only the no-type fallback. */
+    border-top: 3px solid var(--drawer-accent, var(--devaihub-brand-teal));
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
     z-index: 1300;
     display: flex;
@@ -154,5 +157,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--bui-space-1);
+    color: var(--devaihub-brand-teal);
+    font-weight: 600;
   }
 }

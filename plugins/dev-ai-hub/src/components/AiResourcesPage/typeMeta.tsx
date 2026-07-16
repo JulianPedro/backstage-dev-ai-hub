@@ -4,6 +4,7 @@ import {
   RiPlugLine,
   RiPuzzleLine,
   RiRobot2Line,
+  RiStore2Line,
   RiToolsLine,
 } from '@remixicon/react';
 import {
@@ -20,6 +21,7 @@ const ICONS: Record<ResourceTypeIcon, ElementType> = {
   flash: RiFlashlightLine,
   plug: RiPlugLine,
   puzzle: RiPuzzleLine,
+  store: RiStore2Line,
 };
 
 export interface TypeMeta extends ResourceTypeInfo {

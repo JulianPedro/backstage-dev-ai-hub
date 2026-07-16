@@ -37,7 +37,7 @@ From the ADRs + `architecture.md`:
 
 - **ADR-0001** Catalog is the sole source of truth; entities are metadata-only; body stays in Git.
 - **ADR-0002** The backend is intentionally thin: **body resolver + install telemetry + MCP**. No asset store, no REST CRUD, no Git enumeration.
-- **ADR-0003** Five `spec.type` values: `skill · agent · hook · mcp · plugin`. Framework read: skill → `spec.agents`; else → `devaihub.io/compatible-frameworks` annotation; else `[]`.
+- **ADR-0003** Five `spec.type` values: `skill · agent · hook · mcp · plugin`. Framework read: skill → `spec.agents`; else → `devaihub.io/compatible-frameworks` annotation; else `[]`. *(Amended by ADR-0010: a sixth value, `marketplace` — a plugins-only container above `plugin`.)*
 - **ADR-0004** Ingestion is hand-authored `catalog-info.yaml` (+ `examples/`), never plugin-owned.
 - **ADR-0005** All backend routes require Backstage authentication.
 - **ADR-0006** Body reads re-fetch the entity **as the calling user** — body inherits catalog visibility.
@@ -53,7 +53,7 @@ interface ResourceSummary {
   title?: string;
   description?: string;
   tags: string[];
-  type: ResourceType;          // 'skill' | 'agent' | 'hook' | 'mcp' | 'plugin'
+  type: ResourceType;          // 'skill' | 'agent' | 'hook' | 'mcp' | 'plugin' | 'marketplace' (ADR-0010)
   lifecycle: string;
   owner?: string;
   sourceLocation?: string;
@@ -235,6 +235,13 @@ BUI frontend. Slice 8 tears down the legacy silo. Slice 9 (enrichment) is deferr
 | 7 | Catalog-backed MCP server (auth-gated, TTL + cap) | 2 | 2 |
 | 8 | Delete legacy silo + rewrite Playwright e2e for `AiResource` | 4 | 3·4·5·6·7 |
 | 9 | GitHub card enrichment (deferred, additive) | 5 | 3 |
+| 10 | `marketplace` sixth ResourceType: vocab, card, example, spec (ADR-0010) | 3 | 3 |
 
-Slices 1–8 ship as `ready-for-agent`. Slice 9 is tracked but **deferred** — not started until the
-core (1–8) lands.
+Slices 1–8 and 10 ship as `ready-for-agent`. Slice 9 is tracked but **deferred** — not started
+until the core lands.
+
+**Ordering amendment (ADR-0010, 2026-07-14):** slice 10 executes **before** slices 6 (#32) and
+8 (#34): the children-section machinery (#32) is then built once, generically for both container
+types (`plugin` → skill/agent/hook/mcp, `marketplace` → plugin), and the rewritten Playwright
+suite (#34) encodes six types from the start instead of being touched twice. Slice 10 itself
+excludes the children section — that stays in #32.

@@ -22,7 +22,7 @@ five subtypes distinguished by `spec.type`. The catalog is the **only** place
 `AiResource` entities live — DevAI Hub never stores a second copy (ADR-0001).
 
 ### ResourceType
-The `spec.type` of an `AiResource`. Exactly five canonical values:
+The `spec.type` of an `AiResource`. Exactly six canonical values:
 
 | Token    | Meaning                                                       |
 |----------|---------------------------------------------------------------|
@@ -31,6 +31,7 @@ The `spec.type` of an `AiResource`. Exactly five canonical values:
 | `hook`   | An event handler (e.g. `PostToolUse`).                        |
 | `mcp`    | An MCP server configuration.                                  |
 | `plugin` | A composite container (e.g. Claude Code plugin) that bundles other resources via `dependsOn` relations. |
+| `marketplace` | A distribution point for plugins (e.g. a Claude Code plugin marketplace repo). A container one level above `plugin`: it bundles `plugin` resources via `dependsOn` relations — plugins only. "Install" means registering the marketplace with the AI tool (e.g. `/plugin marketplace add`), after which its plugins can be installed from it. |
 
 Entities with an unsupported `spec.type` are silently dropped by the consumer.
 
@@ -45,7 +46,13 @@ Backstage `Entity` — it only knows `ResourceSummary` (architecture.md).
 The consumable content of an `AiResource` — shaped by its `ResourceType`, not
 uniformly markdown: skill instructions, agent definition, and hook logic are
 markdown; an `mcp` body is the JSON snippet added to `.mcp.json`; a `plugin`
-body carries the install link. The body is **canonical for install** — copy,
+body carries the install link; a `marketplace` body is a markdown doc carrying
+the marketplace-add command and repo link (never the `marketplace.json`
+manifest itself — users register the repo, they don't copy the manifest).
+Bodies are either **artifact-shaped** (skill, agent, hook, mcp — the body is
+the installable content, so it can be downloaded) or **pointer-shaped**
+(plugin, marketplace — the body points at a framework-native install, so
+there is nothing to download). The body is **canonical for install** — copy,
 download, and install always deliver the body verbatim, never content
 reconstructed from annotations. Bodies **stay in Git**; they are never stored in
 the plugin's database. Resolved on demand by the backend's body resolver via
@@ -129,7 +136,7 @@ back to the catalog.
 GitHub-sourced metadata, served by the backend as an optional per-resource
 endpoint. Cards render fully without it.
 
-The five **ResourceTypes** drive the UI: each type has its own card colour, icon,
-and `getFrameworks()` read path. A `plugin` resource is the only type that has
-children (via `dependsOn` relations); its `childCount` is surfaced in
-`ResourceSummary`.
+The six **ResourceTypes** drive the UI: each type has its own card colour, icon,
+and `getFrameworks()` read path. Two types have children (via `dependsOn`
+relations): a `plugin` bundles skills/agents/hooks/mcp, and a `marketplace`
+bundles plugins only. `childCount` is surfaced in `ResourceSummary` for both.

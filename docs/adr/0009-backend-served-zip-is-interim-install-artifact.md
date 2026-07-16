@@ -18,10 +18,24 @@ upstream `AiResource` content reference — backstage/backstage#34318 — per AD
 path for the body resolver). A copyable install command may return later as *sugar on top of*
 the backend-served artifact, never as the primary mechanism.
 
+## Amendment (ADR-0010): download only where the body is the artifact
+
+The backend-served artifact applies to the types whose body IS the installable content —
+`skill`, `agent`, `hook`, `mcp`. A `plugin` or `marketplace` body is pointer-shaped
+(instructions + install link / add command): downloading it delivers a doc that
+misrepresents itself as the thing, so the UI hides Download for those two types
+(`hasDownloadableArtifact` in `-common`). Their native path is the framework itself —
+`/plugin marketplace add` and `/plugin install name@marketplace` — which is exactly the
+"native install integration" horizon anticipated below. The marketplace journey's copyable
+add commands do not conflict with the rejection of user-side install commands above: they
+register a catalog with the tool rather than fetching a catalog-gated body, so no auth
+model is swapped.
+
 ## Consequences
 
 - Zip assembly lives in the body resolver; the install dialog offers download + copy-body +
-  per-framework path guidance, and never emits shell commands as the primary flow.
+  per-framework path guidance (download only for artifact-shaped bodies, per the amendment),
+  and never emits shell commands as the primary flow.
 - Producers need no repo-access alignment for install to work — catalog visibility alone
   decides who can browse, view, and install.
 - When a native install path ships, the zip flow is a candidate for demotion or removal;
