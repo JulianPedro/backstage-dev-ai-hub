@@ -1,0 +1,45 @@
+---
+# Local git hooks — run identically here and in CI (`pre-commit run --all-files`).
+# One-time setup: `pip install pre-commit` (or pipx/brew), then `pre-commit install`.
+#
+# Concern ownership (no overlaps):
+#   - editorconfig-checker owns whitespace / line-endings / final-newline / spaces-not-tabs (all files)
+#   - yamllint owns YAML semantics (duplicate keys, quote policy, truthy values)
+#   - markdownlint owns Markdown structure
+#   - prettier formats code/JSON only (never md/yaml — see .prettierignore)
+#
+# prettier/eslint are repo:local hooks so they use the repo's own pinned binaries
+# (prettier v2 + @backstage/cli/config/prettier, eslint v8) — identical to `yarn`.
+# The official prettier mirror ships v3 only, which would reformat differently.
+minimum_pre_commit_version: 4.0.0
+
+repos:
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier (code/json)
+        entry: node_modules/.bin/prettier --write
+        language: system
+        files: \.(js|jsx|ts|tsx|mjs|cjs|json)$
+
+      - id: eslint
+        name: eslint --fix
+        entry: node_modules/.bin/eslint --fix
+        language: system
+        files: \.(js|jsx|ts|tsx|mjs|cjs)$
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [--strict, -c, .yamllint.yml]
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.48.0
+    hooks:
+      - id: markdownlint
+
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 3.6.1
+    hooks:
+      - id: editorconfig-checker

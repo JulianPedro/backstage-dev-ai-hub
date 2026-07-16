@@ -71,7 +71,9 @@ describe('ResourceDetailPanel — body', () => {
     });
     render(<ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />);
 
-    expect(api.getEntityBody).toHaveBeenCalledWith('airesource:default/my-skill');
+    expect(api.getEntityBody).toHaveBeenCalledWith(
+      'airesource:default/my-skill',
+    );
     await waitFor(() =>
       expect(screen.getByTestId('markdown')).toHaveTextContent('# Skill body'),
     );
@@ -90,7 +92,9 @@ describe('ResourceDetailPanel — body', () => {
     );
 
     await waitFor(() =>
-      expect(screen.getAllByText('{"mcpServers":{}}').length).toBeGreaterThan(0),
+      expect(screen.getAllByText('{"mcpServers":{}}').length).toBeGreaterThan(
+        0,
+      ),
     );
     expect(screen.queryByTestId('markdown')).not.toBeInTheDocument();
   });
@@ -122,11 +126,16 @@ describe('ResourceDetailPanel — body', () => {
   it('offers a retry on upstream failure', async () => {
     api.getEntityBody
       .mockRejectedValueOnce(new ResourceBodyError('bad gateway', 502))
-      .mockResolvedValueOnce({ content: '# Recovered', contentType: 'text/markdown' });
+      .mockResolvedValueOnce({
+        content: '# Recovered',
+        contentType: 'text/markdown',
+      });
     render(<ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />);
 
     await waitFor(() =>
-      expect(screen.getByText(/Couldn’t fetch the content/)).toBeInTheDocument(),
+      expect(
+        screen.getByText(/Couldn’t fetch the content/),
+      ).toBeInTheDocument(),
     );
     fireEvent.click(screen.getByText('Retry'));
     await waitFor(() =>

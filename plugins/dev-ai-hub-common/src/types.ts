@@ -1,6 +1,11 @@
 export type AssetType = 'instruction' | 'agent' | 'skill' | 'workflow';
 
-export type AiTool = 'all' | 'github-copilot' | 'claude-code' | 'google-gemini' | 'cursor';
+export type AiTool =
+  | 'all'
+  | 'github-copilot'
+  | 'claude-code'
+  | 'google-gemini'
+  | 'cursor';
 
 /** Lightweight summary returned by list endpoints — no markdown content. */
 export interface AiAssetSummary {

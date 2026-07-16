@@ -14,7 +14,10 @@ version: 1.2.3
 
 describe('AssetParser.parseYaml', () => {
   it('parses a valid YAML envelope and returns metadata + mdPath', () => {
-    const result = AssetParser.parseYaml(VALID_YAML, 'instructions/my-instruction.yaml');
+    const result = AssetParser.parseYaml(
+      VALID_YAML,
+      'instructions/my-instruction.yaml',
+    );
     expect(result).not.toBeNull();
     expect(result!.meta.name).toBe('My Instruction');
     expect(result!.meta.description).toBe('A test instruction');
@@ -27,13 +30,19 @@ describe('AssetParser.parseYaml', () => {
   });
 
   it('leaves mdPath undefined when no content field is set', () => {
-    const result = AssetParser.parseYaml(VALID_YAML, 'instructions/my-instruction.yaml');
+    const result = AssetParser.parseYaml(
+      VALID_YAML,
+      'instructions/my-instruction.yaml',
+    );
     expect(result!.mdPath).toBeUndefined();
   });
 
   it('uses the content field to resolve mdPath when present', () => {
     const yaml = `${VALID_YAML}content: custom-content.md\n`;
-    const result = AssetParser.parseYaml(yaml, 'instructions/my-instruction.yaml');
+    const result = AssetParser.parseYaml(
+      yaml,
+      'instructions/my-instruction.yaml',
+    );
     expect(result!.mdPath).toBe('instructions/custom-content.md');
   });
 
@@ -112,7 +121,11 @@ tools:
 describe('AssetParser.buildId', () => {
   it('returns a base64url encoded string', () => {
     const id = AssetParser.buildId('provider-1', 'instructions/my-asset.yaml');
-    expect(id).toBe(Buffer.from('provider-1:instructions/my-asset.yaml').toString('base64url'));
+    expect(id).toBe(
+      Buffer.from('provider-1:instructions/my-asset.yaml').toString(
+        'base64url',
+      ),
+    );
   });
 
   it('normalises backslashes to forward slashes', () => {
@@ -147,7 +160,10 @@ describe('AssetParser.buildId', () => {
 });
 
 describe('AssetParser.buildAsset', () => {
-  const parsed = AssetParser.parseYaml(VALID_YAML, 'instructions/my-instruction.yaml')!;
+  const parsed = AssetParser.parseYaml(
+    VALID_YAML,
+    'instructions/my-instruction.yaml',
+  )!;
 
   it('builds a complete AiAssetInput with all expected fields', () => {
     const asset = AssetParser.buildAsset(
@@ -160,7 +176,9 @@ describe('AssetParser.buildAsset', () => {
       'instructions/my-instruction.md',
     );
 
-    expect(asset.id).toBe(AssetParser.buildId('my-provider', 'instructions/my-instruction.yaml'));
+    expect(asset.id).toBe(
+      AssetParser.buildId('my-provider', 'instructions/my-instruction.yaml'),
+    );
     expect(asset.name).toBe('My Instruction');
     expect(asset.type).toBe('instruction');
     expect(asset.tools).toEqual(['claude-code']);
@@ -179,15 +197,35 @@ describe('AssetParser.buildAsset', () => {
   it('sets metadata.mcpServers when mcpServers is present in the YAML', () => {
     const yaml = `${VALID_YAML}mcpServers:\n  my-server:\n    url: http://localhost\n`;
     const parsedWithMcp = AssetParser.parseYaml(yaml, 'agents/agent.yaml')!;
-    const asset = AssetParser.buildAsset(parsedWithMcp, '', 'p', 'url', 'main', 'agents/agent.yaml', 'agents/agent.md');
-    expect(asset.metadata?.mcpServers).toEqual({ 'my-server': { url: 'http://localhost' } });
+    const asset = AssetParser.buildAsset(
+      parsedWithMcp,
+      '',
+      'p',
+      'url',
+      'main',
+      'agents/agent.yaml',
+      'agents/agent.md',
+    );
+    expect(asset.metadata?.mcpServers).toEqual({
+      'my-server': { url: 'http://localhost' },
+    });
   });
 
   it('sets metadata.steps when steps is present in the YAML', () => {
     const yaml = `${VALID_YAML}steps:\n  - name: step1\n    action: do-something\n`;
     const parsedWithSteps = AssetParser.parseYaml(yaml, 'workflows/w.yaml')!;
-    const asset = AssetParser.buildAsset(parsedWithSteps, '', 'p', 'url', 'main', 'workflows/w.yaml', 'workflows/w.md');
-    expect(asset.metadata?.steps).toEqual([{ name: 'step1', action: 'do-something' }]);
+    const asset = AssetParser.buildAsset(
+      parsedWithSteps,
+      '',
+      'p',
+      'url',
+      'main',
+      'workflows/w.yaml',
+      'workflows/w.md',
+    );
+    expect(asset.metadata?.steps).toEqual([
+      { name: 'step1', action: 'do-something' },
+    ]);
   });
 
   it('leaves metadata undefined when no extra fields are present', () => {
@@ -211,8 +249,19 @@ type: instruction
 tools:
   - claude-code
 `;
-    const parsedNoTags = AssetParser.parseYaml(yaml, 'instructions/no-tags.yaml')!;
-    const asset = AssetParser.buildAsset(parsedNoTags, '', 'p', 'url', 'main', 'instructions/no-tags.yaml', 'instructions/no-tags.md');
+    const parsedNoTags = AssetParser.parseYaml(
+      yaml,
+      'instructions/no-tags.yaml',
+    )!;
+    const asset = AssetParser.buildAsset(
+      parsedNoTags,
+      '',
+      'p',
+      'url',
+      'main',
+      'instructions/no-tags.yaml',
+      'instructions/no-tags.md',
+    );
     expect(asset.tags).toEqual([]);
   });
 
@@ -224,22 +273,39 @@ type: instruction
 tools:
   - claude-code
 `;
-    const parsedNoAuthor = AssetParser.parseYaml(yaml, 'instructions/no-author.yaml')!;
-    const asset = AssetParser.buildAsset(parsedNoAuthor, '', 'p', 'url', 'main', 'instructions/no-author.yaml', 'instructions/no-author.md');
+    const parsedNoAuthor = AssetParser.parseYaml(
+      yaml,
+      'instructions/no-author.yaml',
+    )!;
+    const asset = AssetParser.buildAsset(
+      parsedNoAuthor,
+      '',
+      'p',
+      'url',
+      'main',
+      'instructions/no-author.yaml',
+      'instructions/no-author.md',
+    );
     expect(asset.author).toBe('Unknown');
   });
 });
 
 describe('AssetParser.parseYaml — schema-as-gatekeeper (arbitrary path discovery)', () => {
   it('discovers a valid asset at an arbitrary custom directory', () => {
-    const result = AssetParser.parseYaml(VALID_YAML, 'ai-artifacts/my-agent.yaml');
+    const result = AssetParser.parseYaml(
+      VALID_YAML,
+      'ai-artifacts/my-agent.yaml',
+    );
     expect(result).not.toBeNull();
     expect(result!.meta.name).toBe('My Instruction');
     expect(result!.mdPath).toBeUndefined();
   });
 
   it('discovers a valid asset at a deeply nested path', () => {
-    const result = AssetParser.parseYaml(VALID_YAML, 'team/ai-assets/copilot/my-agent.yaml');
+    const result = AssetParser.parseYaml(
+      VALID_YAML,
+      'team/ai-assets/copilot/my-agent.yaml',
+    );
     expect(result).not.toBeNull();
     expect(result!.mdPath).toBeUndefined();
   });
@@ -261,7 +327,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 `;
-    expect(AssetParser.parseYaml(ghActionsYaml, '.github/workflows/ci.yaml')).toBeNull();
+    expect(
+      AssetParser.parseYaml(ghActionsYaml, '.github/workflows/ci.yaml'),
+    ).toBeNull();
   });
 
   it('rejects a Helm values YAML (no name/type/tools)', () => {
@@ -297,7 +365,9 @@ type: pipeline
 tools:
   - claude-code
 `;
-    expect(AssetParser.parseYaml(yaml, 'ai-artifacts/pipeline.yaml')).toBeNull();
+    expect(
+      AssetParser.parseYaml(yaml, 'ai-artifacts/pipeline.yaml'),
+    ).toBeNull();
   });
 
   it('rejects a YAML with a valid-looking type but unrecognised tool', () => {
@@ -312,7 +382,10 @@ tools:
   });
 
   it('buildAsset correctly sets yamlPath and mdPath for an arbitrary directory', () => {
-    const parsed = AssetParser.parseYaml(VALID_YAML, 'ai-artifacts/my-agent.yaml')!;
+    const parsed = AssetParser.parseYaml(
+      VALID_YAML,
+      'ai-artifacts/my-agent.yaml',
+    )!;
     const asset = AssetParser.buildAsset(
       parsed,
       '# Content',
@@ -324,6 +397,8 @@ tools:
     );
     expect(asset.yamlPath).toBe('ai-artifacts/my-agent.yaml');
     expect(asset.mdPath).toBe('ai-artifacts/SKILL.md');
-    expect(asset.id).toBe(AssetParser.buildId('my-provider', 'ai-artifacts/my-agent.yaml'));
+    expect(asset.id).toBe(
+      AssetParser.buildId('my-provider', 'ai-artifacts/my-agent.yaml'),
+    );
   });
 });

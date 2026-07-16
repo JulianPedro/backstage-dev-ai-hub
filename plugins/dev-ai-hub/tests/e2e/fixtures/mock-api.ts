@@ -15,12 +15,48 @@ import type {
 // ── Summary data used in test assertions ──────────────────────────────────────
 
 export const DEV_ASSETS = [
-  { id: 'mock-1', name: 'TypeScript Best Practices', type: 'instruction', installCount: 14, tools: ['claude-code', 'github-copilot'] },
-  { id: 'mock-2', name: 'Code Review Agent',         type: 'agent',       installCount: 8,  tools: ['claude-code'] },
-  { id: 'mock-3', name: 'Git Commit',                type: 'skill',       installCount: 22, tools: ['all'] },
-  { id: 'mock-4', name: 'Feature Development Workflow', type: 'workflow',  installCount: 5,  tools: ['github-copilot', 'cursor'] },
-  { id: 'mock-5', name: 'Security Guidelines',       type: 'instruction', installCount: 3,  tools: ['google-gemini', 'claude-code'] },
-  { id: 'mock-6', name: 'Product Manager',           type: 'agent',       installCount: 0,  tools: ['github-copilot'] },
+  {
+    id: 'mock-1',
+    name: 'TypeScript Best Practices',
+    type: 'instruction',
+    installCount: 14,
+    tools: ['claude-code', 'github-copilot'],
+  },
+  {
+    id: 'mock-2',
+    name: 'Code Review Agent',
+    type: 'agent',
+    installCount: 8,
+    tools: ['claude-code'],
+  },
+  {
+    id: 'mock-3',
+    name: 'Git Commit',
+    type: 'skill',
+    installCount: 22,
+    tools: ['all'],
+  },
+  {
+    id: 'mock-4',
+    name: 'Feature Development Workflow',
+    type: 'workflow',
+    installCount: 5,
+    tools: ['github-copilot', 'cursor'],
+  },
+  {
+    id: 'mock-5',
+    name: 'Security Guidelines',
+    type: 'instruction',
+    installCount: 3,
+    tools: ['google-gemini', 'claude-code'],
+  },
+  {
+    id: 'mock-6',
+    name: 'Product Manager',
+    type: 'agent',
+    installCount: 0,
+    tools: ['github-copilot'],
+  },
 ] as const;
 
 export const DEV_STATS = {
@@ -43,7 +79,8 @@ export const MOCK_ASSETS_FULL: AiAsset[] = [
     tags: ['typescript', 'best-practices'],
     author: 'Platform Team',
     version: '1.0.0',
-    content: '# TypeScript Best Practices\n\nAlways use strict mode. Prefer `interface` over `type` for object shapes. Use explicit return types on public functions.',
+    content:
+      '# TypeScript Best Practices\n\nAlways use strict mode. Prefer `interface` over `type` for object shapes. Use explicit return types on public functions.',
     yamlRaw: 'name: TypeScript Best Practices\ntype: instruction',
     yamlPath: 'instructions/typescript-best-practices.yaml',
     mdPath: 'instructions/typescript-best-practices.md',
@@ -58,13 +95,15 @@ export const MOCK_ASSETS_FULL: AiAsset[] = [
     id: 'mock-2',
     providerId: 'mock-provider',
     name: 'Code Review Agent',
-    description: 'Specialized agent for performing thorough and constructive code reviews.',
+    description:
+      'Specialized agent for performing thorough and constructive code reviews.',
     type: 'agent',
     tools: ['claude-code'],
     tags: ['code-review', 'quality'],
     author: 'Platform Team',
     version: '1.2.0',
-    content: '# Code Review Agent\n\nYou are an expert code reviewer. Focus on correctness, performance, security, and maintainability.',
+    content:
+      '# Code Review Agent\n\nYou are an expert code reviewer. Focus on correctness, performance, security, and maintainability.',
     yamlRaw: 'name: Code Review Agent\ntype: agent',
     yamlPath: 'agents/code-review.yaml',
     mdPath: 'agents/code-review.md',
@@ -79,13 +118,15 @@ export const MOCK_ASSETS_FULL: AiAsset[] = [
     id: 'mock-3',
     providerId: 'mock-provider',
     name: 'Git Commit',
-    description: 'Skill for creating well-structured, conventional git commit messages.',
+    description:
+      'Skill for creating well-structured, conventional git commit messages.',
     type: 'skill',
     tools: ['all'],
     tags: ['git', 'commits', 'conventional-commits'],
     author: 'Platform Team',
     version: '1.0.0',
-    content: '# Git Commit Skill\n\nCreate commit messages following the Conventional Commits specification.',
+    content:
+      '# Git Commit Skill\n\nCreate commit messages following the Conventional Commits specification.',
     yamlRaw: 'name: Git Commit\ntype: skill',
     yamlPath: 'skills/git-commit/skill.yaml',
     mdPath: 'skills/git-commit/SKILL.md',
@@ -100,13 +141,15 @@ export const MOCK_ASSETS_FULL: AiAsset[] = [
     id: 'mock-4',
     providerId: 'mock-provider',
     name: 'Feature Development Workflow',
-    description: 'Step-by-step workflow for planning, implementing and shipping a new feature.',
+    description:
+      'Step-by-step workflow for planning, implementing and shipping a new feature.',
     type: 'workflow',
     tools: ['github-copilot', 'cursor'],
     tags: ['workflow', 'feature', 'development'],
     author: 'Platform Team',
     version: '2.0.0',
-    content: '# Feature Development Workflow\n\n## Step 1: Planning\n\n## Step 2: Implementation\n\n## Step 3: Testing\n\n## Step 4: Review',
+    content:
+      '# Feature Development Workflow\n\n## Step 1: Planning\n\n## Step 2: Implementation\n\n## Step 3: Testing\n\n## Step 4: Review',
     yamlRaw: 'name: Feature Development Workflow\ntype: workflow',
     yamlPath: 'workflows/feature-development.yaml',
     mdPath: 'workflows/feature-development.md',
@@ -121,13 +164,15 @@ export const MOCK_ASSETS_FULL: AiAsset[] = [
     id: 'mock-5',
     providerId: 'mock-provider',
     name: 'Security Guidelines',
-    description: 'Security best practices and guidelines for backend development.',
+    description:
+      'Security best practices and guidelines for backend development.',
     type: 'instruction',
     tools: ['google-gemini', 'claude-code'],
     tags: ['security', 'backend', 'best-practices'],
     author: 'Security Team',
     version: '1.1.0',
-    content: '# Security Guidelines\n\nNever store secrets in code. Always validate user input. Use parameterized queries.',
+    content:
+      '# Security Guidelines\n\nNever store secrets in code. Always validate user input. Use parameterized queries.',
     yamlRaw: 'name: Security Guidelines\ntype: instruction',
     yamlPath: 'instructions/security-guidelines.yaml',
     mdPath: 'instructions/security-guidelines.md',
@@ -142,13 +187,15 @@ export const MOCK_ASSETS_FULL: AiAsset[] = [
     id: 'mock-6',
     providerId: 'mock-provider',
     name: 'Product Manager',
-    description: 'Data-driven product decision assistant for roadmap and prioritization.',
+    description:
+      'Data-driven product decision assistant for roadmap and prioritization.',
     type: 'agent',
     tools: ['github-copilot'],
     tags: ['product', 'roadmap', 'prioritization'],
     author: 'Product Team',
     version: '1.0.0',
-    content: '# Product Manager Agent\n\nYou are a data-driven product manager. Help prioritize features using impact/effort frameworks.',
+    content:
+      '# Product Manager Agent\n\nYou are a data-driven product manager. Help prioritize features using impact/effort frameworks.',
     yamlRaw: 'name: Product Manager\ntype: agent',
     yamlPath: 'agents/product-manager.yaml',
     mdPath: 'agents/product-manager.md',
@@ -175,17 +222,27 @@ export const MOCK_STATS: AiHubStats = {
   totalAssets: MOCK_ASSETS_FULL.length,
   byType: { instruction: 2, agent: 2, skill: 1, workflow: 1 },
   byTool: {
-    'claude-code': MOCK_ASSETS_FULL.filter(a => a.tools.includes('claude-code') || a.tools.includes('all')).length,
-    'github-copilot': MOCK_ASSETS_FULL.filter(a => a.tools.includes('github-copilot') || a.tools.includes('all')).length,
-    'google-gemini': MOCK_ASSETS_FULL.filter(a => a.tools.includes('google-gemini') || a.tools.includes('all')).length,
-    'cursor': MOCK_ASSETS_FULL.filter(a => a.tools.includes('cursor') || a.tools.includes('all')).length,
+    'claude-code': MOCK_ASSETS_FULL.filter(
+      a => a.tools.includes('claude-code') || a.tools.includes('all'),
+    ).length,
+    'github-copilot': MOCK_ASSETS_FULL.filter(
+      a => a.tools.includes('github-copilot') || a.tools.includes('all'),
+    ).length,
+    'google-gemini': MOCK_ASSETS_FULL.filter(
+      a => a.tools.includes('google-gemini') || a.tools.includes('all'),
+    ).length,
+    cursor: MOCK_ASSETS_FULL.filter(
+      a => a.tools.includes('cursor') || a.tools.includes('all'),
+    ).length,
   },
   byProvider: { 'mock-provider': MOCK_ASSETS_FULL.length },
   lastSync: MOCK_PROVIDER.lastSync,
 };
 
 /** Applies the same filter logic the backend uses, for use in page.route() handlers. */
-export function buildListResponse(params: URLSearchParams): AiAssetListResponse {
+export function buildListResponse(
+  params: URLSearchParams,
+): AiAssetListResponse {
   let items = [...MOCK_ASSETS_FULL];
 
   const type = params.get('type');
@@ -197,16 +254,21 @@ export function buildListResponse(params: URLSearchParams): AiAssetListResponse 
   const pageSize = Number(params.get('pageSize') ?? '24');
 
   if (type) items = items.filter(a => a.type === type);
-  if (tool) items = items.filter(a => a.tools.includes(tool as any) || a.tools.includes('all'));
+  if (tool)
+    items = items.filter(
+      a => a.tools.includes(tool as any) || a.tools.includes('all'),
+    );
   if (search) {
     const q = search.toLowerCase();
-    items = items.filter(a =>
-      a.name.toLowerCase().includes(q) ||
-      a.description.toLowerCase().includes(q) ||
-      a.tags.some(t => t.toLowerCase().includes(q)),
+    items = items.filter(
+      a =>
+        a.name.toLowerCase().includes(q) ||
+        a.description.toLowerCase().includes(q) ||
+        a.tags.some(t => t.toLowerCase().includes(q)),
     );
   }
-  if (tags?.length) items = items.filter(a => tags.every(t => a.tags.includes(t)));
+  if (tags?.length)
+    items = items.filter(a => tags.every(t => a.tags.includes(t)));
   if (provider) items = items.filter(a => a.providerId === provider);
 
   const totalCount = items.length;

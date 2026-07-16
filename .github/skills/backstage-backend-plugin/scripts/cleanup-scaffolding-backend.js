@@ -21,7 +21,9 @@ const pluginPath = process.argv[2];
 
 if (!pluginPath) {
   console.error('❌ Usage: node cleanup-scaffolding-backend.js <plugin-path>');
-  console.error('   Example: node cleanup-scaffolding-backend.js ../demo/plugins/my-backend-backend');
+  console.error(
+    '   Example: node cleanup-scaffolding-backend.js ../demo/plugins/my-backend-backend',
+  );
   process.exit(1);
 }
 
@@ -45,7 +47,9 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const pluginId = packageJson.backstage?.pluginId;
 
 if (!pluginId) {
-  console.error('❌ No pluginId found in package.json - not a valid Backstage plugin');
+  console.error(
+    '❌ No pluginId found in package.json - not a valid Backstage plugin',
+  );
   process.exit(1);
 }
 
@@ -103,10 +107,16 @@ export async function createRouter(
     let pluginContent = fs.readFileSync(pluginFilePath, 'utf8');
 
     // Remove todoList import
-    pluginContent = pluginContent.replace(/import \{ todoListServiceRef \} from (['"])\.\/services\/TodoListService\1;?\n?/g, '');
+    pluginContent = pluginContent.replace(
+      /import \{ todoListServiceRef \} from (['"])\.\/services\/TodoListService\1;?\n?/g,
+      '',
+    );
 
     // Remove todoList from deps
-    pluginContent = pluginContent.replace(/\s*todoList: todoListServiceRef,?\n?/g, '');
+    pluginContent = pluginContent.replace(
+      /\s*todoList: todoListServiceRef,?\n?/g,
+      '',
+    );
 
     // Remove todoList from init params
     pluginContent = pluginContent.replace(/,?\s*todoList\s*,?/g, '');
@@ -114,7 +124,7 @@ export async function createRouter(
     // Clean up the createRouter call
     pluginContent = pluginContent.replace(
       /await createRouter\(\{\s*httpAuth,?\s*\}\)/g,
-      'await createRouter({ httpAuth })'
+      'await createRouter({ httpAuth })',
     );
 
     fs.writeFileSync(pluginFilePath, pluginContent);
@@ -145,7 +155,9 @@ export async function createRouter(
 
   console.log('\n✨ Cleanup complete!');
   console.log('\n📝 What changed:');
-  console.log('  - Removed services/TodoListService.ts (150+ lines of example code)');
+  console.log(
+    '  - Removed services/TodoListService.ts (150+ lines of example code)',
+  );
   console.log('  - Simplified router.ts to just /health endpoint');
   console.log('  - Removed todoList service from plugin.ts');
   console.log('  - Removed example tests (plugin.test.ts, router.test.ts)');
@@ -153,9 +165,12 @@ export async function createRouter(
   console.log('\n🚀 Next steps:');
   console.log('  1. Add your own routes in src/router.ts');
   console.log('  2. Create services if needed in src/services/');
-  console.log('  3. Follow backstage-backend-plugin/SKILL.md for best practices');
-  console.log(`\n📍 Test with: curl http://localhost:7007/api/${pluginId}/health`);
-
+  console.log(
+    '  3. Follow backstage-backend-plugin/SKILL.md for best practices',
+  );
+  console.log(
+    `\n📍 Test with: curl http://localhost:7007/api/${pluginId}/health`,
+  );
 } catch (error) {
   console.error('\n❌ Cleanup failed:', error.message);
   console.error(error.stack);

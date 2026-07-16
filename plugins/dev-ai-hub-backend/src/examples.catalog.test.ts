@@ -17,7 +17,10 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import { RESOURCE_TYPES, type ResourceType } from '@nospt/plugin-dev-ai-hub-common';
+import {
+  RESOURCE_TYPES,
+  type ResourceType,
+} from '@nospt/plugin-dev-ai-hub-common';
 
 // Path relative to this file: ../../../examples/catalog/
 const CATALOG_DIR = path.resolve(__dirname, '../../../examples/catalog');
@@ -110,11 +113,16 @@ describe('examples/catalog — AiResource fixture validation (#27)', () => {
     expect(fs.existsSync(allYaml)).toBe(true);
 
     const raw = fs.readFileSync(allYaml, 'utf-8');
-    const location = yaml.load(raw) as { kind: string; spec: { targets: string[] } };
+    const location = yaml.load(raw) as {
+      kind: string;
+      spec: { targets: string[] };
+    };
 
     expect(location.kind).toBe('Location');
 
-    const targeted = location.spec.targets.map(t => t.replace(/^\.\//, '')).sort();
+    const targeted = location.spec.targets
+      .map(t => t.replace(/^\.\//, ''))
+      .sort();
     const existing = fixtures.map(f => f.file).sort();
     expect(targeted).toEqual(existing);
   });

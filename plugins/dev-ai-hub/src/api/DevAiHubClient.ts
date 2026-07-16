@@ -43,9 +43,7 @@ export class DevAiHubClient implements DevAiHubApi {
     const response = await this.fetchApi.fetch(`${base}${path}`, init);
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(
-        `Dev AI Hub API error ${response.status}: ${text}`,
-      );
+      throw new Error(`Dev AI Hub API error ${response.status}: ${text}`);
     }
     return response.json() as Promise<T>;
   }
@@ -73,7 +71,8 @@ export class DevAiHubClient implements DevAiHubApi {
     const response = await this.fetchApi.fetch(
       `${base}/assets/${encodeURIComponent(id)}/raw`,
     );
-    if (!response.ok) throw new Error(`Failed to fetch raw asset: ${response.status}`);
+    if (!response.ok)
+      throw new Error(`Failed to fetch raw asset: ${response.status}`);
     return response.text();
   }
 

@@ -1,0 +1,12 @@
+# markdownlint rule config — consumed by markdownlint-cli2 (pre-commit) and reviewdog/action-markdownlint.
+default: true # Default state for all rules
+MD009: false # MD009/no-trailing-spaces — owned by .editorconfig (trim trailing whitespace)
+MD013: false # MD013/line-length - Line length
+MD029: false # MD029/ol-prefix - Ordered list item prefix (allow sequential numbering)
+MD033: false # MD033/no-inline-html - Inline HTML
+MD040: false # MD040/fenced-code-language - Fenced code blocks should have a language specified
+MD041: false # MD041/first-line-heading - First line in file should be a top level heading (conflicts with redirect notices)
+MD046: false # MD046/code-block-style - Code block style (conflicts with Material for MkDocs tabs)
+MD036: false # MD036/no-emphasis-as-heading - spec docs intentionally use bold labels (Goals, Non-Goals, …)
+MD051: false # MD051/link-fragments - false-positives on GitHub anchors containing arrows/parens (e.g. "→")
+MD060: false # MD060/table-column-style - new pedantic table-pipe-spacing rule; not auto-fixable, would reflow all tables

@@ -26,10 +26,7 @@ export interface ResourceBody {
 
 /** API error carrying the HTTP status so the UI can distinguish 404 from 502. */
 export class ResourceBodyError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
+  constructor(message: string, readonly status: number) {
     super(message);
     this.name = 'ResourceBodyError';
   }

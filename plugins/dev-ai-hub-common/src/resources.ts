@@ -20,7 +20,8 @@ export type ResourceType = (typeof RESOURCE_TYPES)[number];
 
 export function isResourceType(value: unknown): value is ResourceType {
   return (
-    typeof value === 'string' && (RESOURCE_TYPES as readonly string[]).includes(value)
+    typeof value === 'string' &&
+    (RESOURCE_TYPES as readonly string[]).includes(value)
   );
 }
 
@@ -115,7 +116,13 @@ function dedupe(tokens: string[]): string[] {
  * backend, so it stays React-free: the frontend maps these identifiers to
  * actual icon components.
  */
-export type ResourceTypeIcon = 'tools' | 'robot' | 'flash' | 'plug' | 'puzzle' | 'store';
+export type ResourceTypeIcon =
+  | 'tools'
+  | 'robot'
+  | 'flash'
+  | 'plug'
+  | 'puzzle'
+  | 'store';
 
 export interface ResourceTypeInfo {
   type: ResourceType;
@@ -138,12 +145,48 @@ export interface ResourceTypeInfo {
  * a type is one entry here plus one CSS token pair in the frontend.
  */
 export const RESOURCE_TYPE_REGISTRY: Record<ResourceType, ResourceTypeInfo> = {
-  skill: { type: 'skill', label: 'Skill', pluralLabel: 'Skills', icon: 'tools', colorRole: 'skill' },
-  agent: { type: 'agent', label: 'Agent', pluralLabel: 'Agents', icon: 'robot', colorRole: 'agent' },
-  hook: { type: 'hook', label: 'Hook', pluralLabel: 'Hooks', icon: 'flash', colorRole: 'hook' },
-  mcp: { type: 'mcp', label: 'MCP', pluralLabel: 'MCP Servers', icon: 'plug', colorRole: 'mcp' },
-  plugin: { type: 'plugin', label: 'Plugin', pluralLabel: 'Plugins', icon: 'puzzle', colorRole: 'plugin' },
-  marketplace: { type: 'marketplace', label: 'Marketplace', pluralLabel: 'Marketplaces', icon: 'store', colorRole: 'marketplace' },
+  skill: {
+    type: 'skill',
+    label: 'Skill',
+    pluralLabel: 'Skills',
+    icon: 'tools',
+    colorRole: 'skill',
+  },
+  agent: {
+    type: 'agent',
+    label: 'Agent',
+    pluralLabel: 'Agents',
+    icon: 'robot',
+    colorRole: 'agent',
+  },
+  hook: {
+    type: 'hook',
+    label: 'Hook',
+    pluralLabel: 'Hooks',
+    icon: 'flash',
+    colorRole: 'hook',
+  },
+  mcp: {
+    type: 'mcp',
+    label: 'MCP',
+    pluralLabel: 'MCP Servers',
+    icon: 'plug',
+    colorRole: 'mcp',
+  },
+  plugin: {
+    type: 'plugin',
+    label: 'Plugin',
+    pluralLabel: 'Plugins',
+    icon: 'puzzle',
+    colorRole: 'plugin',
+  },
+  marketplace: {
+    type: 'marketplace',
+    label: 'Marketplace',
+    pluralLabel: 'Marketplaces',
+    icon: 'store',
+    colorRole: 'marketplace',
+  },
 };
 
 /**
@@ -389,7 +432,9 @@ function getRawGithubFileUrl(
   if (!owner || !repo || marker !== 'blob' || !ref || path.length === 0) {
     return undefined;
   }
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path.join('/')}`;
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path.join(
+    '/',
+  )}`;
 }
 
 /**

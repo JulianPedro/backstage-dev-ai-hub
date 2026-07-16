@@ -1,5 +1,8 @@
 import { Box, Text } from '@backstage/ui';
-import { RESOURCE_TYPES, type ResourceType } from '@nospt/plugin-dev-ai-hub-common';
+import {
+  RESOURCE_TYPES,
+  type ResourceType,
+} from '@nospt/plugin-dev-ai-hub-common';
 import { getTypeMeta } from './typeMeta';
 import styles from './StatTiles.module.css';
 
@@ -23,7 +26,12 @@ export function StatTiles({ counts, activeType, onToggle }: StatTilesProps) {
           <div
             key={type}
             className={isActive ? styles.tileActive : styles.tile}
-            style={{ '--tile-color': meta.tileColor, '--tile-deep': meta.tileDeep } as React.CSSProperties}
+            style={
+              {
+                '--tile-color': meta.tileColor,
+                '--tile-deep': meta.tileDeep,
+              } as React.CSSProperties
+            }
             onClick={() => onToggle(type)}
             onKeyDown={e => {
               if (e.key === 'Enter' || e.key === ' ') onToggle(type);
@@ -35,7 +43,11 @@ export function StatTiles({ counts, activeType, onToggle }: StatTilesProps) {
           >
             <div className={styles.tileInner}>
               <Box>
-                <Text variant="title-large" weight="bold" className={styles.tileValue}>
+                <Text
+                  variant="title-large"
+                  weight="bold"
+                  className={styles.tileValue}
+                >
                   {counts[type]}
                 </Text>
                 <Text variant="body-small" className={styles.tileLabel}>

@@ -47,11 +47,14 @@ interface ResourceInstallDialogProps {
 }
 
 const TYPE_HINTS: Record<ResourceSummary['type'], string> = {
-  skill: 'Download the skill (multi-file skills arrive as one zip) and extract it into the path for your framework.',
-  agent: 'Download or copy the agent definition into the path for your framework.',
+  skill:
+    'Download the skill (multi-file skills arrive as one zip) and extract it into the path for your framework.',
+  agent:
+    'Download or copy the agent definition into the path for your framework.',
   hook: 'Merge the hook definition into your settings file.',
   mcp: 'Add this server entry to your MCP configuration file.',
-  plugin: 'This plugin installs through its framework — follow the instructions below.',
+  plugin:
+    'This plugin installs through its framework — follow the instructions below.',
   marketplace:
     'Register this marketplace with your AI tool once, then install any of its plugins from it.',
 };
@@ -98,7 +101,11 @@ function getInstallLinks(resource: ResourceSummary, body?: ResourceBody) {
     return getAgentInstallLinks(resource.sourceLocation, resource.name);
   }
   if (resource.type === 'mcp') {
-    return getMcpInstallLinks(resource.frameworks, resource.name, body?.content);
+    return getMcpInstallLinks(
+      resource.frameworks,
+      resource.name,
+      body?.content,
+    );
   }
   return [];
 }
@@ -298,11 +305,12 @@ export function ResourceInstallDialog({
             <MarketplaceJourney resource={resource} />
           )}
 
-          {body && (resource.type === 'plugin' || resource.type === 'marketplace') && (
-            <div className={styles.markdown}>
-              <ReactMarkdown>{body.content}</ReactMarkdown>
-            </div>
-          )}
+          {body &&
+            (resource.type === 'plugin' || resource.type === 'marketplace') && (
+              <div className={styles.markdown}>
+                <ReactMarkdown>{body.content}</ReactMarkdown>
+              </div>
+            )}
 
           {pathRows.length > 0 && (
             <dl className={styles.pathList}>

@@ -1,0 +1,55 @@
+---
+# yamllint config — https://yamllint.readthedocs.io/en/stable/rules.html
+# Whitespace, line-endings and final-newline are owned by editorconfig-checker,
+# so trailing-spaces and new-line-at-end-of-file are disabled here (single owner per concern).
+
+extends: default
+
+ignore: |
+  .yarn/
+  .yarnrc.yml
+  node_modules/
+  dist/
+  dist-types/
+  coverage/
+  yarn.lock
+  .kubeconfig.yaml
+
+rules:
+  # Owned by .editorconfig / editorconfig-checker:
+  trailing-spaces: disable
+  new-line-at-end-of-file: disable
+
+  # Avoid noise: don't require a leading `---` document-start marker.
+  document-start: disable
+
+  # Comment style: require a space after `#`, but allow a single space before
+  # an inline comment (matches existing files, e.g. `.markdownlint.yaml`).
+  comments:
+    require-starting-space: true
+    ignore-shebangs: true
+    min-spaces-from-content: 1
+  comments-indentation: disable
+
+  # YAML indentation: spaces, size 2 (editorconfig-checker doesn't enforce size).
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # Requirement: flag duplicate keys.
+  key-duplicates: enable
+
+  # Requirement: double quotes + strip redundant quotes.
+  quoted-strings:
+    quote-type: double
+    required: only-when-needed
+
+  # Requirement: allowed truthy values (`on` also protects the Actions `on:` key).
+  truthy:
+    allowed-values: ["true", "false", "yes", "no", "on", "off"]
+    check-keys: false
+
+  # Not a stated requirement — relaxed to keep noise down.
+  line-length:
+    max: 200
+    level: warning

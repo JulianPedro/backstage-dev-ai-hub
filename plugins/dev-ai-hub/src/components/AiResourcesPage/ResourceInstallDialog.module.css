@@ -167,8 +167,16 @@
   }
 
   .cursorLaunch.cursorLaunch:hover {
-    background-color: color-mix(in srgb, var(--bui-fg-primary) 80%, var(--bui-bg-app));
-    border-color: color-mix(in srgb, var(--bui-fg-primary) 80%, var(--bui-bg-app));
+    background-color: color-mix(
+      in srgb,
+      var(--bui-fg-primary) 80%,
+      var(--bui-bg-app)
+    );
+    border-color: color-mix(
+      in srgb,
+      var(--bui-fg-primary) 80%,
+      var(--bui-bg-app)
+    );
   }
 
   .commandCell code {

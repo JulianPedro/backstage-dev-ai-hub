@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures/base';
 import { DEV_ASSETS } from './fixtures/mock-api';
+import { captureGalleryScreenshot } from './helpers';
 
 const PAGE_URL = '/dev-ai-hub';
 
@@ -31,7 +32,9 @@ test.describe('Asset Detail Panel', () => {
   test('panel shows description', async ({ page }) => {
     const panel = page.locator('[role="presentation"] + div');
     await expect(
-      panel.getByText('Coding standards and best practices for TypeScript projects.'),
+      panel.getByText(
+        'Coding standards and best practices for TypeScript projects.',
+      ),
     ).toBeVisible();
   });
 
@@ -41,9 +44,14 @@ test.describe('Asset Detail Panel', () => {
     }
   });
 
-  test('Preview tab renders the markdown as HTML', async ({ page }) => {
+  test('Preview tab renders the markdown as HTML', async ({
+    page,
+  }, testInfo) => {
     // dev mock content starts with "# TypeScript Best Practices"
-    await expect(page.getByRole('heading', { name: 'TypeScript Best Practices' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'TypeScript Best Practices' }),
+    ).toBeVisible();
+    await captureGalleryScreenshot(page, testInfo, '03-asset-detail');
   });
 
   test('Metadata tab shows author, version, branch', async ({ page }) => {
@@ -66,15 +74,25 @@ test.describe('Asset Detail Panel', () => {
 
   test('Raw YAML tab shows YAML source', async ({ page }) => {
     await page.getByRole('tab', { name: 'Raw YAML' }).click();
-    await expect(page.getByText(/name: TypeScript Best Practices/)).toBeVisible();
+    await expect(
+      page.getByText(/name: TypeScript Best Practices/),
+    ).toBeVisible();
   });
 
-  test('"Copy Markdown" button is visible in the actions footer', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Copy Markdown' })).toBeVisible();
+  test('"Copy Markdown" button is visible in the actions footer', async ({
+    page,
+  }) => {
+    await expect(
+      page.getByRole('button', { name: 'Copy Markdown' }),
+    ).toBeVisible();
   });
 
-  test('"Open in Repo" button is visible in the actions footer', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Open in Repo' })).toBeVisible();
+  test('"Open in Repo" button is visible in the actions footer', async ({
+    page,
+  }) => {
+    await expect(
+      page.getByRole('button', { name: 'Open in Repo' }),
+    ).toBeVisible();
   });
 
   test('Close button (×) removes assetId from the URL', async ({ page }) => {
@@ -82,9 +100,13 @@ test.describe('Asset Detail Panel', () => {
     await expect(page).not.toHaveURL(/assetId=/);
   });
 
-  test('clicking the overlay removes assetId from the URL', async ({ page }) => {
+  test('clicking the overlay removes assetId from the URL', async ({
+    page,
+  }) => {
     // Overlay has role="presentation"; click dispatches onClose
-    await page.locator('[role="presentation"]').click({ position: { x: 5, y: 5 } });
+    await page
+      .locator('[role="presentation"]')
+      .click({ position: { x: 5, y: 5 } });
     await expect(page).not.toHaveURL(/assetId=/);
   });
 });

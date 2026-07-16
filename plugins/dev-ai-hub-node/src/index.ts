@@ -1,6 +1,4 @@
-export {
-  devAiHubProviderExtensionPoint,
-} from './extensions';
+export { devAiHubProviderExtensionPoint } from './extensions';
 export type {
   AiAssetProvider,
   DevAiHubProviderExtensionPoint,

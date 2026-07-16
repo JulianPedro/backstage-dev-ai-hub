@@ -21,7 +21,9 @@ const pluginPath = process.argv[2];
 
 if (!pluginPath) {
   console.error('❌ Usage: node cleanup-scaffolding.js <plugin-path>');
-  console.error('   Example: node cleanup-scaffolding.js ../demo/plugins/my-plugin');
+  console.error(
+    '   Example: node cleanup-scaffolding.js ../demo/plugins/my-plugin',
+  );
   process.exit(1);
 }
 
@@ -53,7 +55,9 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const pluginId = packageJson.backstage?.pluginId;
 
 if (!pluginId) {
-  console.error('❌ No pluginId found in package.json - not a valid Backstage plugin');
+  console.error(
+    '❌ No pluginId found in package.json - not a valid Backstage plugin',
+  );
   process.exit(1);
 }
 
@@ -87,20 +91,35 @@ try {
     // Step 3: Update component file content
     console.log('  - Updating component file...');
 
-    const componentFilePath = path.join(newComponentDir, 'ExampleComponent.tsx');
-    const newComponentFilePath = path.join(newComponentDir, `${componentName}.tsx`);
+    const componentFilePath = path.join(
+      newComponentDir,
+      'ExampleComponent.tsx',
+    );
+    const newComponentFilePath = path.join(
+      newComponentDir,
+      `${componentName}.tsx`,
+    );
 
     if (fs.existsSync(componentFilePath)) {
       let content = fs.readFileSync(componentFilePath, 'utf8');
 
       // Remove ExampleFetchComponent import
-      content = content.replace(/import \{ ExampleFetchComponent \} from ['"]\.\.\/ExampleFetchComponent['"'];?\n?/g, '');
+      content = content.replace(
+        /import \{ ExampleFetchComponent \} from ['"]\.\.\/ExampleFetchComponent['"'];?\n?/g,
+        '',
+      );
 
       // Remove ExampleFetchComponent from JSX
-      content = content.replace(/\s*<Grid item>\s*<ExampleFetchComponent \/>\s*<\/Grid>\s*/g, '');
+      content = content.replace(
+        /\s*<Grid item>\s*<ExampleFetchComponent \/>\s*<\/Grid>\s*/g,
+        '',
+      );
 
       // Rename component export
-      content = content.replace(/export const ExampleComponent/g, `export const ${componentName}`);
+      content = content.replace(
+        /export const ExampleComponent/g,
+        `export const ${componentName}`,
+      );
 
       // Write to new file name
       fs.writeFileSync(newComponentFilePath, content);
@@ -111,19 +130,30 @@ try {
     }
 
     // Step 4: Update test file
-    const testFilePath = path.join(newComponentDir, 'ExampleComponent.test.tsx');
-    const newTestFilePath = path.join(newComponentDir, `${componentName}.test.tsx`);
+    const testFilePath = path.join(
+      newComponentDir,
+      'ExampleComponent.test.tsx',
+    );
+    const newTestFilePath = path.join(
+      newComponentDir,
+      `${componentName}.test.tsx`,
+    );
 
     if (fs.existsSync(testFilePath)) {
       let testContent = fs.readFileSync(testFilePath, 'utf8');
 
       // Update imports
-      testContent = testContent.replace(/from ['"]\.\/ExampleComponent['"]/g, `from './${componentName}'`);
+      testContent = testContent.replace(
+        /from ['"]\.\/ExampleComponent['"]/g,
+        `from './${componentName}'`,
+      );
       testContent = testContent.replace(/ExampleComponent/g, componentName);
 
       fs.writeFileSync(newTestFilePath, testContent);
       fs.unlinkSync(testFilePath);
-      console.log(`    ✅ ExampleComponent.test.tsx → ${componentName}.test.tsx`);
+      console.log(
+        `    ✅ ExampleComponent.test.tsx → ${componentName}.test.tsx`,
+      );
     }
 
     // Step 5: Update index.ts
@@ -131,7 +161,10 @@ try {
     if (fs.existsSync(indexPath)) {
       let indexContent = fs.readFileSync(indexPath, 'utf8');
 
-      indexContent = indexContent.replace(/from ['"]\.\/ExampleComponent['"]/g, `from './${componentName}'`);
+      indexContent = indexContent.replace(
+        /from ['"]\.\/ExampleComponent['"]/g,
+        `from './${componentName}'`,
+      );
       indexContent = indexContent.replace(/ExampleComponent/g, componentName);
 
       fs.writeFileSync(indexPath, indexContent);
@@ -149,11 +182,14 @@ try {
     // Update import path
     pluginContent = pluginContent.replace(
       /import\(['"]\.\/components\/ExampleComponent['"]\)/g,
-      `import('./components/${componentName}')`
+      `import('./components/${componentName}')`,
     );
 
     // Update component reference in import
-    pluginContent = pluginContent.replace(/m\.ExampleComponent/g, `m.${componentName}`);
+    pluginContent = pluginContent.replace(
+      /m\.ExampleComponent/g,
+      `m.${componentName}`,
+    );
 
     fs.writeFileSync(pluginFilePath, pluginContent);
     console.log(`  ✅ Updated imports to use ${componentName}`);
@@ -182,9 +218,12 @@ try {
   console.log(`  - Removed dev/ and example tests`);
   console.log('\n🚀 Next steps:');
   console.log('  1. Update src/plugin.ts to use the New Frontend System');
-  console.log('  2. Customize the component in src/components/${componentName}/');
-  console.log('  3. Follow the conversion steps in backstage-frontend-plugin/SKILL.md');
-
+  console.log(
+    '  2. Customize the component in src/components/${componentName}/',
+  );
+  console.log(
+    '  3. Follow the conversion steps in backstage-frontend-plugin/SKILL.md',
+  );
 } catch (error) {
   console.error('\n❌ Cleanup failed:', error.message);
   console.error(error.stack);

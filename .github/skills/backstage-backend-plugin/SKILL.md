@@ -29,6 +29,7 @@ Use this skill when creating server-side functionality for Backstage: REST/HTTP 
 ### 1.1 Understand the Requirements
 
 Before building a backend plugin, clearly understand:
+
 - What endpoints or APIs are needed (REST, GraphQL, webhooks)
 - What data storage requirements exist (database, cache)
 - Whether background jobs or scheduled tasks are needed
@@ -40,12 +41,14 @@ Before building a backend plugin, clearly understand:
 Load reference files as needed based on the plugin requirements:
 
 **For Core Services:**
+
 - [⚙️ Core Services Reference](./reference/core_services.md) - Comprehensive guide to all core backend services including:
   - httpRouter, logger, database, httpAuth, userInfo
   - cache, scheduler, urlReader, discovery, permissions
   - Usage patterns and best practices for each service
 
 **For Testing:**
+
 - [✅ Testing Reference](./reference/testing.md) - Comprehensive testing guide for backend plugins
 
 ---
@@ -55,6 +58,7 @@ Load reference files as needed based on the plugin requirements:
 Follow the Golden Path workflow below for implementation, referring to reference files as needed.
 
 **Important Decisions:**
+
 - Determine which core services are needed (load [⚙️ Core Services Reference](./reference/core_services.md))
 - Plan database schema and migrations if using database
 - Design authentication policies (which endpoints need auth?)
@@ -68,11 +72,14 @@ After implementing the plugin:
 
 1. Load the [✅ Testing Reference](./reference/testing.md)
 2. Write comprehensive tests for:
-  - Router endpoints using `startTestBackend`
-  - Database operations with `TestDatabases`
-  - External service calls with MSW (Mock Service Worker)
-  - Authentication flows
+
+- Router endpoints using `startTestBackend`
+- Database operations with `TestDatabases`
+- External service calls with MSW (Mock Service Worker)
+- Authentication flows
+
 3. Run tests and achieve good coverage:
+
   ```bash
   yarn backstage-cli package test --coverage
   ```
@@ -107,7 +114,7 @@ Before publishing:
 ### Request Validation
 
 Validate inputs at the edge using a schema (e.g., zod) before hitting DBs or external services:
-  
+
   ```ts
   import { z } from 'zod';
   const querySchema = z.object({ q: z.string().min(1) });
@@ -124,7 +131,7 @@ Validate inputs at the edge using a schema (e.g., zod) before hitting DBs or ext
 ### Error Handling
 
 Add a terminal error handler to your router and prefer structured logs with context:
-  
+
   ```ts
   import { errorHandler } from '@backstage/backend-common';
   router.use(errorHandler());
@@ -136,7 +143,7 @@ Add a terminal error handler to your router and prefer structured logs with cont
 - Open only explicit paths with `addAuthPolicy`
 - For protected routes, extract credentials with `httpAuth`
 - Derive user/entity identity via `userInfo` when required
-  
+
   ```ts
   // Inside a route handler
   const creds = await httpAuth.credentials(req, { allow: ['user', 'service'] });
@@ -264,7 +271,7 @@ Now `GET http://localhost:7007/api/example/health` returns `{ "status": "ok" }`.
 
 - Add the plugin to `packages/backend/src/index.ts` via `backend.add(import('@internal/plugin-<id>-backend'))`.
 - Start the repo (e.g., `yarn start` at the root). Then check:
-  - GET http://localhost:7007/api/example/health → `{ "status": "ok" }`
+  - GET <http://localhost:7007/api/example/health> → `{ "status": "ok" }`
   - If 401 occurs, ensure you opened `/health` with `addAuthPolicy`.
 
 ## Testing, linting & structure checks
@@ -298,6 +305,7 @@ Keep routers small (`/service/router.ts`), inject dependencies (DB, auth, client
 Load these resources as needed during development:
 
 ### Core Services
+
 - [⚙️ Core Services Reference](./reference/core_services.md) - Complete guide to all core backend services including:
   - HTTP Router Service for route registration
   - Logger Service for structured logging
@@ -312,6 +320,7 @@ Load these resources as needed during development:
   - Service composition examples and best practices
 
 ### Testing
+
 - [✅ Testing Reference](./reference/testing.md) - Comprehensive testing guide including:
   - Testing backend plugins with `startTestBackend`
   - Mock services for all core services

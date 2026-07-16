@@ -4,7 +4,9 @@ import { AssetCard } from './AssetCard';
 import type { AiAssetSummary } from '@nospt/plugin-dev-ai-hub-common';
 
 jest.mock('../ToolIcon', () => ({
-  ToolIcon: ({ tool }: { tool: string }) => <span data-testid={`tool-icon-${tool}`} />,
+  ToolIcon: ({ tool }: { tool: string }) => (
+    <span data-testid={`tool-icon-${tool}`} />
+  ),
 }));
 
 const NOW = new Date('2026-03-14T12:00:00Z').getTime();
@@ -38,13 +40,27 @@ describe('AssetCard', () => {
   });
 
   it('renders asset name and description', () => {
-    render(<AssetCard asset={makeAsset()} onView={jest.fn()} onInstall={jest.fn()} />);
+    render(
+      <AssetCard
+        asset={makeAsset()}
+        onView={jest.fn()}
+        onInstall={jest.fn()}
+      />,
+    );
     expect(screen.getByText('My Instruction')).toBeInTheDocument();
-    expect(screen.getByText('A helpful coding instruction')).toBeInTheDocument();
+    expect(
+      screen.getByText('A helpful coding instruction'),
+    ).toBeInTheDocument();
   });
 
   it('renders the type label', () => {
-    render(<AssetCard asset={makeAsset({ type: 'instruction' })} onView={jest.fn()} onInstall={jest.fn()} />);
+    render(
+      <AssetCard
+        asset={makeAsset({ type: 'instruction' })}
+        onView={jest.fn()}
+        onInstall={jest.fn()}
+      />,
+    );
     expect(screen.getByText('Instruction')).toBeInTheDocument();
   });
 
@@ -54,7 +70,11 @@ describe('AssetCard', () => {
 
     types.forEach((type, i) => {
       const { unmount } = render(
-        <AssetCard asset={makeAsset({ type })} onView={jest.fn()} onInstall={jest.fn()} />,
+        <AssetCard
+          asset={makeAsset({ type })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
       );
       expect(screen.getByText(labels[i])).toBeInTheDocument();
       unmount();
@@ -62,7 +82,13 @@ describe('AssetCard', () => {
   });
 
   it('renders author and version in the footer', () => {
-    render(<AssetCard asset={makeAsset()} onView={jest.fn()} onInstall={jest.fn()} />);
+    render(
+      <AssetCard
+        asset={makeAsset()}
+        onView={jest.fn()}
+        onInstall={jest.fn()}
+      />,
+    );
     expect(screen.getByText(/v1\.0\.0/)).toBeInTheDocument();
     expect(screen.getByText(/Test Author/)).toBeInTheDocument();
   });
@@ -71,7 +97,11 @@ describe('AssetCard', () => {
     it('shows "New" badge when updatedAt is within 14 days', () => {
       const recentDate = new Date(NOW - 5 * 24 * 60 * 60 * 1000).toISOString(); // 5 days ago
       render(
-        <AssetCard asset={makeAsset({ updatedAt: recentDate })} onView={jest.fn()} onInstall={jest.fn()} />,
+        <AssetCard
+          asset={makeAsset({ updatedAt: recentDate })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
       );
       expect(screen.getByText('New')).toBeInTheDocument();
     });
@@ -79,7 +109,11 @@ describe('AssetCard', () => {
     it('does not show "New" badge when updatedAt is older than 14 days', () => {
       const oldDate = new Date(NOW - 20 * 24 * 60 * 60 * 1000).toISOString(); // 20 days ago
       render(
-        <AssetCard asset={makeAsset({ updatedAt: oldDate })} onView={jest.fn()} onInstall={jest.fn()} />,
+        <AssetCard
+          asset={makeAsset({ updatedAt: oldDate })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
       );
       expect(screen.queryByText('New')).not.toBeInTheDocument();
     });
@@ -87,25 +121,49 @@ describe('AssetCard', () => {
 
   describe('install count display', () => {
     it('does not show install count when installCount is 0', () => {
-      render(<AssetCard asset={makeAsset({ installCount: 0 })} onView={jest.fn()} onInstall={jest.fn()} />);
+      render(
+        <AssetCard
+          asset={makeAsset({ installCount: 0 })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
       expect(screen.queryByText('↓')).not.toBeInTheDocument();
       expect(screen.queryByText('🔥')).not.toBeInTheDocument();
     });
 
     it('shows "↓" arrow with count when installCount > 0 and < 5', () => {
-      render(<AssetCard asset={makeAsset({ installCount: 3 })} onView={jest.fn()} onInstall={jest.fn()} />);
+      render(
+        <AssetCard
+          asset={makeAsset({ installCount: 3 })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
       expect(screen.getByText('↓')).toBeInTheDocument();
       expect(screen.getByText('3')).toBeInTheDocument();
     });
 
     it('shows 🔥 emoji when installCount >= 5 (popular threshold)', () => {
-      render(<AssetCard asset={makeAsset({ installCount: 5 })} onView={jest.fn()} onInstall={jest.fn()} />);
+      render(
+        <AssetCard
+          asset={makeAsset({ installCount: 5 })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
       expect(screen.getByText('🔥')).toBeInTheDocument();
       expect(screen.getByText('5')).toBeInTheDocument();
     });
 
     it('shows 🔥 emoji for installCount > 5', () => {
-      render(<AssetCard asset={makeAsset({ installCount: 42 })} onView={jest.fn()} onInstall={jest.fn()} />);
+      render(
+        <AssetCard
+          asset={makeAsset({ installCount: 42 })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
       expect(screen.getByText('🔥')).toBeInTheDocument();
       expect(screen.queryByText('↓')).not.toBeInTheDocument();
     });
@@ -114,7 +172,9 @@ describe('AssetCard', () => {
   describe('callbacks', () => {
     it('calls onView with the asset id when "View details" button is clicked', () => {
       const onView = jest.fn();
-      render(<AssetCard asset={makeAsset()} onView={onView} onInstall={jest.fn()} />);
+      render(
+        <AssetCard asset={makeAsset()} onView={onView} onInstall={jest.fn()} />,
+      );
       fireEvent.click(screen.getByRole('button', { name: 'View details' }));
       expect(onView).toHaveBeenCalledTimes(1);
       expect(onView).toHaveBeenCalledWith('asset-1');
@@ -122,8 +182,16 @@ describe('AssetCard', () => {
 
     it('calls onInstall with the asset id when "Install in editor" button is clicked', () => {
       const onInstall = jest.fn();
-      render(<AssetCard asset={makeAsset()} onView={jest.fn()} onInstall={onInstall} />);
-      fireEvent.click(screen.getByRole('button', { name: 'Install in editor' }));
+      render(
+        <AssetCard
+          asset={makeAsset()}
+          onView={jest.fn()}
+          onInstall={onInstall}
+        />,
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Install in editor' }),
+      );
       expect(onInstall).toHaveBeenCalledTimes(1);
       expect(onInstall).toHaveBeenCalledWith('asset-1');
     });
@@ -132,7 +200,11 @@ describe('AssetCard', () => {
   describe('tags', () => {
     it('renders tags as chips prefixed with #', () => {
       render(
-        <AssetCard asset={makeAsset({ tags: ['python', 'linting'] })} onView={jest.fn()} onInstall={jest.fn()} />,
+        <AssetCard
+          asset={makeAsset({ tags: ['python', 'linting'] })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
       );
       expect(screen.getByText('#python')).toBeInTheDocument();
       expect(screen.getByText('#linting')).toBeInTheDocument();
@@ -154,7 +226,13 @@ describe('AssetCard', () => {
     });
 
     it('renders no tags section when tags is empty', () => {
-      render(<AssetCard asset={makeAsset({ tags: [] })} onView={jest.fn()} onInstall={jest.fn()} />);
+      render(
+        <AssetCard
+          asset={makeAsset({ tags: [] })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
+      );
       expect(screen.queryByText(/#/)).not.toBeInTheDocument();
     });
   });
@@ -169,12 +247,18 @@ describe('AssetCard', () => {
         />,
       );
       expect(screen.getByTestId('tool-icon-claude-code')).toBeInTheDocument();
-      expect(screen.getByTestId('tool-icon-github-copilot')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('tool-icon-github-copilot'),
+      ).toBeInTheDocument();
     });
 
     it('shows "Universal" label for the "all" tool', () => {
       render(
-        <AssetCard asset={makeAsset({ tools: ['all'] })} onView={jest.fn()} onInstall={jest.fn()} />,
+        <AssetCard
+          asset={makeAsset({ tools: ['all'] })}
+          onView={jest.fn()}
+          onInstall={jest.fn()}
+        />,
       );
       expect(screen.getByText('Universal')).toBeInTheDocument();
     });

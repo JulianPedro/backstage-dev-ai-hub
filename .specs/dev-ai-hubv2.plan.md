@@ -127,6 +127,7 @@ flowchart LR
 ```
 
 ### Phase 0 — Upgrade to ≥ v1.51 & kind live *(prefactor — everything depends on this)*
+
 - Bump all `@backstage/*` deps from ~1.44/1.45 to the **v1.51.0** line across the four `@nospt`
   packages (use the `backstage-upgrade` skill / `backstage-cli versions:bump`). Confirm the
   workspace builds and existing tests pass.
@@ -139,6 +140,7 @@ flowchart LR
 - **Exit:** the five example entities appear via `catalog getEntities kind=AiResource`; app builds on 1.51.
 
 ### Phase 1 — Read contract in `-common`
+
 - In `-common`: `ResourceType` vocab + type→card registry (type, icon, colour role), `getFrameworks(entity)`,
   the framework vocabulary, the `ResourceSummary` type, annotation contract types, and ResourceType
   install paths. Remove nothing yet (legacy types stay until Phase 4 to keep the build green).
@@ -146,6 +148,7 @@ flowchart LR
 - **Exit:** registry + resolver covered by tests; `ResourceSummary` + framework read available to consumers.
 
 ### Phase 2 — Thin backend (owns all catalog reads)
+
 - `GET /api/dev-ai-hub/resources` → `catalogClient.getEntities({ filter: { kind: 'AiResource' } })`
   **as the caller** → `toResourceSummary()` → `{ items }`.
 - Body resolver: `GET /entity/:ref/raw` (+ `/:filename`) → `getEntityByRef` as caller →
@@ -159,6 +162,7 @@ flowchart LR
 - **Exit:** `/resources`, body resolve, telemetry, and MCP tools work end-to-end against catalog data.
 
 ### Phase 3 — BUI consumer page + five cards
+
 - New/rebuilt API client: `getResources()→ResourceSummary[]`, `getEntityBody`, `getEntityBodyUrl`,
   `track`, `getInstallCount`.
 - BUI page (grouped by `spec.type`): five per-type cards (one colour each), framework badges,
@@ -168,6 +172,7 @@ flowchart LR
 - **Exit:** browse + filter parity with today's section, sourced entirely from the catalog via the backend.
 
 ### Phase 4 — Delete the legacy silo + rewrite e2e
+
 - Remove `AiAssetStore`, `AiAssetSyncService`, `AssetParser`, store-backed `McpServerService`, the
   asset REST routes, migrations `001–006` (keep only the telemetry migration), the node
   `devAiHubProviderExtensionPoint`, legacy `-common` types/schemas/`installPaths`, `pluginLegacy.ts`,
@@ -176,6 +181,7 @@ flowchart LR
 - **Exit:** only install telemetry is plugin-owned; e2e green against `AiResource`.
 
 ### Phase 5 — GitHub card enrichment (deferred, additive)
+>
 > Ingestion (Phases 0–3) reads only the catalog. Enrichment is a **separate, later** step that
 > decorates cards with GitHub-sourced data the entity does not carry. It is **not** the body
 > resolver: the body resolver streams full markdown on a user action (open/install); enrichment
@@ -200,6 +206,7 @@ flowchart LR
   identically with enrichment disabled or unavailable.
 
 ### Phase 6 — Upstream convergence (ongoing)
+
 - Structured subtypes for `agent`/`hook`/`mcp`/`plugin` → read native fields, retire annotation reads.
 - Content-reference upstream (backstage/backstage#34318) → drop the body resolver.
 - `AiResource` graduates alpha → drop `/alpha` adapters + version pins.

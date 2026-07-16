@@ -74,7 +74,8 @@ export async function resolveBody(
 ): Promise<ResolvedBody> {
   if (!target.endsWith('/')) {
     const response = await reader.readUrl(target);
-    const name = new URL(target).pathname.split('/').filter(Boolean).pop() ?? 'body';
+    const name =
+      new URL(target).pathname.split('/').filter(Boolean).pop() ?? 'body';
     return { kind: 'file', name, content: await response.buffer() };
   }
 
@@ -84,7 +85,10 @@ export async function resolveBody(
   return {
     kind: 'tree',
     dirName,
-    entryPath: pickEntryFile(files.map(f => f.path), dirName),
+    entryPath: pickEntryFile(
+      files.map(f => f.path),
+      dirName,
+    ),
     files,
   };
 }

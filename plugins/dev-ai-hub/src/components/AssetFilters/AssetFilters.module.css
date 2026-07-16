@@ -53,7 +53,10 @@
   }
 
   .iconSelectItem:hover {
-    background: var(--bui-bg-neutral-2, color-mix(in srgb, CanvasText 8%, Canvas));
+    background: var(
+      --bui-bg-neutral-2,
+      color-mix(in srgb, CanvasText 8%, Canvas)
+    );
   }
 
   .iconSelectItemActive {
@@ -161,7 +164,10 @@
   }
 
   .tagsDropdownItem:hover {
-    background: var(--bui-bg-neutral-2, color-mix(in srgb, CanvasText 8%, Canvas));
+    background: var(
+      --bui-bg-neutral-2,
+      color-mix(in srgb, CanvasText 8%, Canvas)
+    );
   }
 
   .tagsDropdownCheckbox {

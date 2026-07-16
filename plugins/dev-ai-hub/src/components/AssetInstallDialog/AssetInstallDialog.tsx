@@ -1,10 +1,26 @@
 import { useState } from 'react';
 import {
-  Box, Flex, Text, Button, Tag, TagGroup, Skeleton,
-  Dialog, DialogTrigger, DialogHeader, DialogBody, DialogFooter,
-  Tooltip, TooltipTrigger,
+  Box,
+  Flex,
+  Text,
+  Button,
+  Tag,
+  TagGroup,
+  Skeleton,
+  Dialog,
+  DialogTrigger,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  Tooltip,
+  TooltipTrigger,
 } from '@backstage/ui';
-import { RiFileCopyLine, RiDownloadLine, RiCheckLine, RiFolderZipLine } from '@remixicon/react';
+import {
+  RiFileCopyLine,
+  RiDownloadLine,
+  RiCheckLine,
+  RiFolderZipLine,
+} from '@remixicon/react';
 import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@nospt/plugin-dev-ai-hub-common';
 import { useApi } from '@backstage/core-plugin-api';
@@ -14,10 +30,10 @@ import { ToolIcon } from '../ToolIcon';
 import styles from './AssetInstallDialog.module.css';
 
 const TOOL_LABELS: Record<string, string> = {
-  'claude-code':    'Claude Code',
+  'claude-code': 'Claude Code',
   'github-copilot': 'GitHub Copilot',
-  'google-gemini':  'Google Gemini',
-  'cursor':         'Cursor',
+  'google-gemini': 'Google Gemini',
+  cursor: 'Cursor',
 };
 
 interface AssetInstallDialogProps {
@@ -25,7 +41,10 @@ interface AssetInstallDialogProps {
   onClose: () => void;
 }
 
-export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps) {
+export function AssetInstallDialog({
+  assetId,
+  onClose,
+}: AssetInstallDialogProps) {
   const [copiedTool, setCopiedTool] = useState<string | null>(null);
   const api = useApi(devAiHubApiRef);
   const { asset, loading } = useAssetDetail(assetId);
@@ -82,11 +101,17 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
       <Dialog
         isOpen={!!assetId}
         isDismissable
-        onOpenChange={open => { if (!open) handleClose(); }}
+        onOpenChange={open => {
+          if (!open) handleClose();
+        }}
       >
         <DialogHeader>
           {asset ? `Install: ${asset.name}` : 'Install'}
-          <Text variant="body-small" color="secondary" className={styles.subtitle}>
+          <Text
+            variant="body-small"
+            color="secondary"
+            className={styles.subtitle}
+          >
             Copy the content and place the file at the path shown for your tool.
           </Text>
         </DialogHeader>
@@ -102,66 +127,113 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
             {!loading && asset && isZipSkill && (
               <Box className={styles.zipInfo}>
                 <Flex className={styles.zipHeader}>
-                  <RiFolderZipLine size={16} style={{ color: 'var(--bui-fg-info)' }} />
-                  <Text variant="body-small" weight="bold" style={{ color: 'var(--bui-fg-info)' }}>
+                  <RiFolderZipLine
+                    size={16}
+                    style={{ color: 'var(--bui-fg-info)' }}
+                  />
+                  <Text
+                    variant="body-small"
+                    weight="bold"
+                    style={{ color: 'var(--bui-fg-info)' }}
+                  >
                     Bundled skill — downloads as .zip
                   </Text>
                 </Flex>
-                <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-2)' }}>
-                  This skill includes resource files alongside <code>SKILL.md</code>.
-                  Extract the zip and place all files in the skill directory.
+                <Text
+                  variant="body-x-small"
+                  color="secondary"
+                  style={{
+                    display: 'block',
+                    marginBottom: 'var(--bui-space-2)',
+                  }}
+                >
+                  This skill includes resource files alongside{' '}
+                  <code>SKILL.md</code>. Extract the zip and place all files in
+                  the skill directory.
                 </Text>
                 <TagGroup aria-label="Bundled files">
                   <Flex className={styles.zipFiles}>
-                    <Tag id="skill-md" size="small" className={styles.monoTag}>SKILL.md</Tag>
+                    <Tag id="skill-md" size="small" className={styles.monoTag}>
+                      SKILL.md
+                    </Tag>
                     {resourcePaths.map(p => (
-                      <Tag key={p} id={p} size="small" className={styles.monoTag}>{p}</Tag>
+                      <Tag
+                        key={p}
+                        id={p}
+                        size="small"
+                        className={styles.monoTag}
+                      >
+                        {p}
+                      </Tag>
                     ))}
                   </Flex>
                 </TagGroup>
               </Box>
             )}
 
-            {!loading && asset && Object.entries(installPaths).map(([tool, installPath]) => (
-              <Box key={tool} className={styles.toolSection}>
-                <Flex className={styles.toolHeader}>
-                  <ToolIcon tool={tool as AiTool} size={16} />
-                  <Text variant="body-small" weight="bold">
-                    {TOOL_LABELS[tool] ?? tool}
+            {!loading &&
+              asset &&
+              Object.entries(installPaths).map(([tool, installPath]) => (
+                <Box key={tool} className={styles.toolSection}>
+                  <Flex className={styles.toolHeader}>
+                    <ToolIcon tool={tool as AiTool} size={16} />
+                    <Text variant="body-small" weight="bold">
+                      {TOOL_LABELS[tool] ?? tool}
+                    </Text>
+                  </Flex>
+
+                  <Text
+                    variant="body-x-small"
+                    color="secondary"
+                    style={{
+                      display: 'block',
+                      marginBottom: 'var(--bui-space-1)',
+                    }}
+                  >
+                    Install path
                   </Text>
-                </Flex>
+                  <Box className={styles.installPathBox}>{installPath}</Box>
 
-                <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-1)' }}>
-                  Install path
-                </Text>
-                <Box className={styles.installPathBox}>
-                  {installPath}
+                  <Flex className={styles.toolActions}>
+                    <TooltipTrigger>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleCopy(tool)}
+                      >
+                        {copiedTool === tool ? (
+                          <RiCheckLine size={14} />
+                        ) : (
+                          <RiFileCopyLine size={14} />
+                        )}
+                        {copiedTool === tool ? 'Copied!' : 'Copy Content'}
+                      </Button>
+                      <Tooltip>
+                        {copiedTool === tool
+                          ? 'Copied!'
+                          : 'Copy markdown content'}
+                      </Tooltip>
+                    </TooltipTrigger>
+                    <TooltipTrigger>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleDownload(tool, installPath)}
+                      >
+                        {isZipSkill ? (
+                          <RiFolderZipLine size={14} />
+                        ) : (
+                          <RiDownloadLine size={14} />
+                        )}
+                        {isZipSkill ? 'Download .zip' : 'Download'}
+                      </Button>
+                      <Tooltip>
+                        {isZipSkill
+                          ? 'Download as .zip with all bundled files'
+                          : 'Download file with correct name'}
+                      </Tooltip>
+                    </TooltipTrigger>
+                  </Flex>
                 </Box>
-
-                <Flex className={styles.toolActions}>
-                  <TooltipTrigger>
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleCopy(tool)}
-                    >
-                      {copiedTool === tool ? <RiCheckLine size={14} /> : <RiFileCopyLine size={14} />}
-                      {copiedTool === tool ? 'Copied!' : 'Copy Content'}
-                    </Button>
-                    <Tooltip>{copiedTool === tool ? 'Copied!' : 'Copy markdown content'}</Tooltip>
-                  </TooltipTrigger>
-                  <TooltipTrigger>
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleDownload(tool, installPath)}
-                    >
-                      {isZipSkill ? <RiFolderZipLine size={14} /> : <RiDownloadLine size={14} />}
-                      {isZipSkill ? 'Download .zip' : 'Download'}
-                    </Button>
-                    <Tooltip>{isZipSkill ? 'Download as .zip with all bundled files' : 'Download file with correct name'}</Tooltip>
-                  </TooltipTrigger>
-                </Flex>
-              </Box>
-            ))}
+              ))}
           </Flex>
         </DialogBody>
 

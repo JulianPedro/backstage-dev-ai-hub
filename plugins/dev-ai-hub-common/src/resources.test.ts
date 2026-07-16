@@ -40,27 +40,37 @@ function entity({
 describe('getFrameworks', () => {
   it('reads native spec.agents for a skill', () => {
     expect(
-      getFrameworks(entity({ type: 'skill', agents: ['github-copilot', 'claude-code'] })),
+      getFrameworks(
+        entity({ type: 'skill', agents: ['github-copilot', 'claude-code'] }),
+      ),
     ).toEqual(['github-copilot', 'claude-code']);
   });
 
   it('prefers spec.agents over the annotation for a skill', () => {
     expect(
       getFrameworks(
-        entity({ type: 'skill', agents: ['cursor'], annotation: 'claude-code' }),
+        entity({
+          type: 'skill',
+          agents: ['cursor'],
+          annotation: 'claude-code',
+        }),
       ),
     ).toEqual(['cursor']);
   });
 
   it('falls back to the annotation for a skill with empty spec.agents', () => {
     expect(
-      getFrameworks(entity({ type: 'skill', agents: [], annotation: 'claude-code' })),
+      getFrameworks(
+        entity({ type: 'skill', agents: [], annotation: 'claude-code' }),
+      ),
     ).toEqual(['claude-code']);
   });
 
   it('reads the annotation for non-skill types', () => {
     expect(
-      getFrameworks(entity({ type: 'agent', annotation: 'claude-code, cursor' })),
+      getFrameworks(
+        entity({ type: 'agent', annotation: 'claude-code, cursor' }),
+      ),
     ).toEqual(['claude-code', 'cursor']);
   });
 
@@ -70,19 +80,25 @@ describe('getFrameworks', () => {
 
   it('passes unknown tokens through', () => {
     expect(
-      getFrameworks(entity({ type: 'mcp', annotation: 'claude-code,futuretool' })),
+      getFrameworks(
+        entity({ type: 'mcp', annotation: 'claude-code,futuretool' }),
+      ),
     ).toEqual(['claude-code', 'futuretool']);
   });
 
   it('normalises aliases and dedupes', () => {
     expect(
-      getFrameworks(entity({ type: 'agent', annotation: 'claude, Claude-Code, copilot' })),
+      getFrameworks(
+        entity({ type: 'agent', annotation: 'claude, Claude-Code, copilot' }),
+      ),
     ).toEqual(['claude-code', 'github-copilot']);
   });
 
   it('ignores non-string entries in spec.agents', () => {
     expect(
-      getFrameworks(entity({ type: 'skill', agents: ['claude-code', 42, null] })),
+      getFrameworks(
+        entity({ type: 'skill', agents: ['claude-code', 42, null] }),
+      ),
     ).toEqual(['claude-code']);
   });
 });
@@ -120,9 +136,12 @@ describe('RESOURCE_TYPE_REGISTRY', () => {
 });
 
 describe('isResourceType', () => {
-  it.each(['skill', 'agent', 'hook', 'mcp', 'plugin', 'marketplace'])('accepts %s', t => {
-    expect(isResourceType(t)).toBe(true);
-  });
+  it.each(['skill', 'agent', 'hook', 'mcp', 'plugin', 'marketplace'])(
+    'accepts %s',
+    t => {
+      expect(isResourceType(t)).toBe(true);
+    },
+  );
 
   it.each(['rule', 'instruction', '', undefined, 42])('rejects %s', t => {
     expect(isResourceType(t)).toBe(false);
@@ -132,7 +151,13 @@ describe('isResourceType', () => {
 describe('getBodyShape', () => {
   it('is json only for mcp', () => {
     expect(getBodyShape('mcp')).toBe('json');
-    for (const t of ['skill', 'agent', 'hook', 'plugin', 'marketplace'] as const) {
+    for (const t of [
+      'skill',
+      'agent',
+      'hook',
+      'plugin',
+      'marketplace',
+    ] as const) {
       expect(getBodyShape(t)).toBe('markdown');
     }
   });
@@ -140,10 +165,16 @@ describe('getBodyShape', () => {
 
 describe('getResourceInstallPath', () => {
   it('resolves per-framework skill directories', () => {
-    expect(getResourceInstallPath('skill', 'claude-code', 'approved-github-workflows')).toBe(
-      '.claude/skills/approved-github-workflows/',
+    expect(
+      getResourceInstallPath(
+        'skill',
+        'claude-code',
+        'approved-github-workflows',
+      ),
+    ).toBe('.claude/skills/approved-github-workflows/');
+    expect(getResourceInstallPath('skill', 'cursor', 'x')).toBe(
+      '.cursor/skills/x/',
     );
-    expect(getResourceInstallPath('skill', 'cursor', 'x')).toBe('.cursor/skills/x/');
   });
 
   it('normalises framework aliases', () => {
@@ -159,16 +190,24 @@ describe('getResourceInstallPath', () => {
   });
 
   it('points hook and mcp at their settings files', () => {
-    expect(getResourceInstallPath('hook', 'claude-code', 'post-edit-lint')).toBe(
-      '.claude/settings.json',
+    expect(
+      getResourceInstallPath('hook', 'claude-code', 'post-edit-lint'),
+    ).toBe('.claude/settings.json');
+    expect(getResourceInstallPath('mcp', 'claude-code', 'grafana-mcp')).toBe(
+      '.mcp.json',
     );
-    expect(getResourceInstallPath('mcp', 'claude-code', 'grafana-mcp')).toBe('.mcp.json');
   });
 
   it('is undefined where no convention exists', () => {
-    expect(getResourceInstallPath('plugin', 'claude-code', 'bundle')).toBeUndefined();
-    expect(getResourceInstallPath('hook', 'github-copilot', 'x')).toBeUndefined();
-    expect(getResourceInstallPath('marketplace', 'claude-code', 'nos')).toBeUndefined();
+    expect(
+      getResourceInstallPath('plugin', 'claude-code', 'bundle'),
+    ).toBeUndefined();
+    expect(
+      getResourceInstallPath('hook', 'github-copilot', 'x'),
+    ).toBeUndefined();
+    expect(
+      getResourceInstallPath('marketplace', 'claude-code', 'nos'),
+    ).toBeUndefined();
   });
 });
 
@@ -204,11 +243,15 @@ describe('getMarketplaceRepoSlug', () => {
   });
 
   it('derives owner/repo without the url: prefix', () => {
-    expect(getMarketplaceRepoSlug('https://github.com/org/repo')).toBe('org/repo');
+    expect(getMarketplaceRepoSlug('https://github.com/org/repo')).toBe(
+      'org/repo',
+    );
   });
 
   it('strips a .git suffix', () => {
-    expect(getMarketplaceRepoSlug('url:https://github.com/org/repo.git')).toBe('org/repo');
+    expect(getMarketplaceRepoSlug('url:https://github.com/org/repo.git')).toBe(
+      'org/repo',
+    );
   });
 
   it.each([
@@ -228,9 +271,14 @@ describe('getMarketplaceAddCommands', () => {
       ['claude-code', 'github-copilot'],
       'org/repo',
     );
-    expect(commands.map(({ framework, command }) => ({ framework, command }))).toEqual([
+    expect(
+      commands.map(({ framework, command }) => ({ framework, command })),
+    ).toEqual([
       { framework: 'claude-code', command: '/plugin marketplace add org/repo' },
-      { framework: 'github-copilot', command: 'copilot plugin marketplace add org/repo' },
+      {
+        framework: 'github-copilot',
+        command: 'copilot plugin marketplace add org/repo',
+      },
     ]);
   });
 
@@ -242,7 +290,9 @@ describe('getMarketplaceAddCommands', () => {
     expect(claude.deepLinks).toEqual([
       {
         label: 'Claude',
-        href: `claude-cli://open?q=${encodeURIComponent('/plugin marketplace add org/repo')}`,
+        href: `claude-cli://open?q=${encodeURIComponent(
+          '/plugin marketplace add org/repo',
+        )}`,
       },
     ]);
     expect(copilot.deepLinks).toEqual([]);
@@ -250,15 +300,16 @@ describe('getMarketplaceAddCommands', () => {
 
   it('expands "all" and an empty list to every capable framework', () => {
     for (const frameworks of [['all'], []]) {
-      expect(getMarketplaceAddCommands(frameworks, 'org/repo').map(c => c.framework)).toEqual([
-        'claude-code',
-        'github-copilot',
-      ]);
+      expect(
+        getMarketplaceAddCommands(frameworks, 'org/repo').map(c => c.framework),
+      ).toEqual(['claude-code', 'github-copilot']);
     }
   });
 
   it('produces no row for frameworks without a marketplace concept', () => {
-    expect(getMarketplaceAddCommands(['cursor', 'google-gemini'], 'org/repo')).toEqual([]);
+    expect(
+      getMarketplaceAddCommands(['cursor', 'google-gemini'], 'org/repo'),
+    ).toEqual([]);
   });
 
   it('normalises aliases', () => {
@@ -288,7 +339,10 @@ describe('getAgentInstallLinks', () => {
           `Install this agent: fetch ${rawUrl} and save it to .claude/agents/api-architect.md`,
         )}`,
       },
-      { label: 'VS Code', href: `vscode:chat-agent/install?url=${encodedRawUrl}` },
+      {
+        label: 'VS Code',
+        href: `vscode:chat-agent/install?url=${encodedRawUrl}`,
+      },
       {
         label: 'VS Code Insiders',
         href: `vscode-insiders:chat-agent/install?url=${encodedRawUrl}`,
@@ -315,7 +369,9 @@ describe('getMcpInstallLinks', () => {
   const config = '{"type":"http","url":"http://localhost:8080/mcp"}';
 
   it('derives host links from the mcpServers body, following frameworks', () => {
-    expect(getMcpInstallLinks(['claude-code', 'cursor'], 'grafana-mcp', body)).toEqual([
+    expect(
+      getMcpInstallLinks(['claude-code', 'cursor'], 'grafana-mcp', body),
+    ).toEqual([
       {
         label: 'Claude',
         href: `claude-cli://open?q=${encodeURIComponent(
@@ -324,7 +380,9 @@ describe('getMcpInstallLinks', () => {
       },
       {
         label: 'Cursor',
-        href: `cursor://anysphere.cursor-deeplink/mcp/install?name=grafana&config=${btoa(config)}`,
+        href: `cursor://anysphere.cursor-deeplink/mcp/install?name=grafana&config=${btoa(
+          config,
+        )}`,
       },
     ]);
   });
@@ -336,15 +394,18 @@ describe('getMcpInstallLinks', () => {
     );
     expect(links).toEqual([
       { label: 'VS Code', href: `vscode:mcp/install?${vsConfig}` },
-      { label: 'VS Code Insiders', href: `vscode-insiders:mcp/install?${vsConfig}` },
+      {
+        label: 'VS Code Insiders',
+        href: `vscode-insiders:mcp/install?${vsConfig}`,
+      },
     ]);
   });
 
   it('expands empty, "all", and unknown-only framework lists to every capable host', () => {
     for (const frameworks of [[], ['all'], ['google-gemini']]) {
-      expect(getMcpInstallLinks(frameworks, 'grafana-mcp', body).map(l => l.label)).toEqual(
-        ['Claude', 'VS Code', 'VS Code Insiders', 'Cursor'],
-      );
+      expect(
+        getMcpInstallLinks(frameworks, 'grafana-mcp', body).map(l => l.label),
+      ).toEqual(['Claude', 'VS Code', 'VS Code Insiders', 'Cursor']);
     }
   });
 
@@ -353,7 +414,9 @@ describe('getMcpInstallLinks', () => {
     expect(links).toEqual([
       {
         label: 'Cursor',
-        href: `cursor://anysphere.cursor-deeplink/mcp/install?name=grafana-mcp&config=${btoa(config)}`,
+        href: `cursor://anysphere.cursor-deeplink/mcp/install?name=grafana-mcp&config=${btoa(
+          config,
+        )}`,
       },
     ]);
   });
@@ -366,7 +429,9 @@ describe('getMcpInstallLinks', () => {
     [JSON.stringify({ mcpServers: {} })],
     [JSON.stringify({ mcpServers: { a: { url: 'x' }, b: { url: 'y' } } })],
   ])('is empty for body %s (copy fallback)', input => {
-    expect(getMcpInstallLinks([], 'grafana-mcp', input as string | undefined)).toEqual([]);
+    expect(
+      getMcpInstallLinks([], 'grafana-mcp', input as string | undefined),
+    ).toEqual([]);
   });
 });
 

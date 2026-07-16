@@ -562,5 +562,6 @@ it('matches snapshot', async () => {
 ## Official Documentation
 
 For the latest testing guidance:
+
 - [Frontend System Testing](https://backstage.io/docs/frontend-system/building-plugins/testing/)
 - [Testing with Jest](https://backstage.io/docs/plugins/testing/)

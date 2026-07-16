@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-node@v6.3.0 # v6.3.0
         with:
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
+          registry-url: https://registry.npmjs.org
 
       - name: Enable Corepack & activate Yarn
         run: |

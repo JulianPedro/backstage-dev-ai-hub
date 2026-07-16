@@ -63,17 +63,27 @@ const PROVIDER: ProviderConfig = {
 
 function makeStoreMock(overrides: Partial<AiAssetStore> = {}): AiAssetStore {
   return {
-    listAssets: jest.fn().mockResolvedValue({ items: [ASSET_SUMMARY], totalCount: 1 }),
-    getAsset: jest.fn().mockImplementation(async (id: string) =>
-      id === 'asset-123' ? ASSET_FULL : null,
-    ),
+    listAssets: jest
+      .fn()
+      .mockResolvedValue({ items: [ASSET_SUMMARY], totalCount: 1 }),
+    getAsset: jest
+      .fn()
+      .mockImplementation(async (id: string) =>
+        id === 'asset-123' ? ASSET_FULL : null,
+      ),
     incrementInstallCount: jest.fn().mockResolvedValue(undefined),
-    getAllSyncStatuses: jest.fn().mockResolvedValue([
-      { providerId: 'provider-1', status: 'idle', assetCount: 1 },
-    ]),
-    getSyncStatus: jest.fn().mockImplementation(async (id: string) =>
-      id === 'provider-1' ? { providerId: 'provider-1', status: 'idle', assetCount: 1 } : null,
-    ),
+    getAllSyncStatuses: jest
+      .fn()
+      .mockResolvedValue([
+        { providerId: 'provider-1', status: 'idle', assetCount: 1 },
+      ]),
+    getSyncStatus: jest
+      .fn()
+      .mockImplementation(async (id: string) =>
+        id === 'provider-1'
+          ? { providerId: 'provider-1', status: 'idle', assetCount: 1 }
+          : null,
+      ),
     getStats: jest.fn().mockResolvedValue({
       totalAssets: 1,
       byType: { instruction: 1, agent: 0, skill: 0, workflow: 0 },
@@ -139,14 +149,24 @@ describe('router smoke tests (path-to-regexp route matching)', () => {
       const { app } = makeApp();
       const res = await request(app).get('/assets');
       expect(res.status).toBe(200);
-      expect(res.body).toMatchObject({ items: expect.any(Array), totalCount: 1 });
+      expect(res.body).toMatchObject({
+        items: expect.any(Array),
+        totalCount: 1,
+      });
     });
 
     it('forwards query parameters to the store', async () => {
       const { app, store } = makeApp();
-      await request(app).get('/assets?type=instruction&search=test&page=2&pageSize=5');
+      await request(app).get(
+        '/assets?type=instruction&search=test&page=2&pageSize=5',
+      );
       expect(store.listAssets).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'instruction', search: 'test', page: 2, pageSize: 5 }),
+        expect.objectContaining({
+          type: 'instruction',
+          search: 'test',
+          page: 2,
+          pageSize: 5,
+        }),
       );
     });
   });

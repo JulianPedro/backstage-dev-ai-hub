@@ -9,9 +9,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  ci:
+  verify:
+    name: Verify
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2 # v6.0.2
@@ -26,14 +34,160 @@ jobs:
           corepack enable
           corepack prepare yarn@4.13.0 --activate
 
-      - name: Install dependencies
-        run: yarn install
+      - name: Locate Yarn cache
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
-      - name: Type-check
-        run: yarn tsc
+      - name: Cache Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
 
       - name: Lint
         run: yarn lint:all
 
+      - name: Type-check
+        run: yarn tsc
+
+      - name: Test
+        env:
+          JEST_JUNIT_OUTPUT_DIR: coverage
+          JEST_JUNIT_OUTPUT_NAME: junit.xml
+        run: >-
+          yarn test:all
+          --coverageReporters cobertura
+          --coverageReporters json-summary
+          --reporters default
+          --reporters jest-junit
+
+      # Surface the unit-test results and coverage as a single sticky PR comment.
+      # Runs even when the Test step fails (the artifacts are written either way),
+      # so a red run still reports; Build stays gated on success and is skipped.
+      - name: Report tests & coverage
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        uses: MishaKav/jest-coverage-comment@40d7aed38d0fbaea266c34c12ab06356eec894eb # v1.0.33
+        with:
+          title: Test & Coverage Report
+          coverage-summary-path: ./coverage/coverage-summary.json
+          junitxml-path: ./coverage/junit.xml
+          junitxml-title: Unit Tests
+
       - name: Build
         run: yarn build:all
+
+  pre-commit:
+    name: Pre-commit & PR Suggestions
+    # Inherently PR-scoped (posts inline suggestions) — skip on pushes.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2 # v6.0.2
+        with:
+          # Full history so pre-commit can diff the changeset (base..head).
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0 # v6.3.0
+        with:
+          node-version: "24"
+
+      - name: Enable Corepack & activate Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.13.0 --activate
+
+      - name: Locate Yarn cache
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install pre-commit
+        run: pip install pre-commit==4.6.0
+
+      # 1) Informational inline comments on the PRISTINE tree (accurate line numbers,
+      #    before the pre-commit gate mutates files via --fix).
+      - name: reviewdog yamllint
+        uses: reviewdog/action-yamllint@f01d8a48fd8d89f89895499fca2cff09f9e9e8c0 # v1.21.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          filter_mode: added
+          fail_level: none
+          yamllint_flags: -c .yamllint.yml .
+
+      - name: reviewdog markdownlint
+        uses: reviewdog/action-markdownlint@3667398db9118d7e78f7a63d10e26ce454ba5f58 # v0.26.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          filter_mode: added
+          fail_level: none
+
+      - name: reviewdog eslint
+        uses: reviewdog/action-eslint@556a3fdaf8b4201d4d74d406013386aa4f7dab96 # v1.34.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          filter_mode: added
+          fail_level: none
+          eslint_flags: .
+
+      # 2) Authoritative gate — runs only on the current changeset (base..head).
+      #    eslint is skipped here — `yarn lint:all` (verify job) is the eslint gate.
+      #    continue-on-error so we can still post suggestions, then fail explicitly.
+      - name: Run pre-commit (changed files)
+        id: precommit
+        env:
+          SKIP: eslint
+          FROM_REF: ${{ github.event.pull_request.base.sha }}
+          TO_REF: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -z "$FROM_REF" ]; then
+            # No diff base available — fall back to the full tree.
+            pre-commit run --all-files --show-diff-on-failure
+          else
+            pre-commit run --from-ref "$FROM_REF" --to-ref "$TO_REF" --show-diff-on-failure
+          fi
+        continue-on-error: true
+
+      # 3) Turn pre-commit's auto-fixes (prettier/markdownlint --fix) into committable
+      #    inline PR suggestions.
+      - name: Suggest fixes
+        uses: reviewdog/action-suggester@aa38384ceb608d00f84b4690cacc83a5aba307ff # v1.24.0
+        with:
+          tool_name: pre-commit
+          filter_mode: diff_context
+          level: warning
+
+      # 4) Single hard gate.
+      - name: Enforce pre-commit result
+        if: ${{ steps.precommit.outcome == 'failure' }}
+        run: |
+          echo "pre-commit found issues — see the gate log and PR suggestions above."
+          exit 1

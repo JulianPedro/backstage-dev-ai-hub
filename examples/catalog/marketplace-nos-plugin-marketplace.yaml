@@ -7,8 +7,8 @@ metadata:
   tags: [marketplace, curated]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.md
-    devaihub.io/compatible-frameworks: "claude-code,github-copilot"
-    devaihub.io/version: "1.0.0"
+    devaihub.io/compatible-frameworks: claude-code,github-copilot
+    devaihub.io/version: 1.0.0
 spec:
   type: marketplace
   lifecycle: production

@@ -7,7 +7,9 @@ export interface AiAssetProvider {
   /** Human-readable name */
   name: string;
   /** Fetch all assets from this provider */
-  getAssets(): Promise<Omit<AiAsset, 'id' | 'syncedAt' | 'createdAt' | 'updatedAt'>[]>;
+  getAssets(): Promise<
+    Omit<AiAsset, 'id' | 'syncedAt' | 'createdAt' | 'updatedAt'>[]
+  >;
 }
 
 export interface DevAiHubProviderExtensionPoint {

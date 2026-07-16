@@ -153,10 +153,7 @@ describe('GET /entity/:ref/raw — directory body', () => {
   });
 
   it('404s when the tree has no resolvable entry file', async () => {
-    const { app } = makeTreeApp([
-      treeFile('a.md', 'a'),
-      treeFile('b.md', 'b'),
-    ]);
+    const { app } = makeTreeApp([treeFile('a.md', 'a'), treeFile('b.md', 'b')]);
 
     const res = await request(app).get(`/entity/${ENC_REF}/raw`);
     expect(res.status).toBe(404);
@@ -237,7 +234,9 @@ describe('GET /entity/:ref/raw — error mapping', () => {
     const notFound = new Error('missing');
     notFound.name = 'NotFoundError';
     const { app } = makeApp({
-      entity: entityWithLocation('url:https://github.com/org/repo/blob/main-nos/x.md'),
+      entity: entityWithLocation(
+        'url:https://github.com/org/repo/blob/main-nos/x.md',
+      ),
       readUrl: jest.fn().mockRejectedValue(notFound),
     });
 
@@ -247,7 +246,9 @@ describe('GET /entity/:ref/raw — error mapping', () => {
 
   it('502s when the upstream read fails', async () => {
     const { app } = makeApp({
-      entity: entityWithLocation('url:https://github.com/org/repo/blob/main-nos/x.md'),
+      entity: entityWithLocation(
+        'url:https://github.com/org/repo/blob/main-nos/x.md',
+      ),
       readUrl: jest.fn().mockRejectedValue(new Error('rate limited')),
     });
 
@@ -259,7 +260,9 @@ describe('GET /entity/:ref/raw — error mapping', () => {
     const authError = new Error('Missing credentials');
     authError.name = 'AuthenticationError';
     const { app } = makeApp({
-      entity: entityWithLocation('url:https://github.com/org/repo/blob/main-nos/x.md'),
+      entity: entityWithLocation(
+        'url:https://github.com/org/repo/blob/main-nos/x.md',
+      ),
       credentials: () => Promise.reject(authError),
     });
 
@@ -274,9 +277,9 @@ describe('pickEntryFile', () => {
   });
 
   it('prefers SKILL.md among several markdown files', () => {
-    expect(
-      pickEntryFile(['SKILL.md', 'references/a.md'], 'dir'),
-    ).toBe('SKILL.md');
+    expect(pickEntryFile(['SKILL.md', 'references/a.md'], 'dir')).toBe(
+      'SKILL.md',
+    );
   });
 
   it('falls back to the directory-named markdown file', () => {

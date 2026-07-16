@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, main-nos]
     paths:
-      - 'docs/**'
+      - docs/**
   workflow_dispatch:
 
 permissions:

@@ -11,10 +11,10 @@
   }
 
   .zipInfo {
-    border: 1px solid #00D2D3;
+    border: 1px solid #00d2d3;
     border-radius: var(--bui-radius-2);
     padding: var(--bui-space-3);
-    background-color: color-mix(in srgb, #00D2D3 7%, transparent);
+    background-color: color-mix(in srgb, #00d2d3 7%, transparent);
   }
 
   .zipHeader {

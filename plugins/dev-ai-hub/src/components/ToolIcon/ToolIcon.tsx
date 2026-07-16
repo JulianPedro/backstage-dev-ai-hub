@@ -10,11 +10,12 @@ const CURSOR_PATH =
 
 type SvgTool = Exclude<AiTool, 'all' | 'cursor'>;
 
-const TOOL_ICON: Record<SvgTool, { path: string; hex: string; label: string }> = {
-  'claude-code':    { ...siAnthropic,    label: 'Claude Code' },
-  'github-copilot': { ...siGithub,       label: 'GitHub Copilot' },
-  'google-gemini':  { ...siGooglegemini, label: 'Google Gemini' },
-};
+const TOOL_ICON: Record<SvgTool, { path: string; hex: string; label: string }> =
+  {
+    'claude-code': { ...siAnthropic, label: 'Claude Code' },
+    'github-copilot': { ...siGithub, label: 'GitHub Copilot' },
+    'google-gemini': { ...siGooglegemini, label: 'Google Gemini' },
+  };
 
 interface ToolIconProps {
   tool: AiTool;
@@ -26,7 +27,13 @@ interface ToolIconProps {
   size?: number;
 }
 
-export function ToolIcon({ tool, branded = true, className, style, size = 20 }: ToolIconProps) {
+export function ToolIcon({
+  tool,
+  branded = true,
+  className,
+  style,
+  size = 20,
+}: ToolIconProps) {
   if (tool === 'all') {
     return (
       <RiInfinityLine
@@ -47,7 +54,10 @@ export function ToolIcon({ tool, branded = true, className, style, size = 20 }: 
         height={size}
         fill="currentColor"
         className={className}
-        style={{ color: branded ? 'var(--bui-fg-primary)' : 'inherit', ...style }}
+        style={{
+          color: branded ? 'var(--bui-fg-primary)' : 'inherit',
+          ...style,
+        }}
         aria-label="Cursor"
         role="img"
       >

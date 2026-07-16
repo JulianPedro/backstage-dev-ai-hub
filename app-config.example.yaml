@@ -10,10 +10,10 @@
 
 devAiHub:
   providers:
-    - id: "main-ai-assets"
-      type: "github"
-      target: "https://github.com/your-org/ai-assets-repo.git"
-      branch: "main"
+    - id: main-ai-assets
+      type: github
+      target: https://github.com/your-org/ai-assets-repo.git
+      branch: main
       schedule:
         frequency:
           minutes: 30

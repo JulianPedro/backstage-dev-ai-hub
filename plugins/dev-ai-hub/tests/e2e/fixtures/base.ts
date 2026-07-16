@@ -45,7 +45,9 @@ export const test = base.extend<object>({
     page.goto = (async (url: string, options?: Parameters<Page['goto']>[1]) => {
       const response = await originalGoto(url, options);
       const enterGuest = page.getByRole('button', { name: 'Enter' });
-      await enterGuest.waitFor({ state: 'visible', timeout: 3000 }).catch(() => null);
+      await enterGuest
+        .waitFor({ state: 'visible', timeout: 3000 })
+        .catch(() => null);
       if (await enterGuest.isVisible()) {
         await enterGuest.click();
       }

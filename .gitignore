@@ -13,6 +13,9 @@ playwright-report/
 playwright-results.json
 **/.auth.json
 
+# E2E screenshot gallery (captured per run; published to the screenshots branch)
+e2e-screenshots/
+
 # Claude Code
 .claude/
 

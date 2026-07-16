@@ -12,7 +12,7 @@ backend:
     credentials: true
   database:
     client: better-sqlite3
-    connection: ':memory:'
+    connection: ":memory:"
 
 devAiHub:
   providers:

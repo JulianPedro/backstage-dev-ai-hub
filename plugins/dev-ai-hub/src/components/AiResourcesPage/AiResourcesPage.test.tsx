@@ -147,9 +147,9 @@ describe('AiResourcesPage', () => {
     fireEvent.click(checkbox);
     expect(screen.getByRole('checkbox', { name: 'security' })).toBeChecked();
     // Trigger shows the selected tags
-    expect(screen.getByRole('button', { name: 'Filter by tags' })).toHaveTextContent(
-      '#security',
-    );
+    expect(
+      screen.getByRole('button', { name: 'Filter by tags' }),
+    ).toHaveTextContent('#security');
     expect(screen.getByText('My Skill')).toBeInTheDocument();
     expect(screen.queryByText('My Agent')).not.toBeInTheDocument();
 
@@ -196,7 +196,9 @@ describe('AiResourcesPage', () => {
     fireEvent.change(screen.getByLabelText('Search resources'), {
       target: { value: 'zzz-no-match' },
     });
-    expect(screen.getByText('No resources match the current filters.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No resources match the current filters.'),
+    ).toBeInTheDocument();
   });
 
   it('shows an error state instead of crashing', () => {

@@ -1,27 +1,63 @@
-import { useState, useRef, useEffect, type ReactNode, type ElementType } from 'react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  type ReactNode,
+  type ElementType,
+} from 'react';
 import { Box, Flex, Text, SearchField } from '@backstage/ui';
-import { RiAppsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiCheckLine } from '@remixicon/react';
-import type { AssetType, AiTool, AiHubProvider } from '@nospt/plugin-dev-ai-hub-common';
+import {
+  RiAppsLine,
+  RiArticleLine,
+  RiRobot2Line,
+  RiToolsLine,
+  RiGitBranchLine,
+  RiCheckLine,
+} from '@remixicon/react';
+import type {
+  AssetType,
+  AiTool,
+  AiHubProvider,
+} from '@nospt/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import styles from './AssetFilters.module.css';
 
-const ASSET_TYPE_OPTIONS: { value: AssetType | 'all'; label: string; color: string; Icon: ElementType }[] = [
-  { value: 'all',         label: 'All Types',     color: '#DCDDE1', Icon: RiAppsLine },
-  { value: 'instruction', label: 'Instructions',  color: '#54A0FF', Icon: RiArticleLine },
-  { value: 'agent',       label: 'Agents',        color: '#FF6B9D', Icon: RiRobot2Line },
-  { value: 'skill',       label: 'Skills',        color: '#6AB04C', Icon: RiToolsLine },
-  { value: 'workflow',    label: 'Workflows',     color: '#F9CA24', Icon: RiGitBranchLine },
+const ASSET_TYPE_OPTIONS: {
+  value: AssetType | 'all';
+  label: string;
+  color: string;
+  Icon: ElementType;
+}[] = [
+  { value: 'all', label: 'All Types', color: '#DCDDE1', Icon: RiAppsLine },
+  {
+    value: 'instruction',
+    label: 'Instructions',
+    color: '#54A0FF',
+    Icon: RiArticleLine,
+  },
+  { value: 'agent', label: 'Agents', color: '#FF6B9D', Icon: RiRobot2Line },
+  { value: 'skill', label: 'Skills', color: '#6AB04C', Icon: RiToolsLine },
+  {
+    value: 'workflow',
+    label: 'Workflows',
+    color: '#F9CA24',
+    Icon: RiGitBranchLine,
+  },
 ];
 
 const AI_TOOL_OPTIONS: { value: AiTool | 'all'; label: string }[] = [
-  { value: 'all',            label: 'All Tools' },
-  { value: 'claude-code',    label: 'Claude Code' },
+  { value: 'all', label: 'All Tools' },
+  { value: 'claude-code', label: 'Claude Code' },
   { value: 'github-copilot', label: 'GitHub Copilot' },
-  { value: 'google-gemini',  label: 'Google Gemini' },
-  { value: 'cursor',         label: 'Cursor' },
+  { value: 'google-gemini', label: 'Google Gemini' },
+  { value: 'cursor', label: 'Cursor' },
 ];
 
-function useDropdownClose(ref: React.RefObject<HTMLElement | null>, onClose: () => void, open: boolean) {
+function useDropdownClose(
+  ref: React.RefObject<HTMLElement | null>,
+  onClose: () => void,
+  open: boolean,
+) {
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
@@ -42,7 +78,12 @@ function useDropdownClose(ref: React.RefObject<HTMLElement | null>, onClose: () 
   }, [open, ref, onClose]);
 }
 
-function IconSelectBox<T extends string>({ value: selected, options, onChange, ariaLabel }: {
+function IconSelectBox<T extends string>({
+  value: selected,
+  options,
+  onChange,
+  ariaLabel,
+}: {
   value: T;
   options: { value: T; label: string; icon: ReactNode }[];
   onChange: (v: T) => void;
@@ -71,19 +112,30 @@ function IconSelectBox<T extends string>({ value: selected, options, onChange, a
         <span className={styles.tagsDropdownArrow}>▾</span>
       </button>
       {open && (
-        <div className={styles.tagsDropdownPanel} role="listbox" aria-label={ariaLabel}>
+        <div
+          className={styles.tagsDropdownPanel}
+          role="listbox"
+          aria-label={ariaLabel}
+        >
           {options.map(opt => (
             <button
               key={opt.value}
               type="button"
               role="option"
               aria-selected={opt.value === selected}
-              className={`${styles.iconSelectItem} ${opt.value === selected ? styles.iconSelectItemActive : ''}`}
-              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`${styles.iconSelectItem} ${
+                opt.value === selected ? styles.iconSelectItemActive : ''
+              }`}
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
             >
               <span className={styles.iconSelectItemIcon}>{opt.icon}</span>
               <span>{opt.label}</span>
-              {opt.value === selected && <RiCheckLine size={14} className={styles.iconSelectCheck} />}
+              {opt.value === selected && (
+                <RiCheckLine size={14} className={styles.iconSelectCheck} />
+              )}
             </button>
           ))}
         </div>
@@ -92,7 +144,11 @@ function IconSelectBox<T extends string>({ value: selected, options, onChange, a
   );
 }
 
-function TagsFilterBox({ selectedTags, availableTags, onChange }: {
+function TagsFilterBox({
+  selectedTags,
+  availableTags,
+  onChange,
+}: {
   selectedTags: string[];
   availableTags: string[];
   onChange: (tags: string[]) => void;
@@ -103,16 +159,24 @@ function TagsFilterBox({ selectedTags, availableTags, onChange }: {
   useDropdownClose(containerRef, () => setOpen(false), open);
 
   const allTags = Array.from(new Set([...availableTags, ...selectedTags]));
-  const filtered = allTags.filter(t => t.toLowerCase().includes(search.toLowerCase()));
+  const filtered = allTags.filter(t =>
+    t.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const toggleTag = (tag: string) => {
-    onChange(selectedTags.includes(tag) ? selectedTags.filter(t => t !== tag) : [...selectedTags, tag]);
+    onChange(
+      selectedTags.includes(tag)
+        ? selectedTags.filter(t => t !== tag)
+        : [...selectedTags, tag],
+    );
   };
 
-  const triggerLabel = selectedTags.length > 0
-    ? selectedTags.map(t => `#${t}`).join(' ')
-    : 'All Tags';
-  const showZeroResultsHint = availableTags.length === 0 && selectedTags.length > 0;
+  const triggerLabel =
+    selectedTags.length > 0
+      ? selectedTags.map(t => `#${t}`).join(' ')
+      : 'All Tags';
+  const showZeroResultsHint =
+    availableTags.length === 0 && selectedTags.length > 0;
 
   return (
     <div ref={containerRef} className={styles.tagsDropdown}>
@@ -128,10 +192,16 @@ function TagsFilterBox({ selectedTags, availableTags, onChange }: {
         <span className={styles.tagsDropdownArrow}>▾</span>
       </button>
       {showZeroResultsHint && (
-        <p className={styles.tagsDropdownNoResults}>Clear tags to see results…</p>
+        <p className={styles.tagsDropdownNoResults}>
+          Clear tags to see results…
+        </p>
       )}
       {open && (
-        <div className={styles.tagsDropdownPanel} role="dialog" aria-label="Filter by tags">
+        <div
+          className={styles.tagsDropdownPanel}
+          role="dialog"
+          aria-label="Filter by tags"
+        >
           <input
             type="search"
             className={styles.tagsDropdownSearch}
@@ -141,7 +211,9 @@ function TagsFilterBox({ selectedTags, availableTags, onChange }: {
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
-          <div className={styles.tagsDropdownSectionLabel}>FILTER YOUR SEARCH</div>
+          <div className={styles.tagsDropdownSectionLabel}>
+            FILTER YOUR SEARCH
+          </div>
           <div className={styles.tagsDropdownList}>
             {filtered.length === 0 && (
               <div className={styles.tagsDropdownNoResults}>No tags found</div>
@@ -180,7 +252,12 @@ interface AssetFiltersProps {
   providers?: AiHubProvider[];
 }
 
-export function AssetFilters({ value, onChange, availableTags = [], providers }: AssetFiltersProps) {
+export function AssetFilters({
+  value,
+  onChange,
+  availableTags = [],
+  providers,
+}: AssetFiltersProps) {
   const selectedType = value.types.length === 1 ? value.types[0] : 'all';
   const selectedTool = value.tools.length === 1 ? value.tools[0] : 'all';
   const showProviderFilter = providers && providers.length > 1;
@@ -189,7 +266,11 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
     { value: 'all', label: 'All Providers' },
     ...(providers ?? []).map(p => ({
       value: p.id,
-      label: p.target.split('/').slice(-1)[0]?.replace(/\.git$/, '') ?? p.id,
+      label:
+        p.target
+          .split('/')
+          .slice(-1)[0]
+          ?.replace(/\.git$/, '') ?? p.id,
     })),
   ];
 
@@ -202,9 +283,15 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
   const toolSelectOptions = AI_TOOL_OPTIONS.map(t => ({
     value: t.value,
     label: t.label,
-    icon: t.value !== 'all'
-      ? <ToolIcon tool={t.value as AiTool} branded size={14} />
-      : <RiAppsLine size={14} style={{ color: 'var(--bui-fg-secondary)', flexShrink: 0 }} />,
+    icon:
+      t.value !== 'all' ? (
+        <ToolIcon tool={t.value as AiTool} branded size={14} />
+      ) : (
+        <RiAppsLine
+          size={14}
+          style={{ color: 'var(--bui-fg-secondary)', flexShrink: 0 }}
+        />
+      ),
   }));
 
   return (
@@ -220,34 +307,56 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
       <Flex className={styles.filtersRow}>
         {/* Type filter */}
         <Box className={styles.filterBox}>
-          <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
+          <Text
+            variant="body-x-small"
+            color="secondary"
+            className={styles.filterLabel}
+          >
             Type
           </Text>
           <IconSelectBox
             ariaLabel="Filter by type"
             value={selectedType}
             options={typeSelectOptions}
-            onChange={key => onChange({ ...value, types: key === 'all' ? [] : [key as AssetType] })}
+            onChange={key =>
+              onChange({
+                ...value,
+                types: key === 'all' ? [] : [key as AssetType],
+              })
+            }
           />
         </Box>
 
         {/* AI Tool filter */}
         <Box className={styles.filterBox}>
-          <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
+          <Text
+            variant="body-x-small"
+            color="secondary"
+            className={styles.filterLabel}
+          >
             AI Tool
           </Text>
           <IconSelectBox
             ariaLabel="Filter by AI tool"
             value={selectedTool}
             options={toolSelectOptions}
-            onChange={key => onChange({ ...value, tools: key === 'all' ? [] : [key as AiTool] })}
+            onChange={key =>
+              onChange({
+                ...value,
+                tools: key === 'all' ? [] : [key as AiTool],
+              })
+            }
           />
         </Box>
 
         {/* Provider filter — only shown when there are 2+ providers */}
         {showProviderFilter && (
           <Box className={styles.filterBox}>
-            <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
+            <Text
+              variant="body-x-small"
+              color="secondary"
+              className={styles.filterLabel}
+            >
               Provider
             </Text>
             <IconSelectBox
@@ -256,9 +365,19 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
               options={providerOptions.map(p => ({
                 value: p.value,
                 label: p.label,
-                icon: <RiAppsLine size={14} style={{ color: 'var(--bui-fg-secondary)', flexShrink: 0 }} />,
+                icon: (
+                  <RiAppsLine
+                    size={14}
+                    style={{ color: 'var(--bui-fg-secondary)', flexShrink: 0 }}
+                  />
+                ),
               }))}
-              onChange={key => onChange({ ...value, providerId: key === 'all' ? undefined : key })}
+              onChange={key =>
+                onChange({
+                  ...value,
+                  providerId: key === 'all' ? undefined : key,
+                })
+              }
             />
           </Box>
         )}
@@ -266,7 +385,11 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
         {/* Tags filter */}
         {(availableTags.length > 0 || value.tags.length > 0) && (
           <Box className={styles.filterBox}>
-            <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
+            <Text
+              variant="body-x-small"
+              color="secondary"
+              className={styles.filterLabel}
+            >
               Tags
             </Text>
             <TagsFilterBox

@@ -15,7 +15,11 @@ import styles from './AiResourcesPage.module.css';
 
 const PAGE_SIZE = 24;
 
-const DEFAULT_FILTERS: ResourceFiltersValue = { search: '', framework: undefined, tags: [] };
+const DEFAULT_FILTERS: ResourceFiltersValue = {
+  search: '',
+  framework: undefined,
+  tags: [],
+};
 
 function matchesSearch(r: ResourceSummary, query: string): boolean {
   const q = query.trim().toLowerCase();
@@ -30,7 +34,9 @@ function matchesSearch(r: ResourceSummary, query: string): boolean {
 
 export function AiResourcesPage() {
   const { items, error, loading } = useResources();
-  const [typeFilter, setTypeFilter] = useState<ResourceType | undefined>(undefined);
+  const [typeFilter, setTypeFilter] = useState<ResourceType | undefined>(
+    undefined,
+  );
   const [filters, setFilters] = useState<ResourceFiltersValue>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
 
@@ -52,7 +58,10 @@ export function AiResourcesPage() {
     });
 
   const counts = useMemo(() => {
-    const c = Object.fromEntries(RESOURCE_TYPES.map(t => [t, 0])) as Record<ResourceType, number>;
+    const c = Object.fromEntries(RESOURCE_TYPES.map(t => [t, 0])) as Record<
+      ResourceType,
+      number
+    >;
     (items ?? []).forEach(r => {
       c[r.type] += 1;
     });
@@ -75,7 +84,8 @@ export function AiResourcesPage() {
         r =>
           (!typeFilter || r.type === typeFilter) &&
           (!filters.framework || r.frameworks.includes(filters.framework)) &&
-          (filters.tags.length === 0 || filters.tags.every(t => r.tags.includes(t))) &&
+          (filters.tags.length === 0 ||
+            filters.tags.every(t => r.tags.includes(t))) &&
           matchesSearch(r, filters.search),
       ),
     [items, typeFilter, filters],
@@ -100,7 +110,11 @@ export function AiResourcesPage() {
 
   return (
     <div className={styles.pageRoot}>
-      <StatTiles counts={counts} activeType={typeFilter} onToggle={handleTileToggle} />
+      <StatTiles
+        counts={counts}
+        activeType={typeFilter}
+        onToggle={handleTileToggle}
+      />
 
       <ResourceFilters
         value={filters}
@@ -112,7 +126,10 @@ export function AiResourcesPage() {
       {loading && (
         <div className={styles.grid}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} style={{ height: 170, borderRadius: 'var(--bui-radius-2)' }} />
+            <Skeleton
+              key={i}
+              style={{ height: 170, borderRadius: 'var(--bui-radius-2)' }}
+            />
           ))}
         </div>
       )}
@@ -137,7 +154,11 @@ export function AiResourcesPage() {
           </Box>
           <div className={styles.grid}>
             {pageItems.map(r => (
-              <ResourceCard key={r.entityRef} resource={r} onView={openDetail} />
+              <ResourceCard
+                key={r.entityRef}
+                resource={r}
+                onView={openDetail}
+              />
             ))}
           </div>
           {totalPages > 1 && (

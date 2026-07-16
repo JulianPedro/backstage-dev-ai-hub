@@ -9,7 +9,10 @@ import type { CatalogService } from '@backstage/plugin-catalog-node';
 import type { AiAssetStore } from './database/AiAssetStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import type { ProviderConfig, AssetListFilter } from './types';
-import type { AssetType, ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
+import type {
+  AssetType,
+  ResourceSummary,
+} from '@nospt/plugin-dev-ai-hub-common';
 import { toResourceSummary } from './service/toResourceSummary';
 import {
   SOURCE_LOCATION_ANNOTATION,
@@ -150,7 +153,12 @@ export function createRouter(options: RouterOptions): express.Router {
 
       // Multi-file artifact: one zip (ADR-0009 — interim, not the golden road).
       if (body.files.length === 1) {
-        sendBodyFile(res, body.files[0].path, await body.files[0].content(), true);
+        sendBodyFile(
+          res,
+          body.files[0].path,
+          await body.files[0].content(),
+          true,
+        );
         return;
       }
       res.setHeader('Content-Type', 'application/zip');
@@ -160,7 +168,9 @@ export function createRouter(options: RouterOptions): express.Router {
       );
       const archive = archiver('zip');
       archive.on('error', error => {
-        options.logger.error(`Zip assembly failed for ${req.params.ref}: ${error}`);
+        options.logger.error(
+          `Zip assembly failed for ${req.params.ref}: ${error}`,
+        );
         res.destroy(error);
       });
       archive.pipe(res);
@@ -252,7 +262,10 @@ export function createRouter(options: RouterOptions): express.Router {
         return;
       }
       const filename = `${asset.name.replace(/[^a-zA-Z0-9_-]+/g, '_')}.md`;
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${filename}"`,
+      );
       res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
       res.send(asset.content ?? '');
     } catch (err) {
@@ -271,7 +284,10 @@ export function createRouter(options: RouterOptions): express.Router {
       await store.incrementInstallCount(req.params.id);
       res.sendStatus(204);
     } catch (err) {
-      options.logger.error('POST /assets/:id/track-install failed', err as Error);
+      options.logger.error(
+        'POST /assets/:id/track-install failed',
+        err as Error,
+      );
       res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -279,7 +295,14 @@ export function createRouter(options: RouterOptions): express.Router {
   // ── Providers ─────────────────────────────────────────────────────────────
 
   router.get('/providers', (_req, res) => {
-    res.json(providers.map(p => ({ id: p.id, type: p.type, target: p.target, branch: p.branch })));
+    res.json(
+      providers.map(p => ({
+        id: p.id,
+        type: p.type,
+        target: p.target,
+        branch: p.branch,
+      })),
+    );
   });
 
   router.get('/providers/:id/status', async (req, res) => {

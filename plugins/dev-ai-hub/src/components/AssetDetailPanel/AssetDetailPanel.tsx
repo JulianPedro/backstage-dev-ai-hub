@@ -2,16 +2,34 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
-  Alert, Box, Flex, Text, Button, ButtonIcon, Tag, TagGroup, Skeleton, Link,
-  Tabs, TabList, Tab, TabPanel,
+  Alert,
+  Box,
+  Flex,
+  Text,
+  Button,
+  ButtonIcon,
+  Tag,
+  TagGroup,
+  Skeleton,
+  Link,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanel,
 } from '@backstage/ui';
-import { RiCloseLine, RiFileCopyLine, RiFolderZipLine, RiExternalLinkLine } from '@remixicon/react';
+import {
+  RiCloseLine,
+  RiFileCopyLine,
+  RiFolderZipLine,
+  RiExternalLinkLine,
+} from '@remixicon/react';
 import type { AssetType } from '@nospt/plugin-dev-ai-hub-common';
 import { useAssetDetail } from '../../hooks';
 import styles from './AssetDetailPanel.module.css';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const SyntaxHighlighter = require('react-syntax-highlighter/dist/esm/prism').default;
+const SyntaxHighlighter =
+  require('react-syntax-highlighter/dist/esm/prism').default;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { oneLight } = require('react-syntax-highlighter/dist/esm/styles/prism');
 
@@ -33,9 +51,9 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
 
   const handleCopy = () => {
     if (!asset) return;
-    navigator.clipboard.writeText(asset.content).then(() =>
-      setSnackbar('Markdown copied to clipboard!'),
-    );
+    navigator.clipboard
+      .writeText(asset.content)
+      .then(() => setSnackbar('Markdown copied to clipboard!'));
   };
 
   if (!assetId) return null;
@@ -102,7 +120,12 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
 
             <Box className={styles.contentArea}>
               {loading && (
-                <Flex style={{ justifyContent: 'center', paddingTop: 'var(--bui-space-8)' }}>
+                <Flex
+                  style={{
+                    justifyContent: 'center',
+                    paddingTop: 'var(--bui-space-8)',
+                  }}
+                >
                   <Skeleton style={{ width: '100%', height: 200 }} />
                 </Flex>
               )}
@@ -114,9 +137,15 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          pre: ({ children }) => <div className={styles.codeBlockWrapper}>{children}</div>,
+                          pre: ({ children }) => (
+                            <div className={styles.codeBlockWrapper}>
+                              {children}
+                            </div>
+                          ),
                           code({ className, children }) {
-                            const match = /language-(\w+)/.exec(className || '');
+                            const match = /language-(\w+)/.exec(
+                              className || '',
+                            );
                             const code = String(children).replace(/\n$/, '');
                             const isBlock = code.includes('\n') || !!match;
                             return isBlock ? (
@@ -150,9 +179,15 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                       <MetaRow label="Version" value={asset.version} />
                       <MetaRow label="Provider" value={asset.providerId} />
                       {asset.commitSha && (
-                        <MetaRow label="Commit" value={asset.commitSha.slice(0, 8)} />
+                        <MetaRow
+                          label="Commit"
+                          value={asset.commitSha.slice(0, 8)}
+                        />
                       )}
-                      <MetaRow label="Last synced" value={new Date(asset.syncedAt).toLocaleString()} />
+                      <MetaRow
+                        label="Last synced"
+                        value={new Date(asset.syncedAt).toLocaleString()}
+                      />
                       <MetaRow label="Branch" value={asset.branch} />
 
                       <hr className={styles.divider} />
@@ -164,7 +199,9 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                         <Flex className={styles.chipsRow}>
                           <TagGroup aria-label="Compatible tools">
                             {asset.tools.map(t => (
-                              <Tag key={t} id={t} size="small">{t}</Tag>
+                              <Tag key={t} id={t} size="small">
+                                {t}
+                              </Tag>
                             ))}
                           </TagGroup>
                         </Flex>
@@ -178,7 +215,9 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                           <Flex className={styles.chipsRow}>
                             <TagGroup aria-label="Tags">
                               {asset.tags.map(t => (
-                                <Tag key={t} id={t} size="small">{t}</Tag>
+                                <Tag key={t} id={t} size="small">
+                                  {t}
+                                </Tag>
                               ))}
                             </TagGroup>
                           </Flex>
@@ -190,23 +229,52 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                           <hr className={styles.divider} />
                           <Box>
                             <Flex className={styles.bundledHeader}>
-                              <RiFolderZipLine size={14} style={{ color: 'var(--bui-fg-secondary)' }} />
+                              <RiFolderZipLine
+                                size={14}
+                                style={{ color: 'var(--bui-fg-secondary)' }}
+                              />
                               <Text variant="body-small" color="secondary">
                                 Bundled files
                               </Text>
                             </Flex>
-                            {asset.resourcesContent && Object.keys(asset.resourcesContent).length > 0 ? (
-                              <Flex direction="column" style={{ gap: 'var(--bui-space-1)', marginTop: 'var(--bui-space-1)' }}>
+                            {asset.resourcesContent &&
+                            Object.keys(asset.resourcesContent).length > 0 ? (
+                              <Flex
+                                direction="column"
+                                style={{
+                                  gap: 'var(--bui-space-1)',
+                                  marginTop: 'var(--bui-space-1)',
+                                }}
+                              >
                                 <TagGroup aria-label="Bundled files">
                                   <Flex className={styles.chipsRow}>
-                                    <Tag id="skill-md" size="small" style={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}>
+                                    <Tag
+                                      id="skill-md"
+                                      size="small"
+                                      style={{
+                                        fontFamily: 'monospace',
+                                        fontSize: '0.7rem',
+                                        height: 20,
+                                      }}
+                                    >
                                       SKILL.md
                                     </Tag>
-                                    {Object.keys(asset.resourcesContent).map(p => (
-                                      <Tag key={p} id={p} size="small" style={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}>
-                                        {p}
-                                      </Tag>
-                                    ))}
+                                    {Object.keys(asset.resourcesContent).map(
+                                      p => (
+                                        <Tag
+                                          key={p}
+                                          id={p}
+                                          size="small"
+                                          style={{
+                                            fontFamily: 'monospace',
+                                            fontSize: '0.7rem',
+                                            height: 20,
+                                          }}
+                                        >
+                                          {p}
+                                        </Tag>
+                                      ),
+                                    )}
                                   </Flex>
                                 </TagGroup>
                                 <Text variant="body-small" color="secondary">
@@ -216,7 +284,15 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                             ) : (
                               <TagGroup aria-label="Bundled files">
                                 <Flex className={styles.chipsRow}>
-                                  <Tag id="skill-md-only" size="small" style={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}>
+                                  <Tag
+                                    id="skill-md-only"
+                                    size="small"
+                                    style={{
+                                      fontFamily: 'monospace',
+                                      fontSize: '0.7rem',
+                                      height: 20,
+                                    }}
+                                  >
                                     SKILL.md
                                   </Tag>
                                 </Flex>
@@ -247,9 +323,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                   </TabPanel>
 
                   <TabPanel id="raw">
-                    <pre className={styles.rawYaml}>
-                      {asset.yamlRaw}
-                    </pre>
+                    <pre className={styles.rawYaml}>{asset.yamlRaw}</pre>
                   </TabPanel>
                 </>
               )}
@@ -258,11 +332,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
 
           {/* Actions */}
           <Flex className={styles.actions}>
-            <Button
-              variant="primary"
-              onClick={handleCopy}
-              isDisabled={!asset}
-            >
+            <Button variant="primary" onClick={handleCopy} isDisabled={!asset}>
               <RiFileCopyLine size={16} />
               Copy Markdown
             </Button>
@@ -290,11 +360,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
             zIndex: 1400,
           }}
         >
-          <Alert
-            status="success"
-            icon
-            description={snackbar}
-          />
+          <Alert status="success" icon description={snackbar} />
         </div>
       )}
     </>
@@ -304,10 +370,16 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <Flex className={styles.metaRow}>
-      <Text variant="body-medium" color="secondary" className={styles.metaLabel}>
+      <Text
+        variant="body-medium"
+        color="secondary"
+        className={styles.metaLabel}
+      >
         {label}:
       </Text>
-      <Text variant="body-medium" weight="bold">{value}</Text>
+      <Text variant="body-medium" weight="bold">
+        {value}
+      </Text>
     </Flex>
   );
 }

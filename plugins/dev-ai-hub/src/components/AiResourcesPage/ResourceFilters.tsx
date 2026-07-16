@@ -76,7 +76,11 @@ function IconSelectBox<T extends string>({
         <span className={styles.tagsDropdownArrow}>▾</span>
       </button>
       {open && (
-        <div className={styles.tagsDropdownPanel} role="listbox" aria-label={ariaLabel}>
+        <div
+          className={styles.tagsDropdownPanel}
+          role="listbox"
+          aria-label={ariaLabel}
+        >
           {options.map(opt => (
             <button
               key={opt.value}
@@ -119,7 +123,9 @@ function TagsFilterBox({
   useDropdownClose(containerRef, () => setOpen(false), open);
 
   const allTags = Array.from(new Set([...availableTags, ...selectedTags]));
-  const filtered = allTags.filter(t => t.toLowerCase().includes(search.toLowerCase()));
+  const filtered = allTags.filter(t =>
+    t.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const toggleTag = (tag: string) => {
     onChange(
@@ -130,8 +136,11 @@ function TagsFilterBox({
   };
 
   const triggerLabel =
-    selectedTags.length > 0 ? selectedTags.map(t => `#${t}`).join(' ') : 'All Tags';
-  const showZeroResultsHint = availableTags.length === 0 && selectedTags.length > 0;
+    selectedTags.length > 0
+      ? selectedTags.map(t => `#${t}`).join(' ')
+      : 'All Tags';
+  const showZeroResultsHint =
+    availableTags.length === 0 && selectedTags.length > 0;
 
   return (
     <div ref={containerRef} className={styles.tagsDropdown}>
@@ -147,10 +156,16 @@ function TagsFilterBox({
         <span className={styles.tagsDropdownArrow}>▾</span>
       </button>
       {showZeroResultsHint && (
-        <p className={styles.tagsDropdownNoResults}>Clear tags to see results…</p>
+        <p className={styles.tagsDropdownNoResults}>
+          Clear tags to see results…
+        </p>
       )}
       {open && (
-        <div className={styles.tagsDropdownPanel} role="dialog" aria-label="Filter by tags">
+        <div
+          className={styles.tagsDropdownPanel}
+          role="dialog"
+          aria-label="Filter by tags"
+        >
           <input
             type="search"
             className={styles.tagsDropdownSearch}
@@ -160,7 +175,9 @@ function TagsFilterBox({
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
-          <div className={styles.tagsDropdownSectionLabel}>FILTER YOUR SEARCH</div>
+          <div className={styles.tagsDropdownSectionLabel}>
+            FILTER YOUR SEARCH
+          </div>
           <div className={styles.tagsDropdownList}>
             {filtered.length === 0 && (
               <div className={styles.tagsDropdownNoResults}>No tags found</div>
@@ -200,7 +217,12 @@ export function ResourceFilters({
     {
       value: 'all',
       label: 'All Tools',
-      icon: <RiAppsLine size={14} style={{ color: 'var(--bui-fg-secondary)', flexShrink: 0 }} />,
+      icon: (
+        <RiAppsLine
+          size={14}
+          style={{ color: 'var(--bui-fg-secondary)', flexShrink: 0 }}
+        />
+      ),
     },
     ...availableFrameworks.map(fw => ({
       value: fw,
@@ -222,7 +244,11 @@ export function ResourceFilters({
       <Flex className={styles.filtersRow}>
         {(availableTags.length > 0 || value.tags.length > 0) && (
           <Box className={styles.filterBox}>
-            <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
+            <Text
+              variant="body-x-small"
+              color="secondary"
+              className={styles.filterLabel}
+            >
               Tags
             </Text>
             <TagsFilterBox
@@ -234,7 +260,11 @@ export function ResourceFilters({
         )}
 
         <Box className={styles.filterBox}>
-          <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
+          <Text
+            variant="body-x-small"
+            color="secondary"
+            className={styles.filterLabel}
+          >
             AI Tool
           </Text>
           <IconSelectBox

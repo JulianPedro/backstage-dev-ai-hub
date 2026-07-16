@@ -432,4 +432,3 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 | Structured subtype for `agent` / `hook` / `mcp` / `plugin` / `marketplace` | Migrate annotation fields into native spec fields; drop annotations. |
 | Content-in-catalog reference (backstage/backstage#34318) | Drop the bespoke body resolver; serve body from catalog directly. |
 | AiResource graduates from alpha | Remove `/alpha` imports; drop type-guard adapters. |
-

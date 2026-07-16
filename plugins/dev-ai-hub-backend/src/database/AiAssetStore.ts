@@ -1,15 +1,29 @@
 import type { Knex } from 'knex';
-import { resolvePackagePath, type DatabaseService } from '@backstage/backend-plugin-api';
-import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter, AssetType } from '@nospt/plugin-dev-ai-hub-common';
+import {
+  resolvePackagePath,
+  type DatabaseService,
+} from '@backstage/backend-plugin-api';
+import type {
+  AiAsset,
+  AiAssetSummary,
+  AiHubStats,
+  AssetListFilter,
+  AssetType,
+} from '@nospt/plugin-dev-ai-hub-common';
 import type { AiAssetInput, SyncStatus } from '../types';
 
 export class AiAssetStore {
   private constructor(private readonly db: Knex) {}
 
-  static async create(options: { database: DatabaseService }): Promise<AiAssetStore> {
+  static async create(options: {
+    database: DatabaseService;
+  }): Promise<AiAssetStore> {
     const db = await options.database.getClient();
     await db.migrate.latest({
-      directory: resolvePackagePath('@nospt/plugin-dev-ai-hub-backend', 'migrations'),
+      directory: resolvePackagePath(
+        '@nospt/plugin-dev-ai-hub-backend',
+        'migrations',
+      ),
       loadExtensions: ['.js'],
     });
     return new AiAssetStore(db);
@@ -30,11 +44,15 @@ export class AiAssetStore {
       icon: input.icon ?? null,
       version: input.version,
       install_path: input.installPath ?? null,
-      install_paths: input.installPaths ? JSON.stringify(input.installPaths) : null,
+      install_paths: input.installPaths
+        ? JSON.stringify(input.installPaths)
+        : null,
       content: input.content,
       yaml_raw: input.yamlRaw,
       metadata: input.metadata ? JSON.stringify(input.metadata) : null,
-      resources_content: input.resourcesContent ? JSON.stringify(input.resourcesContent) : null,
+      resources_content: input.resourcesContent
+        ? JSON.stringify(input.resourcesContent)
+        : null,
       yaml_path: input.yamlPath,
       md_path: input.mdPath,
       repo_url: input.repoUrl,
@@ -60,8 +78,11 @@ export class AiAssetStore {
     }
     if (filter.tool) {
       query = query.where(function toolFilter() {
-        this.where('tools', 'like', `%"${filter.tool}"%`)
-          .orWhere('tools', 'like', `%"all"%`);
+        this.where('tools', 'like', `%"${filter.tool}"%`).orWhere(
+          'tools',
+          'like',
+          `%"all"%`,
+        );
       });
     }
     if (filter.providerId) {
@@ -94,8 +115,23 @@ export class AiAssetStore {
     const pageSize = Math.min(100, Math.max(1, filter.pageSize ?? 20));
 
     const rows = await query
-      .select('id', 'provider_id', 'name', 'label', 'description', 'type', 'tools', 'tags',
-              'author', 'icon', 'version', 'install_count', 'synced_at', 'created_at', 'updated_at')
+      .select(
+        'id',
+        'provider_id',
+        'name',
+        'label',
+        'description',
+        'type',
+        'tools',
+        'tags',
+        'author',
+        'icon',
+        'version',
+        'install_count',
+        'synced_at',
+        'created_at',
+        'updated_at',
+      )
       .orderBy('name', 'asc')
       .limit(pageSize)
       .offset((page - 1) * pageSize);
@@ -163,7 +199,11 @@ export class AiAssetStore {
   }
 
   async getStats(): Promise<AiHubStats> {
-    const rows = await this.db('ai_assets').select('type', 'tools', 'provider_id');
+    const rows = await this.db('ai_assets').select(
+      'type',
+      'tools',
+      'provider_id',
+    );
 
     const byType: Record<AssetType, number> = {
       instruction: 0,
@@ -236,9 +276,7 @@ export class AiAssetStore {
         : undefined,
       content: row.content as string,
       yamlRaw: row.yaml_raw as string,
-      metadata: row.metadata
-        ? JSON.parse(row.metadata as string)
-        : undefined,
+      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined,
       resourcesContent: row.resources_content
         ? JSON.parse(row.resources_content as string)
         : undefined,

@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage-plugin-dev-ai-hub
+  description: Dev AI Hub — Backstage plugins for browsing and installing AI assets (skills, agents, hooks, MCP servers, plugins, marketplaces).
+  annotations:
+    github.com/project-slug: nosportugal/backstage-plugin-dev-ai-hub
+spec:
+  type: library
+  owner: nosportugal
+  lifecycle: experimental

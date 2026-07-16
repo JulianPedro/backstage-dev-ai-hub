@@ -1,0 +1,38 @@
+name: Playwright Screenshots Cleanup
+
+# When a PR closes (merged or not), delete its `screenshots-pr-<N>` branch so
+# the screenshot gallery's storage stays bounded to open PRs. See the gallery
+# steps in e2e.yml for how the branch is created.
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots-cleanup-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Delete screenshots branch
+    runs-on: ubuntu-latest
+    # Only same-repo PRs ever create a screenshots branch (fork GITHUB_TOKENs are
+    # read-only), so a fork PR close has nothing to clean.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Delete screenshots-pr-<N> branch if present
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          branch="screenshots-pr-${PR_NUMBER}"
+          if gh api "repos/$repo/git/ref/heads/$branch" >/dev/null 2>&1; then
+            gh api -X DELETE "repos/$repo/git/refs/heads/$branch"
+            echo "Deleted $branch."
+          else
+            echo "No $branch to delete."
+          fi

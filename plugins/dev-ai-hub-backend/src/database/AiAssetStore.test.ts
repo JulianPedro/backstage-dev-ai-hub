@@ -96,46 +96,77 @@ describe('upsertAsset + getAsset', () => {
 
 describe('listAssets', () => {
   it('returns all assets when no filter is applied', async () => {
-    await store.upsertAsset(makeInput({ id: 'a1', name: 'Asset 1', type: 'instruction' }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'Asset 2', type: 'agent' }));
+    await store.upsertAsset(
+      makeInput({ id: 'a1', name: 'Asset 1', type: 'instruction' }),
+    );
+    await store.upsertAsset(
+      makeInput({ id: 'a2', name: 'Asset 2', type: 'agent' }),
+    );
 
-    const { items, totalCount } = await store.listAssets({ page: 1, pageSize: 20 });
+    const { items, totalCount } = await store.listAssets({
+      page: 1,
+      pageSize: 20,
+    });
     expect(totalCount).toBe(2);
     expect(items).toHaveLength(2);
   });
 
   it('filters by type', async () => {
     await store.upsertAsset(makeInput({ id: 'a1', type: 'instruction' }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'Agent', type: 'agent' }));
+    await store.upsertAsset(
+      makeInput({ id: 'a2', name: 'Agent', type: 'agent' }),
+    );
 
-    const { items, totalCount } = await store.listAssets({ type: 'agent', page: 1, pageSize: 20 });
+    const { items, totalCount } = await store.listAssets({
+      type: 'agent',
+      page: 1,
+      pageSize: 20,
+    });
     expect(totalCount).toBe(1);
     expect(items[0].type).toBe('agent');
   });
 
   it('filters by tool', async () => {
     await store.upsertAsset(makeInput({ id: 'a1', tools: ['claude-code'] }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'Copilot Asset', tools: ['github-copilot'] }));
+    await store.upsertAsset(
+      makeInput({ id: 'a2', name: 'Copilot Asset', tools: ['github-copilot'] }),
+    );
 
-    const { items } = await store.listAssets({ tool: 'claude-code', page: 1, pageSize: 20 });
+    const { items } = await store.listAssets({
+      tool: 'claude-code',
+      page: 1,
+      pageSize: 20,
+    });
     expect(items).toHaveLength(1);
     expect(items[0].id).toBe('a1');
   });
 
   it('includes assets with tool "all" in any tool filter', async () => {
     await store.upsertAsset(makeInput({ id: 'a1', tools: ['all'] }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'Copilot Asset', tools: ['github-copilot'] }));
+    await store.upsertAsset(
+      makeInput({ id: 'a2', name: 'Copilot Asset', tools: ['github-copilot'] }),
+    );
 
-    const { items } = await store.listAssets({ tool: 'claude-code', page: 1, pageSize: 20 });
+    const { items } = await store.listAssets({
+      tool: 'claude-code',
+      page: 1,
+      pageSize: 20,
+    });
     expect(items).toHaveLength(1);
     expect(items[0].id).toBe('a1');
   });
 
   it('filters by providerId', async () => {
     await store.upsertAsset(makeInput({ id: 'a1', providerId: 'provider-1' }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'P2 Asset', providerId: 'provider-2' }));
+    await store.upsertAsset(
+      makeInput({ id: 'a2', name: 'P2 Asset', providerId: 'provider-2' }),
+    );
 
-    const { items } = await store.listAssets({ providerId: 'provider-2', page: 1, pageSize: 20 });
+    const { items } = await store.listAssets({
+      providerId: 'provider-2',
+      page: 1,
+      pageSize: 20,
+    });
     expect(items).toHaveLength(1);
     expect(items[0].id).toBe('a2');
   });
@@ -144,25 +175,49 @@ describe('listAssets', () => {
     await store.upsertAsset(makeInput({ id: 'a1', name: 'Python Linting' }));
     await store.upsertAsset(makeInput({ id: 'a2', name: 'TypeScript Config' }));
 
-    const { items } = await store.listAssets({ search: 'Python', page: 1, pageSize: 20 });
+    const { items } = await store.listAssets({
+      search: 'Python',
+      page: 1,
+      pageSize: 20,
+    });
     expect(items).toHaveLength(1);
     expect(items[0].id).toBe('a1');
   });
 
   it('filters by search term (matches description)', async () => {
-    await store.upsertAsset(makeInput({ id: 'a1', description: 'Instructions for FastAPI projects' }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'React Asset', description: 'Instructions for React projects' }));
+    await store.upsertAsset(
+      makeInput({ id: 'a1', description: 'Instructions for FastAPI projects' }),
+    );
+    await store.upsertAsset(
+      makeInput({
+        id: 'a2',
+        name: 'React Asset',
+        description: 'Instructions for React projects',
+      }),
+    );
 
-    const { items } = await store.listAssets({ search: 'FastAPI', page: 1, pageSize: 20 });
+    const { items } = await store.listAssets({
+      search: 'FastAPI',
+      page: 1,
+      pageSize: 20,
+    });
     expect(items).toHaveLength(1);
     expect(items[0].id).toBe('a1');
   });
 
   it('filters by tags', async () => {
-    await store.upsertAsset(makeInput({ id: 'a1', tags: ['python', 'linting'] }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'TS Asset', tags: ['typescript'] }));
+    await store.upsertAsset(
+      makeInput({ id: 'a1', tags: ['python', 'linting'] }),
+    );
+    await store.upsertAsset(
+      makeInput({ id: 'a2', name: 'TS Asset', tags: ['typescript'] }),
+    );
 
-    const { items } = await store.listAssets({ tags: ['python'], page: 1, pageSize: 20 });
+    const { items } = await store.listAssets({
+      tags: ['python'],
+      page: 1,
+      pageSize: 20,
+    });
     expect(items).toHaveLength(1);
     expect(items[0].id).toBe('a1');
   });
@@ -172,7 +227,10 @@ describe('listAssets', () => {
       await store.upsertAsset(makeInput({ id: `a${i}`, name: `Asset ${i}` }));
     }
 
-    const { items, totalCount } = await store.listAssets({ page: 2, pageSize: 2 });
+    const { items, totalCount } = await store.listAssets({
+      page: 2,
+      pageSize: 2,
+    });
     expect(totalCount).toBe(5);
     expect(items).toHaveLength(2);
   });
@@ -202,8 +260,12 @@ describe('incrementInstallCount', () => {
 describe('deleteAssetsNotIn', () => {
   it('deletes assets from a provider that are not in the keep list', async () => {
     await store.upsertAsset(makeInput({ id: 'a1', providerId: 'p1' }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'Asset 2', providerId: 'p1' }));
-    await store.upsertAsset(makeInput({ id: 'a3', name: 'Asset 3', providerId: 'p2' }));
+    await store.upsertAsset(
+      makeInput({ id: 'a2', name: 'Asset 2', providerId: 'p1' }),
+    );
+    await store.upsertAsset(
+      makeInput({ id: 'a3', name: 'Asset 3', providerId: 'p2' }),
+    );
 
     await store.deleteAssetsNotIn('p1', ['a1']);
 
@@ -241,8 +303,17 @@ describe('sync status', () => {
   });
 
   it('updates existing sync status on conflict', async () => {
-    await store.upsertSyncStatus({ providerId: 'p1', status: 'idle', assetCount: 5 });
-    await store.upsertSyncStatus({ providerId: 'p1', status: 'error', assetCount: 0, error: 'boom' });
+    await store.upsertSyncStatus({
+      providerId: 'p1',
+      status: 'idle',
+      assetCount: 5,
+    });
+    await store.upsertSyncStatus({
+      providerId: 'p1',
+      status: 'error',
+      assetCount: 0,
+      error: 'boom',
+    });
 
     const status = await store.getSyncStatus('p1');
     expect(status!.status).toBe('error');
@@ -256,8 +327,16 @@ describe('sync status', () => {
   });
 
   it('getAllSyncStatuses returns statuses for all providers', async () => {
-    await store.upsertSyncStatus({ providerId: 'p1', status: 'idle', assetCount: 3 });
-    await store.upsertSyncStatus({ providerId: 'p2', status: 'syncing', assetCount: 7 });
+    await store.upsertSyncStatus({
+      providerId: 'p1',
+      status: 'idle',
+      assetCount: 3,
+    });
+    await store.upsertSyncStatus({
+      providerId: 'p2',
+      status: 'syncing',
+      assetCount: 7,
+    });
 
     const statuses = await store.getAllSyncStatuses();
     expect(statuses).toHaveLength(2);
@@ -268,9 +347,32 @@ describe('sync status', () => {
 
 describe('getStats', () => {
   it('returns correct totals by type, tool, and provider', async () => {
-    await store.upsertAsset(makeInput({ id: 'a1', type: 'instruction', tools: ['claude-code'], providerId: 'p1' }));
-    await store.upsertAsset(makeInput({ id: 'a2', name: 'Agent', type: 'agent', tools: ['github-copilot'], providerId: 'p1' }));
-    await store.upsertAsset(makeInput({ id: 'a3', name: 'P2 Instruction', type: 'instruction', tools: ['claude-code'], providerId: 'p2' }));
+    await store.upsertAsset(
+      makeInput({
+        id: 'a1',
+        type: 'instruction',
+        tools: ['claude-code'],
+        providerId: 'p1',
+      }),
+    );
+    await store.upsertAsset(
+      makeInput({
+        id: 'a2',
+        name: 'Agent',
+        type: 'agent',
+        tools: ['github-copilot'],
+        providerId: 'p1',
+      }),
+    );
+    await store.upsertAsset(
+      makeInput({
+        id: 'a3',
+        name: 'P2 Instruction',
+        type: 'instruction',
+        tools: ['claude-code'],
+        providerId: 'p2',
+      }),
+    );
 
     const stats = await store.getStats();
 

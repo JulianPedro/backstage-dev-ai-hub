@@ -69,7 +69,9 @@ export const devAiHubPlugin = createFrontendPlugin({
         path: 'resources',
         title: 'Resources',
         loader: () =>
-          import('./components/AiResourcesPage').then(m => <m.AiResourcesPage />),
+          import('./components/AiResourcesPage').then(m => (
+            <m.AiResourcesPage />
+          )),
       },
     }),
   ],

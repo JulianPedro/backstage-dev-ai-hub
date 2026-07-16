@@ -5,15 +5,42 @@ on:
     branches: [main, main-nos]
   pull_request:
     branches: [main, main-nos]
+    types: [opened, synchronize, reopened, ready_for_review]
+    # E2E exercises the running app — never docs-only changes.
+    paths-ignore:
+      - docs/**
+      - "**/*.md"
+  workflow_dispatch:
 
 permissions:
   contents: read
-  pull-requests: write
+
+# One run per ref/PR; supersede in-flight runs when new commits land.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Feature flag for the per-state screenshot gallery (capture + publish +
+  # embed in the PR comment). Set to "false" to turn the whole feature off —
+  # the screenshot captures are skipped and only the test results are posted.
+  SCREENSHOT_GALLERY: "true"
 
 jobs:
+  # Runs the app + PR code. Deliberately read-only: it must never hold a
+  # contents:write token while executing PR-authored code. It produces the
+  # results summary (as an output) and the screenshots artifact; the separate
+  # gallery job below does the privileged publish/comment.
   e2e:
     name: E2E Tests (Playwright)
+    # Skip draft PRs — they run on ready_for_review instead.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      summary: ${{ steps.summary.outputs.summary }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2
@@ -28,11 +55,39 @@ jobs:
           corepack enable
           corepack prepare yarn@4.13.0 --activate
 
-      - name: Install dependencies
-        run: yarn install
+      - name: Locate Yarn cache
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
-      - name: Install Playwright browsers
+      - name: Cache Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # Cache the Playwright browser binary keyed on the lockfile so a
+      # cache hit skips the multi-hundred-MB download entirely.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      # On a cache miss install the browser + OS deps; on a hit just
+      # (re)install the OS deps, which aren't part of the cached binary.
+      - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run Playwright tests
         id: playwright
@@ -133,9 +188,23 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-      - name: Comment PR with test results
+      # Hand the per-state screenshots to the gallery job (also a downloadable
+      # fallback when the inline gallery can't be published, e.g. fork PRs).
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && env.SCREENSHOT_GALLERY == 'true' }}
+        with:
+          name: e2e-screenshots
+          path: e2e-screenshots/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # Build the markdown results summary and expose it as a job output —
+      # the gallery job owns posting the single sticky PR comment.
+      - name: Build results summary
         uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
+        if: always()
+        id: summary
         with:
           script: |
             const fs = require('fs');
@@ -184,7 +253,6 @@ jobs:
                 `| ⏱️ Duration | ${durationSec}s |`,
                 failedSection,
                 `> 📊 [View full Playwright report](${runUrl})`,
-                `<!-- playwright-e2e-comment -->`,
               ].join('\n');
             } catch (err) {
               body = [
@@ -193,34 +261,163 @@ jobs:
                 `The test run ${outcome === 'failure' ? 'failed' : 'completed'} but results could not be read.`,
                 '',
                 `> 🔍 [View workflow run](${runUrl})`,
-                `<!-- playwright-e2e-comment -->`,
               ].join('\n');
             }
 
-            const marker = '<!-- playwright-e2e-comment -->';
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body && c.body.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
+            core.setOutput('summary', body);
 
       - name: Fail job if tests failed
         if: steps.playwright.outcome == 'failure'
         run: exit 1
+
+  # Privileged but PR-code-free: holds contents:write only to publish the
+  # screenshots branch via the Git Data API, then posts the single PR comment
+  # (results summary + inline gallery). It runs no PR-authored code, so the
+  # write token's blast radius is limited to these trusted steps.
+  #
+  # Inline images are referenced by their github.com `?raw=true` blob URL so
+  # they render for anyone with repo access. Only same-repo PRs can publish
+  # (a fork's GITHUB_TOKEN is read-only); forks fall back to the screenshots
+  # artifact. The publish/embed steps are gated by the SCREENSHOT_GALLERY flag.
+  #
+  # Storage: each PR owns a `screenshots-pr-<N>` branch holding a SINGLE orphan
+  # commit with only the current screenshots (no history). The
+  # playwright-screenshots-cleanup workflow deletes the branch when the PR
+  # closes, so total storage stays bounded to open PRs.
+  gallery:
+    name: Screenshot gallery
+    needs: e2e
+    # Run for every non-draft PR (even if tests failed) so the results comment
+    # is always posted; the gallery section is added only when it succeeds.
+    if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Download screenshots
+        if: ${{ env.SCREENSHOT_GALLERY == 'true' && github.event.pull_request.head.repo.full_name == github.repository }}
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: e2e-screenshots
+
+      # Best-effort (continue-on-error): the gallery is a review aid, so a
+      # hosting hiccup must never fail this job. The gallery section of the
+      # comment is gated on this step's success.
+      - name: Publish screenshots to branch
+        id: publish
+        continue-on-error: true
+        if: ${{ env.SCREENSHOT_GALLERY == 'true' && github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # -E so the ERR trap also fires for failures inside $(...) subshells.
+          set -Eeuo pipefail
+          # continue-on-error swallows a failure here silently (the gallery
+          # section is just dropped from the comment). Surface it as a run
+          # warning so a broken publish is visible rather than mysterious.
+          trap 'echo "::warning::Screenshot gallery publish failed; the PR comment will omit the gallery. See this step log."' ERR
+          shopt -s nullglob
+          shots=(e2e-screenshots/*.png)
+          if [ ${#shots[@]} -eq 0 ]; then
+            echo "No screenshots captured — nothing to publish."
+            exit 0
+          fi
+
+          # Commit via the Git Data API rather than `git push`: API-created
+          # commits are signed by GitHub (Verified), so they satisfy any
+          # "require signed commits" ruleset that rejects an unsigned bot push.
+          repo="$GITHUB_REPOSITORY"
+          branch="screenshots-pr-${PR_NUMBER}"
+          msg="screenshots: PR #${PR_NUMBER} (${GITHUB_SHA})"
+
+          # One blob per screenshot, at the branch root.
+          #
+          # The base64 of a screenshot must NOT be passed as a `gh`/`jq` CLI
+          # argument: a single argument is capped at MAX_ARG_STRLEN (~128 KB), so
+          # a larger PNG fails with "Argument list too long" and the empty blob
+          # sha then 422s the tree. Stream the request body via stdin instead —
+          # base64 → temp file → `jq -Rs` reads it by filename as a raw string.
+          b64file="$(mktemp)"
+          entries="$(
+            for f in "${shots[@]}"; do
+              base64 -w0 "$f" > "$b64file"
+              bsha="$(jq -Rs '{encoding: "base64", content: (. | rtrimstr("\n"))}' "$b64file" \
+                | gh api -X POST "repos/$repo/git/blobs" --input - --jq '.sha')"
+              jq -n --arg path "$(basename "$f")" --arg sha "$bsha" \
+                '{path: $path, mode: "100644", type: "blob", sha: $sha}'
+            done | jq -s '.'
+          )"
+
+          # Fresh tree + parentless (orphan) commit: the branch holds only this
+          # run's screenshots, no history. Force-replace the PR's own branch —
+          # no cross-PR races (each PR writes only its branch; same-PR runs are
+          # serialised by the workflow concurrency group).
+          tree_sha="$(jq -n --argjson t "$entries" '{tree: $t}' \
+            | gh api -X POST "repos/$repo/git/trees" --input - --jq '.sha')"
+          commit_sha="$(jq -n --arg m "$msg" --arg t "$tree_sha" '{message: $m, tree: $t, parents: []}' \
+            | gh api -X POST "repos/$repo/git/commits" --input - --jq '.sha')"
+
+          if gh api "repos/$repo/git/ref/heads/$branch" >/dev/null 2>&1; then
+            jq -n --arg s "$commit_sha" '{sha: $s, force: true}' \
+              | gh api -X PATCH "repos/$repo/git/refs/heads/$branch" --input - >/dev/null
+            echo "Updated $branch → verified commit $commit_sha."
+          else
+            jq -n --arg r "refs/heads/$branch" --arg s "$commit_sha" '{ref: $r, sha: $s}' \
+              | gh api -X POST "repos/$repo/git/refs" --input - >/dev/null
+            echo "Created $branch → verified commit $commit_sha."
+          fi
+
+      - name: Build screenshot gallery
+        id: gallery
+        if: ${{ always() && steps.publish.outcome == 'success' }}
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          shots=(e2e-screenshots/*.png)
+          base="https://github.com/${GITHUB_REPOSITORY}/blob/screenshots-pr-${PR_NUMBER}"
+          {
+            echo "gallery<<__GALLERY_EOF__"
+            echo "---"
+            echo "### 📸 UI screenshots"
+            echo ""
+            if [ ${#shots[@]} -eq 0 ]; then
+              echo "_No screenshots were captured for this run (see the e2e results above)._"
+            else
+              echo "Captured from the Playwright e2e run — one per UI state. Visible to anyone with repo access."
+              echo ""
+              echo "<table>"
+              i=0
+              for f in "${shots[@]}"; do
+                name="$(basename "$f" .png)"
+                if [ $((i % 2)) -eq 0 ]; then echo "<tr>"; fi
+                echo "<td align=\"center\"><b>${name}</b><br><img width=\"420\" src=\"${base}/${name}.png?raw=true\" alt=\"${name}\"></td>"
+                i=$((i + 1))
+                if [ $((i % 2)) -eq 0 ]; then echo "</tr>"; fi
+              done
+              if [ $((i % 2)) -ne 0 ]; then echo "</tr>"; fi
+              echo "</table>"
+            fi
+            echo "__GALLERY_EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      # One sticky comment carrying the test-results summary (from the e2e job)
+      # and, when the gallery ran, the screenshot table below it. When the
+      # gallery is disabled, skipped, or fails, the gallery output is empty and
+      # only the summary shows.
+      - name: Sticky PR comment (results + screenshots)
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
+        if: ${{ always() && github.event.pull_request.head.repo.full_name == github.repository }}
+        with:
+          # Update the same comment in place on every run (identified by header),
+          # never hide-and-recreate — one persistent comment, not a new one each push.
+          header: e2e-results
+          message: |
+            ${{ needs.e2e.outputs.summary }}
+            ${{ steps.gallery.outputs.gallery }}

@@ -607,6 +607,7 @@ bucket.observe$('key').subscribe(change => {
 ## Official Documentation
 
 For comprehensive API documentation:
+
 - [Utility APIs](https://backstage.io/docs/api/utility-apis/)
 - [Core APIs](https://backstage.io/docs/reference/core-plugin-api/)
 - [Frontend Plugin API](https://backstage.io/docs/reference/frontend-plugin-api/)

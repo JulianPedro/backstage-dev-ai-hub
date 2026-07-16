@@ -11,11 +11,13 @@ This repository uses Jest via `backstage-cli package test` for all plugins.
 ## Commands
 
 ### Run all tests (all plugins in parallel)
+
 ```sh
 yarn test
 ```
 
 ### Run tests for a specific plugin
+
 ```sh
 yarn workspace @nospt/plugin-dev-ai-hub test
 yarn workspace @nospt/plugin-dev-ai-hub-backend test
@@ -24,12 +26,14 @@ yarn workspace @nospt/plugin-dev-ai-hub-node test
 ```
 
 ### Run a specific test file
+
 ```sh
 yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --testPathPattern=AssetParser
 yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --testPathPattern=router.smoke
 ```
 
 ### Run in watch mode
+
 ```sh
 yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --watch
 ```
@@ -42,6 +46,7 @@ yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --wat
 - `plugins/dev-ai-hub-common/src/installPaths.test.ts`
 
 ## Procedure
+
 1. Only run tests for the relevant plugin if possible and if it exists.
 2. Run the terminal command from the workspace root (`/Users/ricardocalcado/dev/backstage-plugin-dev-ai-hub`).
 3. Inspect output for failures — Jest prints `FAIL`, file path, and diff.

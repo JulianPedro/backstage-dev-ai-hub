@@ -31,8 +31,10 @@ export function toResourceSummary(entity: Entity): ResourceSummary | undefined {
     description: entity.metadata.description,
     tags: entity.metadata.tags ?? [],
     type,
-    lifecycle: typeof entity.spec?.lifecycle === 'string' ? entity.spec.lifecycle : '',
-    owner: typeof entity.spec?.owner === 'string' ? entity.spec.owner : undefined,
+    lifecycle:
+      typeof entity.spec?.lifecycle === 'string' ? entity.spec.lifecycle : '',
+    owner:
+      typeof entity.spec?.owner === 'string' ? entity.spec.owner : undefined,
     sourceLocation: annotations[ANNOTATION_SOURCE_LOCATION],
     frameworks: getFrameworks(entity),
     version: annotations[ANNOTATION_VERSION],

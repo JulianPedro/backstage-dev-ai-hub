@@ -50,7 +50,9 @@ export class AiAssetSyncService {
       });
 
       logger.info(
-        `dev-ai-hub: scheduled sync for provider "${provider.id}" every ${JSON.stringify(frequencyDuration)}`,
+        `dev-ai-hub: scheduled sync for provider "${
+          provider.id
+        }" every ${JSON.stringify(frequencyDuration)}`,
       );
     }
 
@@ -144,7 +146,9 @@ export class AiAssetSyncService {
           }
         } else {
           const mdCandidates = [...fileMap.keys()].filter(p => {
-            const dir = p.includes('/') ? p.split('/').slice(0, -1).join('/') : '';
+            const dir = p.includes('/')
+              ? p.split('/').slice(0, -1).join('/')
+              : '';
             return dir === yamlDir && p.endsWith('.md');
           });
           if (mdCandidates.length === 1) {
@@ -152,7 +156,9 @@ export class AiAssetSyncService {
             mdFile = fileMap.get(resolvedMdPath)!;
           } else if (mdCandidates.length > 1) {
             logger.warn(
-              `dev-ai-hub: multiple .md files in "${yamlDir || '.'}" for ${filePath} — add a 'content' field to the YAML to specify which one, skipping`,
+              `dev-ai-hub: multiple .md files in "${
+                yamlDir || '.'
+              }" for ${filePath} — add a 'content' field to the YAML to specify which one, skipping`,
             );
             continue;
           } else {
@@ -176,14 +182,17 @@ export class AiAssetSyncService {
             );
             const resourceFile = fileMap.get(fullPath);
             if (resourceFile) {
-              resourcesContent[resourcePath] = (await resourceFile.content()).toString('utf-8');
+              resourcesContent[resourcePath] = (
+                await resourceFile.content()
+              ).toString('utf-8');
             } else {
               logger.warn(
                 `dev-ai-hub: resource file not found: ${fullPath} (asset ${filePath})`,
               );
             }
           }
-          if (Object.keys(resourcesContent).length === 0) resourcesContent = undefined;
+          if (Object.keys(resourcesContent).length === 0)
+            resourcesContent = undefined;
         }
 
         const asset = AssetParser.buildAsset(

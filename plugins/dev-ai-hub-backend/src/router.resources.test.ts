@@ -19,7 +19,8 @@ const SKILL_ENTITY: Entity = {
     description: 'CI/CD hardening skill',
     tags: ['security'],
     annotations: {
-      'backstage.io/source-location': 'url:https://github.com/org/repo/blob/main/skill.yaml',
+      'backstage.io/source-location':
+        'url:https://github.com/org/repo/blob/main/skill.yaml',
       'devaihub.io/compatible-frameworks': 'cursor',
       'devaihub.io/version': '1.0.0',
     },

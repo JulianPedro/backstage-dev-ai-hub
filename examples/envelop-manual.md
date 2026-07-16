@@ -14,6 +14,7 @@ The `.md` file is **never modified** by the plugin — it is your raw AI asset e
 ## Required Fields
 
 ### `name`
+
 **Type:** `string` (1–200 chars)
 
 The internal identifier for the asset. Used to generate default install paths (lowercased, spaces become hyphens, special characters removed). Must be unique within the provider repository.
@@ -27,6 +28,7 @@ name: python-code-style
 ---
 
 ### `type`
+
 **Type:** `enum`
 
 Defines the asset category and determines the default install paths per tool.
@@ -45,6 +47,7 @@ type: instruction
 ---
 
 ### `description`
+
 **Type:** `string` (1–500 chars)
 
 Short summary shown in the UI and returned by the MCP server. Keep it focused on what the asset does and when to use it.
@@ -58,6 +61,7 @@ description: >-
 ---
 
 ### `tools`
+
 **Type:** `string[]` — minimum 1 value
 
 The AI tools this asset is compatible with. Drives both filtering in the UI/MCP and default install path resolution.
@@ -81,6 +85,7 @@ tools:
 ## Optional Fields — Identity & Display
 
 ### `label`
+
 **Type:** `string` (1–200 chars)
 
 Human-readable display name shown in the UI and MCP responses. Use this when `name` is a technical slug and you want a friendlier title. Falls back to `name` when omitted.
@@ -93,6 +98,7 @@ label: "Python — Code Style Guide"
 ---
 
 ### `author`
+
 **Type:** `string` — default: `"Unknown"`
 
 Team or person who owns and maintains the asset.
@@ -104,6 +110,7 @@ author: "Platform Team"
 ---
 
 ### `version`
+
 **Type:** `string` — default: `"1.0.0"`
 
 Semantic version of the asset. Informational — does not affect sync logic (which tracks the repository commit).
@@ -115,6 +122,7 @@ version: "2.1.0"
 ---
 
 ### `updatedAt`
+
 **Type:** `string` (ISO 8601 date)
 
 Date the asset content was last intentionally updated. Informational only.
@@ -126,6 +134,7 @@ updatedAt: "2026-03-27"
 ---
 
 ### `icon`
+
 **Type:** `string`
 
 URL or path to an icon displayed in the UI card. Accepts absolute URLs or paths relative to the repository root. Supported formats: PNG, SVG, JPG.
@@ -137,6 +146,7 @@ icon: "https://cdn.example.com/icons/python.svg"
 ---
 
 ### `tags`
+
 **Type:** `string[]` — default: `[]`
 
 Keywords used for search, filtering, and MCP contextual suggestions. Use terms describing language, framework, domain, or purpose.
@@ -153,6 +163,7 @@ tags:
 ## Optional Fields — Content
 
 ### `content`
+
 **Type:** `string` (file path)
 
 Path to the `.md` content file, relative to the directory of this `.yaml` file. When omitted, the parser automatically looks for a file with the same base name (e.g. `python-code-style.yaml` → `python-code-style.md`). For skills, `SKILL.md` in the same directory is the convention.
@@ -190,6 +201,7 @@ The hub resolves install paths automatically by combining `type` + `tool`. Use t
 ---
 
 ### `installPath`
+
 **Type:** `string`
 
 Overrides the install path for **all tools**. Useful when the asset must always go to a fixed location regardless of the tool.
@@ -201,6 +213,7 @@ installPath: ".ai/guidelines/python-style.md"
 ---
 
 ### `installPaths`
+
 **Type:** `Record<string, string>`
 
 Overrides the install path **per tool**. Only the tools listed here are overridden; others fall back to `installPath` or the automatic convention.
@@ -216,6 +229,7 @@ installPaths:
 ## Optional Fields — Type-specific
 
 ### `resources` *(skills only)*
+
 **Type:** `string[]`
 
 Additional files bundled into the `.zip` download for a skill. Paths are relative to the directory of this `.yaml` file. Use when a skill depends on setup scripts, templates, or examples beyond the main `SKILL.md`.

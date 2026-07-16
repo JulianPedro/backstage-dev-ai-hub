@@ -45,20 +45,29 @@ describe('AssetFilters — tag dropdown regression #1046', () => {
   });
 
   it('KEEPS tag dropdown visible when tag selected but availableTags became empty (regression #1046)', () => {
-    renderTags({ availableTags: [], value: { ...defaultValue, tags: ['python'] } });
+    renderTags({
+      availableTags: [],
+      value: { ...defaultValue, tags: ['python'] },
+    });
     expect(screen.getByLabelText('Filter by tags')).toBeInTheDocument();
   });
 
   /* ─── Options merge ────────────────────────────────────────────────── */
 
   it('includes selected tags in dropdown options even when 0 results', () => {
-    renderTags({ availableTags: [], value: { ...defaultValue, tags: ['stuck-tag'] } });
+    renderTags({
+      availableTags: [],
+      value: { ...defaultValue, tags: ['stuck-tag'] },
+    });
     // The selected tag must still appear in the dropdown so it can be un-selected
     expect(screen.getByText('#stuck-tag')).toBeInTheDocument();
   });
 
   it('shows helper placeholder when 0 results with active tag selection', () => {
-    renderTags({ availableTags: [], value: { ...defaultValue, tags: ['stuck-tag'] } });
+    renderTags({
+      availableTags: [],
+      value: { ...defaultValue, tags: ['stuck-tag'] },
+    });
     expect(screen.getByText('Clear tags to see results…')).toBeInTheDocument();
   });
 });

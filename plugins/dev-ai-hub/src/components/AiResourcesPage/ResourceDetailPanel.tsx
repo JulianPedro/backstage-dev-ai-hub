@@ -42,7 +42,10 @@ interface ResourceDetailPanelProps {
  * body resolver (issue #30) and rendered by shape. Resources without a
  * source-location are browsable but not actionable — no action buttons.
  */
-export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelProps) {
+export function ResourceDetailPanel({
+  resource,
+  onClose,
+}: ResourceDetailPanelProps) {
   const api = useApi(devAiHubResourceApiRef);
   const actionable = !!resource?.sourceLocation;
   const bodyState = useResourceBody(resource?.entityRef, actionable);
@@ -81,7 +84,12 @@ export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelPr
         <Flex className={styles.header}>
           <div
             className={styles.iconBox}
-            style={{ '--card-accent': meta.color, '--card-accent-bg': meta.colorBg } as React.CSSProperties}
+            style={
+              {
+                '--card-accent': meta.color,
+                '--card-accent-bg': meta.colorBg,
+              } as React.CSSProperties
+            }
           >
             <meta.Icon size={20} />
           </div>
@@ -89,7 +97,10 @@ export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelPr
             <Text variant="title-small" weight="bold" as="h2">
               {resource.title ?? resource.name}
             </Text>
-            <Text variant="body-x-small" style={{ color: meta.color, fontWeight: 600 }}>
+            <Text
+              variant="body-x-small"
+              style={{ color: meta.color, fontWeight: 600 }}
+            >
               {meta.label}
             </Text>
           </Box>
@@ -160,8 +171,8 @@ export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelPr
             )}
             {actionable && bodyState.error === 'not-found' && (
               <Text variant="body-small" as="p" color="secondary">
-                Content not available — it may have been removed, or you may
-                not have access to it.
+                Content not available — it may have been removed, or you may not
+                have access to it.
               </Text>
             )}
             {actionable && bodyState.error === 'upstream' && (
@@ -169,7 +180,11 @@ export function ResourceDetailPanel({ resource, onClose }: ResourceDetailPanelPr
                 <Text variant="body-small" as="p" color="secondary">
                   Couldn’t fetch the content from its source.
                 </Text>
-                <Button size="small" variant="tertiary" onPress={bodyState.retry}>
+                <Button
+                  size="small"
+                  variant="tertiary"
+                  onPress={bodyState.retry}
+                >
                   Retry
                 </Button>
               </Flex>

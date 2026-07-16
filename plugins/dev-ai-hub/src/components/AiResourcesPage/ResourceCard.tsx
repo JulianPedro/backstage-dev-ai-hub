@@ -31,7 +31,12 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
   return (
     <div
       className={styles.card}
-      style={{ '--card-accent': meta.color, '--card-accent-bg': meta.colorBg } as React.CSSProperties}
+      style={
+        {
+          '--card-accent': meta.color,
+          '--card-accent-bg': meta.colorBg,
+        } as React.CSSProperties
+      }
       onClick={() => onView(resource.entityRef)}
       onKeyDown={e => {
         if (e.key === 'Enter') onView(resource.entityRef);
@@ -45,7 +50,12 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
           <meta.Icon size={18} />
         </div>
         <div className={styles.headerText}>
-          <Text variant="title-x-small" weight="bold" as="h3" className={styles.title}>
+          <Text
+            variant="title-x-small"
+            weight="bold"
+            as="h3"
+            className={styles.title}
+          >
             {resource.title ?? resource.name}
           </Text>
           <Text variant="body-x-small" className={styles.typeLabel}>
@@ -68,7 +78,11 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
       </div>
 
       {resource.description && (
-        <Text variant="body-small" color="secondary" className={styles.description}>
+        <Text
+          variant="body-small"
+          color="secondary"
+          className={styles.description}
+        >
           {resource.description}
         </Text>
       )}
@@ -92,7 +106,10 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
             </span>
           ))}
           {hiddenTagCount > 0 && (
-            <span className={styles.tag} title={resource.tags.slice(MAX_VISIBLE_TAGS).join(', ')}>
+            <span
+              className={styles.tag}
+              title={resource.tags.slice(MAX_VISIBLE_TAGS).join(', ')}
+            >
               +{hiddenTagCount}
             </span>
           )}
@@ -102,7 +119,10 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
       {(resource.version || ownerLabel) && (
         <div className={styles.footer}>
           <Text variant="body-x-small" color="secondary">
-            {[resource.version && `v${resource.version.replace(/^v/, '')}`, ownerLabel]
+            {[
+              resource.version && `v${resource.version.replace(/^v/, '')}`,
+              ownerLabel,
+            ]
               .filter(Boolean)
               .join(' · ')}
           </Text>

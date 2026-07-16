@@ -45,6 +45,7 @@ export const examplePlugin = createBackendPlugin({
 ```
 
 **Key Methods**:
+
 - `use(handler)`: Add Express middleware/router
 - `addAuthPolicy(policy)`: Configure authentication requirements
 
@@ -96,12 +97,14 @@ env.registerInit({
 ```
 
 **Log Levels**:
+
 - `debug()`: Detailed debugging information
 - `info()`: General informational messages
 - `warn()`: Warning messages
 - `error()`: Error messages
 
 **Best Practices**:
+
 - Use child loggers to add context
 - Include relevant metadata in structured format
 - Log errors with full context for debugging
@@ -186,6 +189,7 @@ Include migrations in your `package.json` exports:
 ```
 
 **Best Practices**:
+
 - Always write migrations for schema changes
 - Use transactions for multi-step operations
 - Index frequently queried columns
@@ -227,6 +231,7 @@ router.get('/protected', async (req, res) => {
 ```
 
 **Credential Types**:
+
 - `user`: End-user authentication
 - `service`: Service-to-service authentication
 - `none`: No authentication
@@ -277,6 +282,7 @@ router.post('/create', async (req, res) => {
 ```
 
 **UserInfo Properties**:
+
 - `userEntityRef`: User entity reference (e.g., `user:default/john.doe`)
 - `ownershipEntityRefs`: All entity refs the user belongs to (user + groups)
 
@@ -305,6 +311,7 @@ const response = await fetch(`${baseUrl}/entities`, {
 ```
 
 **Best Practices**:
+
 - Use discovery instead of hardcoding URLs
 - Cache base URLs if making many requests
 - Use for inter-plugin communication
@@ -354,11 +361,13 @@ env.registerInit({
 ```
 
 **Frequency Options**:
+
 - `{ hours: number }`: Run every N hours
 - `{ minutes: number }`: Run every N minutes
 - `{ cron: string }`: Use cron expression
 
 **Best Practices**:
+
 - Make tasks idempotent
 - Set appropriate timeouts
 - Handle failures gracefully
@@ -409,6 +418,7 @@ env.registerInit({
 ```
 
 **Cache Methods**:
+
 - `get(key)`: Retrieve value
 - `set(key, value, options?)`: Store value with optional TTL
 - `delete(key)`: Remove value
@@ -451,6 +461,7 @@ env.registerInit({
 ```
 
 **Supported Protocols**:
+
 - HTTP/HTTPS
 - GitHub
 - GitLab
@@ -702,5 +713,6 @@ const value = await cache.get(key);
 ## Official Documentation
 
 For complete service references:
+
 - [Core Backend Services](https://backstage.io/docs/backend-system/core-services/)
 - [Backend Plugin API](https://backstage.io/docs/reference/backend-plugin-api/)

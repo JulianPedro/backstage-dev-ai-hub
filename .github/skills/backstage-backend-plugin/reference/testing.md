@@ -102,6 +102,7 @@ const { server } = await startTestBackend({
 ```
 
 **Available Mocks**:
+
 - `mockServices.logger` - Logger service
 - `mockServices.database` - Database service
 - `mockServices.cache` - Cache service
@@ -406,6 +407,7 @@ describe('database integration', () => {
 ```
 
 **Supported Databases**:
+
 - PostgreSQL
 - MySQL
 - SQLite
@@ -790,6 +792,7 @@ describe('scheduled tasks', () => {
 ## Official Documentation
 
 For comprehensive testing guidance:
+
 - [Testing Backend Plugins](https://backstage.io/docs/backend-system/building-plugins-and-modules/testing/)
 - [Backend Test Utils](https://backstage.io/docs/reference/backend-test-utils/)
 - [Testing with Jest](https://backstage.io/docs/plugins/testing/)

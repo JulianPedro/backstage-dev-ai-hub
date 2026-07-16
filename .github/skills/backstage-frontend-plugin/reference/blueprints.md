@@ -15,6 +15,7 @@ Creates page extensions that render at specific routes.
 **Package**: `@backstage/frontend-plugin-api`
 
 **Key Features**:
+
 - Default path configuration
 - Always dynamically loaded using `React.lazy()`
 - Integration with route references
@@ -35,6 +36,7 @@ const examplePage = PageBlueprint.make({
 ```
 
 **Parameters**:
+
 - `routeRef`: Route reference for navigation
 - `path`: URL path for the page
 - `loader`: Async component loader function
@@ -48,6 +50,7 @@ Creates navigation items, typically rendered in the sidebar.
 **Package**: `@backstage/frontend-plugin-api`
 
 **Key Features**:
+
 - Integrates with `app.nav` extension
 - Default sidebar rendering
 - Route-aware navigation
@@ -69,6 +72,7 @@ const exampleNavItem = NavItemBlueprint.make({
 ```
 
 **Parameters**:
+
 - `routeRef`: Route reference to navigate to
 - `title`: Display text for navigation item
 - `icon`: MUI icon component or custom SVG icon
@@ -82,6 +86,7 @@ Creates content tabs for entity pages in the catalog plugin.
 **Package**: `@backstage/plugin-catalog-react/alpha`
 
 **Key Features**:
+
 - Renders on entity pages
 - Tab-based navigation
 - Entity-aware context
@@ -102,11 +107,13 @@ const exampleEntityContent = EntityContentBlueprint.make({
 ```
 
 **Parameters**:
+
 - `path`: Tab path segment
 - `title`: Tab display name
 - `loader`: Async component loader function
 
 **Best Practices**:
+
 - Keep entity content extensions small and focused
 - Avoid heavy logic in loaders
 - Use permissions to control visibility
@@ -121,6 +128,7 @@ Creates Utility API extensions for shared logic across plugins.
 **Package**: `@backstage/frontend-plugin-api`
 
 **Key Features**:
+
 - Advanced parameter types
 - Dependency injection support
 - Factory pattern for API instantiation
@@ -146,6 +154,7 @@ const exampleApi = ApiBlueprint.make({
 ```
 
 **Parameters**:
+
 - `name`: Unique identifier for the API extension
 - `params`: Define callback for advanced configuration
   - `api`: API reference created with `createApiRef`
@@ -203,6 +212,7 @@ const customPage = PageBlueprint.makeWithOverrides({
 ```
 
 **When to Use**:
+
 - Need custom configuration options
 - Require additional extension points
 - Building reusable extension templates
@@ -364,6 +374,7 @@ export function DataComponent() {
 ## Official Documentation
 
 For the latest information, consult:
+
 - [Frontend Extension Blueprints](https://backstage.io/docs/frontend-system/architecture/extension-blueprints/)
 - [Common Extension Blueprints](https://backstage.io/docs/frontend-system/building-plugins/common-extension-blueprints/)
 - [Building Frontend Plugins](https://backstage.io/docs/frontend-system/building-plugins/index/)

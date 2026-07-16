@@ -29,6 +29,7 @@ Use this skill when creating UI features for Backstage: pages, navigation items,
 ### 1.1 Understand the Requirements
 
 Before building a frontend plugin, clearly understand:
+
 - What UI features are needed (pages, navigation, entity content, cards)
 - What data the plugin will display or interact with
 - Whether Utility APIs are needed for shared logic
@@ -39,12 +40,15 @@ Before building a frontend plugin, clearly understand:
 Load reference files as needed based on the plugin requirements:
 
 **For Extension Development:**
+
 - [📋 Extension Blueprints Reference](./reference/blueprints.md) - Comprehensive guide to PageBlueprint, NavItemBlueprint, EntityContentBlueprint, and ApiBlueprint
 
 **For Utility API Development:**
+
 - [🔌 Utility APIs Reference](./reference/utility_apis.md) - Creating and using Utility APIs for shared logic
 
 **For Testing:**
+
 - [✅ Testing Reference](./reference/testing.md) - Comprehensive testing guide for components, extensions, and APIs
 
 ---
@@ -61,10 +65,13 @@ After implementing the plugin:
 
 1. Load the [✅ Testing Reference](./reference/testing.md)
 2. Write comprehensive tests for:
-  - React components using `renderInTestApp`
-  - Extensions using `createExtensionTester`
-  - Utility APIs with mocked dependencies
+
+- React components using `renderInTestApp`
+- Extensions using `createExtensionTester`
+- Utility APIs with mocked dependencies
+
 3. Run tests and achieve good coverage:
+
   ```bash
   yarn backstage-cli package test --coverage
   ```
@@ -114,11 +121,11 @@ Before publishing:
 ### Lazy Loading and UX
 
 Use dynamic imports in loaders and wrap rendered elements in `Suspense` with a lightweight fallback. Add an error boundary for resilience:
-  
+
   ```tsx
   // Suspense and error boundary around a lazy extension element
   const Example = React.lazy(() => import('./components/ExamplePage'));
-  
+
   function ExampleWrapper() {
     return (
       <ErrorBoundary>
@@ -141,11 +148,11 @@ Use dynamic imports in loaders and wrap rendered elements in `Suspense` with a l
 ### Permissions and Visibility
 
 Hide/show entity content based on permissions or ownership to avoid broken UX for unauthorized users:
-  
+
   ```tsx
   import { usePermission } from '@backstage/plugin-permission-react';
   import { somePermission } from '@backstage/plugin-permission-common';
-  
+
   export function ExampleEntityContent() {
     const { loading, allowed } = usePermission({ permission: somePermission });
     if (loading) return null;
@@ -243,6 +250,7 @@ export const examplePlugin = createFrontendPlugin({
 ```
 
 **Changes from legacy**:
+
 - Use `createFrontendPlugin` (not `createPlugin`)
 - Use `PageBlueprint` and `NavItemBlueprint` (not `createRoutableExtension`)
 - Export only the plugin instance (not individual page components)
@@ -377,6 +385,7 @@ Keep a predictable structure (API layer, hooks, components, `routes.ts`, `plugin
 Load these resources as needed during development:
 
 ### Extension Development
+
 - [📋 Extension Blueprints Reference](./reference/blueprints.md) - Complete guide to all extension blueprints including:
   - PageBlueprint for creating pages
   - NavItemBlueprint for navigation items
@@ -386,6 +395,7 @@ Load these resources as needed during development:
   - Common patterns and best practices
 
 ### Utility API Development
+
 - [🔌 Utility APIs Reference](./reference/utility_apis.md) - Creating and using Utility APIs including:
   - API interface definition patterns
   - Creating API references with `createApiRef`
@@ -396,6 +406,7 @@ Load these resources as needed during development:
   - Testing strategies
 
 ### Testing
+
 - [✅ Testing Reference](./reference/testing.md) - Comprehensive testing guide including:
   - Testing React components with `renderInTestApp`
   - Testing extensions with `createExtensionTester`

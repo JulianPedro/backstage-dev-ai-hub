@@ -2,7 +2,10 @@ import type { AssetType, AiTool } from './types';
 
 /** Sanitize asset name for use in file paths */
 function toSlug(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '');
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-_]/g, '');
 }
 
 /**
@@ -11,38 +14,41 @@ function toSlug(name: string): string {
  *
  * Priority: installPaths[tool] > installPath > convention below.
  */
-const CONVENTIONS: Record<AssetType, Record<AiTool | 'default', (name: string) => string>> = {
+const CONVENTIONS: Record<
+  AssetType,
+  Record<AiTool | 'default', (name: string) => string>
+> = {
   instruction: {
-    'claude-code':    name => `.claude/rules/${name}.md`,
+    'claude-code': name => `.claude/rules/${name}.md`,
     'github-copilot': name => `.github/instructions/${name}.instructions.md`,
-    'google-gemini':  _    => `GEMINI.md`,
-    'cursor':         name => `.cursor/rules/${name}.mdc`,
-    'all':            name => `.ai/instructions/${name}.md`,
-    'default':        name => `.ai/instructions/${name}.md`,
+    'google-gemini': _ => `GEMINI.md`,
+    cursor: name => `.cursor/rules/${name}.mdc`,
+    all: name => `.ai/instructions/${name}.md`,
+    default: name => `.ai/instructions/${name}.md`,
   },
   agent: {
-    'claude-code':    name => `.claude/agents/${name}.md`,
+    'claude-code': name => `.claude/agents/${name}.md`,
     'github-copilot': name => `.github/agents/${name}.agent.md`,
-    'google-gemini':  _    => `GEMINI.md`,
-    'cursor':         name => `.cursor/rules/${name}.mdc`,
-    'all':            name => `.ai/agents/${name}.md`,
-    'default':        name => `.ai/agents/${name}.md`,
+    'google-gemini': _ => `GEMINI.md`,
+    cursor: name => `.cursor/rules/${name}.mdc`,
+    all: name => `.ai/agents/${name}.md`,
+    default: name => `.ai/agents/${name}.md`,
   },
   skill: {
-    'claude-code':    name => `.claude/skills/${name}/SKILL.md`,
+    'claude-code': name => `.claude/skills/${name}/SKILL.md`,
     'github-copilot': name => `.claude/skills/${name}/SKILL.md`,
-    'google-gemini':  name => `.claude/skills/${name}/SKILL.md`,
-    'cursor':         name => `.cursor/skills/${name}/SKILL.md`,
-    'all':            name => `.claude/skills/${name}/SKILL.md`,
-    'default':        name => `.claude/skills/${name}/SKILL.md`,
+    'google-gemini': name => `.claude/skills/${name}/SKILL.md`,
+    cursor: name => `.cursor/skills/${name}/SKILL.md`,
+    all: name => `.claude/skills/${name}/SKILL.md`,
+    default: name => `.claude/skills/${name}/SKILL.md`,
   },
   workflow: {
-    'claude-code':    name => `.claude/workflows/${name}.md`,
+    'claude-code': name => `.claude/workflows/${name}.md`,
     'github-copilot': name => `.github/workflows/${name}.workflow.md`,
-    'google-gemini':  name => `.gemini/workflows/${name}.md`,
-    'cursor':         name => `.cursor/rules/${name}.mdc`,
-    'all':            name => `.ai/workflows/${name}.md`,
-    'default':        name => `.ai/workflows/${name}.md`,
+    'google-gemini': name => `.gemini/workflows/${name}.md`,
+    cursor: name => `.cursor/rules/${name}.mdc`,
+    all: name => `.ai/workflows/${name}.md`,
+    default: name => `.ai/workflows/${name}.md`,
   },
 };
 
@@ -82,10 +88,18 @@ export function getInstallPathsForAsset(
   name: string,
   overrides?: InstallPathOverrides,
 ): Record<string, string> {
-  const ALL_TOOLS: AiTool[] = ['claude-code', 'github-copilot', 'google-gemini', 'cursor'];
+  const ALL_TOOLS: AiTool[] = [
+    'claude-code',
+    'github-copilot',
+    'google-gemini',
+    'cursor',
+  ];
   const resolvedTools = tools.includes('all') ? ALL_TOOLS : tools;
 
   return Object.fromEntries(
-    resolvedTools.map(tool => [tool, getInstallPath(type, tool, name, overrides)]),
+    resolvedTools.map(tool => [
+      tool,
+      getInstallPath(type, tool, name, overrides),
+    ]),
   );
 }

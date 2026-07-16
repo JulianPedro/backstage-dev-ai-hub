@@ -15,7 +15,11 @@ export interface ProviderConfig {
   };
 }
 
-export interface AiAssetInput extends Omit<AiAsset, 'id' | 'syncedAt' | 'createdAt' | 'updatedAt' | 'installCount'> {
+export interface AiAssetInput
+  extends Omit<
+    AiAsset,
+    'id' | 'syncedAt' | 'createdAt' | 'updatedAt' | 'installCount'
+  > {
   id: string;
 }
 

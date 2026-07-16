@@ -25,11 +25,12 @@
 ## 1. Goals & non-goals
 
 ### Goals
+
 1. Put AI assets in the **software catalog as first-class `AiResource` entities**, using the
    *native* `@backstage/plugin-catalog-backend-module-ai-model` — not a custom kind, not a
    private store. The catalog becomes the single source of truth.
 2. Support, initially, five `spec.type` values: **`skill`, `agent`, `hook`, `mcp`, `plugin`**.
-   The `plugin` type follows the Claude Code plugin spec (https://code.claude.com/docs/en/plugins).
+   The `plugin` type follows the Claude Code plugin spec (<https://code.claude.com/docs/en/plugins>).
 3. Ship a **dedicated NFS page** in the DevAI Hub plugin that *reads discovered `AiResource`
    entities from the catalog* and renders **one card style per type, each with its own colour**.
 4. Keep entities **metadata-only**: typical Backstage metadata + usage metadata (compatibility
@@ -39,6 +40,7 @@
    content references, we adopt them and delete our stopgaps. No siloed components.
 
 ### Non-goals (for now)
+
 - Storing asset **content/bodies** in the catalog (explicitly out — see §4.4 and #34318).
 - Defining a **custom catalog kind** or fork of `AiResource`. We consume the native kind.
 - Replicating the plugin's **embedded MCP runtime** as catalog data. The MCP server, if kept,
@@ -390,6 +392,7 @@ emoji identify a type in the architecture diagram (§3), the taxonomy (§4), the
 the identity holds in light and dark mode.
 
 Guidance:
+
 - **Use theme tokens, not raw hex.** Bind the roles above to the Backstage UI palette so dark
   mode and org themes work. Raw hex shown only as a starting point.
 - **Make cards swappable.** In v1.51 the scaffolder `TemplateCard` became swappable via
@@ -594,6 +597,7 @@ flowchart LR
 ```
 
 ### Phase 0 — Foundations & spike
+
 **Do:** Confirm app on ≥ v1.51 and sub-package `@backstage/*` ranges are compatible. Install
 `@backstage/plugin-catalog-backend-module-ai-model`; add `AiResource` to `catalog.rules[].allow`.
 Hand-author **one `catalog-info.yaml` per type** (5 files). Stand up the NFS page skeleton (§5.1)
@@ -602,6 +606,7 @@ that lists `kind=AiResource` with placeholder cards.
 confirmed `⚠︎ VERIFY` items 1 (skill field names), 5 (relation emission), 6 (strict spec).
 
 ### Phase 1 — Producer (ingestion), dual-run
+
 **Do:** Build `@.../plugin-catalog-backend-module-dev-ai-hub`. Reuse the Git sync; emit
 `AiResource`s for the Claude Code layout + legacy envelopes (§6.3). Leave the existing asset
 store/UI running untouched.
@@ -610,19 +615,23 @@ validation errors and **stable names across two consecutive syncs**; orphan prun
 removing a file from Git.
 
 ### Phase 2 — Presentation
+
 **Do:** Implement the five typed cards with the colour registry (§5.3), framework badges (§4.4),
 type/framework filters, and the composite `PluginCard` (relations). Make cards swappable.
 **Exit:** the dedicated page reaches feature parity with the current plugin section for browse +
 filter, sourced entirely from the catalog.
 
 ### Phase 3 — Consumer cutover & de-silo
+
 **Do:** Point any remaining readers (frontend actions, MCP server) at the catalog; add the
 on-demand body resolver (§6.4). Keep only the telemetry table.
 **Exit:** the asset REST API and asset tables are removed; nothing but telemetry is plugin-owned.
 **This is the "no siloed components" milestone.**
 
 ### Phase 4 — Upstream convergence (ongoing)
+
 **Do, when each upstream milestone lands:**
+
 - Structured subtype for `agent`/`hook`/`mcp`/`plugin` ships → migrate that type's annotations
   into the official spec; delete the annotation + adapter.
 - #34318 (content reference) ships → drop the bespoke body resolver.
@@ -630,6 +639,7 @@ on-demand body resolver (§6.4). Keep only the telemetry table.
 **Exit:** none — this phase is the steady state of staying "on the same page as Backstage."
 
 **Thresholds that change the plan:**
+
 - If teams will hand-author entities and you don't need auto-discovery → skip Phase 1, go
   pure-consumer.
 - If alpha churn is too costly → hold at end of Phase 1 behind a feature flag until the kind
@@ -754,11 +764,11 @@ spec:
 ## Appendix B — Reference
 
 - Backstage v1.51.0 release notes (AiResource kind; `NavItemBlueprint` removal; scaffolder
-  `groups`; `SwappableComponentBlueprint`): https://backstage.io/docs/releases/v1.51.0/
+  `groups`; `SwappableComponentBlueprint`): <https://backstage.io/docs/releases/v1.51.0/>
 - NFS building plugins (`createFrontendPlugin`, `PageBlueprint`):
-  https://backstage.io/docs/frontend-system/building-plugins/index/
+  <https://backstage.io/docs/frontend-system/building-plugins/index/>
 - NFS common blueprints (NavItem deprecation/removal note):
-  https://backstage.io/docs/frontend-system/building-plugins/common-extension-blueprints/
-- Claude Code plugins (manifest, structure, components): https://code.claude.com/docs/en/plugins
-- Content-in-catalog gap: https://github.com/backstage/backstage/issues/34318
-- Plugin repo under refactor: https://github.com/JulianPedro/backstage-dev-ai-hub
+  <https://backstage.io/docs/frontend-system/building-plugins/common-extension-blueprints/>
+- Claude Code plugins (manifest, structure, components): <https://code.claude.com/docs/en/plugins>
+- Content-in-catalog gap: <https://github.com/backstage/backstage/issues/34318>
+- Plugin repo under refactor: <https://github.com/JulianPedro/backstage-dev-ai-hub>

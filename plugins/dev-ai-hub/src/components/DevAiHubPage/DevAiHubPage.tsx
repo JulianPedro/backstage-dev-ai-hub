@@ -1,7 +1,12 @@
 import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Flex, Text, Skeleton, TablePagination } from '@backstage/ui';
-import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
+import {
+  RiArticleLine,
+  RiRobot2Line,
+  RiToolsLine,
+  RiGitBranchLine,
+} from '@remixicon/react';
 import type { AssetType, AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
@@ -21,15 +26,41 @@ const DEFAULT_FILTERS: AssetFiltersValue = {
 
 const PAGE_SIZE = 24;
 
-const STATS_CONFIG: { key: AssetType; label: string; Icon: ElementType; gradient: string; shadow: string }[] = [
-  { key: 'instruction', label: 'Instructions', Icon: RiArticleLine,
-    gradient: 'linear-gradient(135deg, #54A0FF 0%, #2980FF 100%)', shadow: '#54A0FF40' },
-  { key: 'agent',       label: 'Agents',       Icon: RiRobot2Line,
-    gradient: 'linear-gradient(135deg, #FF6B9D 0%, #E0507A 100%)', shadow: '#FF6B9D40' },
-  { key: 'skill',       label: 'Skills',       Icon: RiToolsLine,
-    gradient: 'linear-gradient(135deg, #6AB04C 0%, #4A8F2E 100%)', shadow: '#6AB04C40' },
-  { key: 'workflow',    label: 'Workflows',    Icon: RiGitBranchLine,
-    gradient: 'linear-gradient(135deg, #F9CA24 0%, #D4A800 100%)', shadow: '#F9CA2440' },
+const STATS_CONFIG: {
+  key: AssetType;
+  label: string;
+  Icon: ElementType;
+  gradient: string;
+  shadow: string;
+}[] = [
+  {
+    key: 'instruction',
+    label: 'Instructions',
+    Icon: RiArticleLine,
+    gradient: 'linear-gradient(135deg, #54A0FF 0%, #2980FF 100%)',
+    shadow: '#54A0FF40',
+  },
+  {
+    key: 'agent',
+    label: 'Agents',
+    Icon: RiRobot2Line,
+    gradient: 'linear-gradient(135deg, #FF6B9D 0%, #E0507A 100%)',
+    shadow: '#FF6B9D40',
+  },
+  {
+    key: 'skill',
+    label: 'Skills',
+    Icon: RiToolsLine,
+    gradient: 'linear-gradient(135deg, #6AB04C 0%, #4A8F2E 100%)',
+    shadow: '#6AB04C40',
+  },
+  {
+    key: 'workflow',
+    label: 'Workflows',
+    Icon: RiGitBranchLine,
+    gradient: 'linear-gradient(135deg, #F9CA24 0%, #D4A800 100%)',
+    shadow: '#F9CA2440',
+  },
 ];
 
 export function DevAiHubPage() {
@@ -41,24 +72,44 @@ export function DevAiHubPage() {
   const installAssetId = searchParams.get('installId');
 
   const handleViewAsset = (id: string) =>
-    setSearchParams(p => { const n = new URLSearchParams(p); n.set('assetId', id); return n; });
+    setSearchParams(p => {
+      const n = new URLSearchParams(p);
+      n.set('assetId', id);
+      return n;
+    });
 
   const handleCloseDetail = () =>
-    setSearchParams(p => { const n = new URLSearchParams(p); n.delete('assetId'); return n; });
+    setSearchParams(p => {
+      const n = new URLSearchParams(p);
+      n.delete('assetId');
+      return n;
+    });
 
   const handleInstallAsset = (id: string) =>
-    setSearchParams(p => { const n = new URLSearchParams(p); n.set('installId', id); return n; });
+    setSearchParams(p => {
+      const n = new URLSearchParams(p);
+      n.set('installId', id);
+      return n;
+    });
 
   const handleCloseInstall = () =>
-    setSearchParams(p => { const n = new URLSearchParams(p); n.delete('installId'); return n; });
+    setSearchParams(p => {
+      const n = new URLSearchParams(p);
+      n.delete('installId');
+      return n;
+    });
 
   const { stats } = useStats();
   const { providers } = useProviders();
 
   const apiFilter = useMemo(
     () => ({
-      type: filters.types.length === 1 ? (filters.types[0] as AssetType) : undefined,
-      tool: filters.tools.length === 1 ? (filters.tools[0] as AiTool) : undefined,
+      type:
+        filters.types.length === 1
+          ? (filters.types[0] as AssetType)
+          : undefined,
+      tool:
+        filters.tools.length === 1 ? (filters.tools[0] as AiTool) : undefined,
       search: filters.search || undefined,
       tags: filters.tags.length > 0 ? filters.tags : undefined,
       providerId: filters.providerId || undefined,
@@ -95,22 +146,45 @@ export function DevAiHubPage() {
               <div
                 key={key}
                 className={styles.statCard}
-                onClick={() => handleFiltersChange({ ...filters, types: isActive ? [] : [key] })}
+                onClick={() =>
+                  handleFiltersChange({
+                    ...filters,
+                    types: isActive ? [] : [key],
+                  })
+                }
                 style={{
                   background: gradient,
-                  boxShadow: isActive ? `0 8px 24px ${shadow}` : `0 2px 8px ${shadow}`,
+                  boxShadow: isActive
+                    ? `0 8px 24px ${shadow}`
+                    : `0 2px 8px ${shadow}`,
                   transform: isActive ? 'translateY(-2px)' : 'none',
-                  outline: isActive ? '2px solid rgba(255,255,255,0.6)' : 'none',
+                  outline: isActive
+                    ? '2px solid rgba(255,255,255,0.6)'
+                    : 'none',
                   outlineOffset: 2,
                 }}
                 role="button"
                 tabIndex={0}
-                onKeyDown={e => { if (e.key === 'Enter') handleFiltersChange({ ...filters, types: isActive ? [] : [key] }); }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter')
+                    handleFiltersChange({
+                      ...filters,
+                      types: isActive ? [] : [key],
+                    });
+                }}
               >
                 <div className={styles.statCardInner}>
                   <Box>
-                    <Text variant="title-large" weight="bold" className={styles.statValue}>
-                      {stats ? (stats.byType[key] ?? 0) : <Skeleton style={{ width: 32 }} />}
+                    <Text
+                      variant="title-large"
+                      weight="bold"
+                      className={styles.statValue}
+                    >
+                      {stats ? (
+                        stats.byType[key] ?? 0
+                      ) : (
+                        <Skeleton style={{ width: 32 }} />
+                      )}
                     </Text>
                     <Text variant="body-small" className={styles.statLabel}>
                       {label}
@@ -135,7 +209,11 @@ export function DevAiHubPage() {
 
         {/* Results summary */}
         {result && !loading && (
-          <Text variant="body-x-small" color="secondary" style={{ marginBottom: 'var(--bui-space-4)', display: 'block' }}>
+          <Text
+            variant="body-x-small"
+            color="secondary"
+            style={{ marginBottom: 'var(--bui-space-4)', display: 'block' }}
+          >
             {result.totalCount} asset{result.totalCount !== 1 ? 's' : ''} found
           </Text>
         )}
@@ -144,7 +222,10 @@ export function DevAiHubPage() {
         <div className={styles.assetGrid}>
           {loading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} style={{ height: 150, borderRadius: 'var(--bui-radius-2)' }} />
+                <Skeleton
+                  key={i}
+                  style={{ height: 150, borderRadius: 'var(--bui-radius-2)' }}
+                />
               ))
             : result?.items.map(asset => (
                 <AssetCard
@@ -160,8 +241,14 @@ export function DevAiHubPage() {
         {!loading && result?.items.length === 0 && (
           <div className={styles.emptyState}>
             <div className={styles.emptyEmoji}>🤖</div>
-            <Text variant="title-small" color="secondary" weight="bold">No assets found</Text>
-            <Text variant="body-small" color="secondary" style={{ marginTop: 'var(--bui-space-1)' }}>
+            <Text variant="title-small" color="secondary" weight="bold">
+              No assets found
+            </Text>
+            <Text
+              variant="body-small"
+              color="secondary"
+              style={{ marginTop: 'var(--bui-space-1)' }}
+            >
               Try adjusting your filters or search terms.
             </Text>
           </div>
@@ -183,10 +270,7 @@ export function DevAiHubPage() {
         )}
       </div>
 
-      <AssetDetailPanel
-        assetId={selectedAssetId}
-        onClose={handleCloseDetail}
-      />
+      <AssetDetailPanel assetId={selectedAssetId} onClose={handleCloseDetail} />
 
       <AssetInstallDialog
         assetId={installAssetId}

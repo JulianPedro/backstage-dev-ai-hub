@@ -134,6 +134,7 @@ flowchart LR
 ```
 
 ### Phase 0 — Baseline & kind live
+
 - Move `@backstage/*` deps to the **v1.51.0** line; confirm the workspace builds.
 - Add `@backstage/plugin-catalog-backend` + `@backstage/plugin-catalog-backend-module-ai-model` to
   the backend `dev/` harness; allow `AiResource` in `catalog.rules`.
@@ -142,12 +143,14 @@ flowchart LR
 - **Exit:** the five example entities appear via `catalog getEntities kind=AiResource`.
 
 ### Phase 1 — Read contract + `-common`
+
 - In `-common`: the type→card registry (type, icon, colour role), `getFrameworks(entity)`, the
   framework vocabulary, and TS types for the annotation contract. Remove asset-DB types.
 - Unit-test `getFrameworks` (skill native, annotation fallback, absent → `[]`, unknown pass-through).
 - **Exit:** registry + resolver covered by tests; no dependency on the old asset model.
 
 ### Phase 2 — NFS page + cards
+
 - NFS wiring (manual): `createFrontendPlugin` + `PageBlueprint`, `/alpha` entrypoint, route ref,
   sidebar via `title`+`icon` (no `NavItemBlueprint`).
 - Page reads `kind=AiResource`, groups by `spec.type`, renders the five cards (swappable),
@@ -156,19 +159,22 @@ flowchart LR
 - **Exit:** browse + filter parity with today's section, sourced entirely from the catalog.
 
 ### Phase 3 — Thin backend
+
 - Strip the backend to: **body resolver** (`getEntityByRef` → `source-location` → `UrlReader`,
-  + zip assembly for resource-bearing skills), **install telemetry** (one counter table keyed by
+  - zip assembly for resource-bearing skills), **install telemetry** (one counter table keyed by
   entity ref), and the **catalog-backed MCP server** (`CatalogClient` for list/search/get, body
   resolver for install).
 - Wire frontend install/copy/download/VS-Code flows to the resolver.
 - **Exit:** copy/download/install and the MCP tools work end-to-end against catalog data.
 
 ### Phase 4 — Delete the legacy silo
+
 - Remove `AiAssetStore`, `AiAssetSyncService`, `AssetParser`, REST asset CRUD, migrations for asset
   tables (keep only the telemetry table), and now-dead `-common`/`-node` types.
 - **Exit:** nothing but install telemetry is plugin-owned. The "no siloed components" milestone.
 
 ### Phase 5 — Upstream convergence (ongoing)
+
 - Structured subtype ships for `agent`/`hook`/`mcp`/`plugin` → read native fields, retire the
   annotation read for that type.
 - Content-reference lands (backstage/backstage#34318) → drop the body resolver.

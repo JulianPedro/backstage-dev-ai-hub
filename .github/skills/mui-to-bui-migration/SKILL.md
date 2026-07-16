@@ -597,7 +597,7 @@ Common icon mappings:
 | `RecordVoiceOver` | `RiMegaphoneLine`    |
 | `Description`     | `RiFileTextLine`     |
 
-Find more icons at: https://remixicon.com/
+Find more icons at: <https://remixicon.com/>
 
 ### 16. Paper to Card
 
@@ -927,6 +927,6 @@ When migrating a plugin:
 
 ## Reference
 
-- BUI Documentation: https://ui.backstage.io
-- Remix Icons: https://remixicon.com/
-- Example Migration PR: https://github.com/backstage/backstage/pull/31631
+- BUI Documentation: <https://ui.backstage.io>
+- Remix Icons: <https://remixicon.com/>
+- Example Migration PR: <https://github.com/backstage/backstage/pull/31631>

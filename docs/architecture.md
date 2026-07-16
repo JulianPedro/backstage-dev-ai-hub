@@ -73,6 +73,7 @@ interface ResourceSummary {
 ```
 
 **Why a flat contract?**
+
 - **Decoupling**: Frontend changes don't break when catalog field paths move (e.g. `spec.type` vs `metadata.annotations`).
 - **No catalog imports in frontend**: The frontend package does not import `@backstage/catalog-model` or `@backstage/plugin-catalog-react`. It is purely presentational.
 - **Security**: Sensitive annotations or internal fields can be dropped during transformation.

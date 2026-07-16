@@ -7,13 +7,23 @@ import * as hooks from '../../hooks';
 // Mock BUI components as simple stubs to avoid react-router context issues
 // that arise when jest.requireActual('@backstage/ui') loads BUI internals.
 jest.mock('@backstage/ui', () => ({
-  Box: ({ children, className }: any) => <div className={className}>{children}</div>,
-  Flex: ({ children, className }: any) => <div className={className}>{children}</div>,
-  Text: ({ children, className }: any) => <span className={className}>{children}</span>,
+  Box: ({ children, className }: any) => (
+    <div className={className}>{children}</div>
+  ),
+  Flex: ({ children, className }: any) => (
+    <div className={className}>{children}</div>
+  ),
+  Text: ({ children, className }: any) => (
+    <span className={className}>{children}</span>
+  ),
   Skeleton: () => null,
   TablePagination: () => null,
   SearchField: ({ 'aria-label': label, onChange, value }: any) => (
-    <input aria-label={label} value={value ?? ''} onChange={e => onChange?.(e.target.value)} />
+    <input
+      aria-label={label}
+      value={value ?? ''}
+      onChange={e => onChange?.(e.target.value)}
+    />
   ),
 }));
 
@@ -51,7 +61,15 @@ describe('DevAiHubPage — stuck-filter regression #1046', () => {
     (hooks.useAssets as jest.Mock).mockReturnValue({
       result: {
         items: [
-          { id: '1', name: 'example', tags: ['python'], type: 'skill', tools: [], frameworks: [], installPaths: {} },
+          {
+            id: '1',
+            name: 'example',
+            tags: ['python'],
+            type: 'skill',
+            tools: [],
+            frameworks: [],
+            installPaths: {},
+          },
         ],
         totalCount: 1,
       },
@@ -60,7 +78,11 @@ describe('DevAiHubPage — stuck-filter regression #1046', () => {
     (hooks.useStats as jest.Mock).mockReturnValue({ stats: null });
     (hooks.useProviders as jest.Mock).mockReturnValue({ providers: [] });
 
-    render(<MemoryRouter><DevAiHubPage /></MemoryRouter>);
+    render(
+      <MemoryRouter>
+        <DevAiHubPage />
+      </MemoryRouter>,
+    );
 
     // Tag filter must be visible when there are tagged items
     await waitFor(() => {

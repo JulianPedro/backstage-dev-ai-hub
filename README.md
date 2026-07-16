@@ -6,8 +6,7 @@ The plugin syncs one or more Git repositories as the source of truth, stores ass
 
 ![Project Screenshot](docs/screenshot.png)
 
-
-https://github.com/user-attachments/assets/5728807d-2587-408b-88f2-4c2853606285
+<https://github.com/user-attachments/assets/5728807d-2587-408b-88f2-4c2853606285>
 
 ---
 

@@ -16,12 +16,14 @@
 ## Glossary
 
 ### AiResource
+
 The Backstage catalog entity kind that represents a single AI asset. Registered by
 `@backstage/plugin-catalog-backend-module-ai-model` (v1.51+, alpha). Has exactly
 five subtypes distinguished by `spec.type`. The catalog is the **only** place
 `AiResource` entities live — DevAI Hub never stores a second copy (ADR-0001).
 
 ### ResourceType
+
 The `spec.type` of an `AiResource`. Exactly six canonical values:
 
 | Token    | Meaning                                                       |
@@ -36,6 +38,7 @@ The `spec.type` of an `AiResource`. Exactly six canonical values:
 Entities with an unsupported `spec.type` are silently dropped by the consumer.
 
 ### ResourceSummary
+
 The flat JSON contract the backend returns to the frontend. Contains only the
 fields the UI actually needs (`entityRef`, `name`, `title`, `description`, `tags`,
 `type`, `lifecycle`, `owner`, `sourceLocation`, `frameworks`, `version`, `kind`,
@@ -43,6 +46,7 @@ fields the UI actually needs (`entityRef`, `name`, `title`, `description`, `tags
 Backstage `Entity` — it only knows `ResourceSummary` (architecture.md).
 
 ### body
+
 The consumable content of an `AiResource` — shaped by its `ResourceType`, not
 uniformly markdown: skill instructions, agent definition, and hook logic are
 markdown; an `mcp` body is the JSON snippet added to `.mcp.json`; a `plugin`
@@ -59,6 +63,7 @@ the plugin's database. Resolved on demand by the backend's body resolver via
 `backstage.io/source-location` (ADR-0001, ADR-0002).
 
 ### source-location
+
 The `backstage.io/source-location` annotation on an `AiResource`. A pointer in
 the form `url:<scheme>://…` that tells the body resolver where the **body itself**
 lives in Git — deliberately overloaded from the vanilla Backstage meaning
@@ -69,6 +74,7 @@ Required for "View body" / Install actions; without it the resource is browsable
 but not actionable.
 
 ### entry file
+
 The single markdown file that *represents* a directory-shaped (resource-bearing)
 body when a human views or copies it. Resolved server-side by the body resolver:
 the only `.md` in the tree, else `SKILL.md`, else the `.md` named after the
@@ -76,26 +82,31 @@ directory. Viewing shows the entry file; downloading/installing delivers the who
 body (all files) as one archive.
 
 ### producer
+
 Any system or person that creates `AiResource` `catalog-info.yaml` files and
 registers them in the Backstage catalog. DevAI Hub is **not** a producer — it is
 a pure consumer (ADR-0004). Ingestion is hand-authored YAML only (no plugin-owned
 Git discovery).
 
 ### consumer
+
 DevAI Hub's role. It reads `AiResource` entities from the catalog, transforms
 them into `ResourceSummary` objects, and serves them to the frontend. It never
 creates, edits, or ingests entities.
 
 ### framework
+
 An AI tool that a resource is compatible with. Tracked by the
 `devaihub.io/compatible-frameworks` annotation (comma-separated). For `skill`
 entities, read from the native `spec.agents` field when non-empty, falling back
 to the annotation otherwise. Resolved to a canonical token by
-`getFrameworks(entity)` in `-common`. Known tokens: 
+`getFrameworks(entity)` in `-common`. Known tokens:
 `github-copilot`, `claude-code`, `cursor`, `google-gemini`, `all`.
 
 ### telemetry
+
 Plugin-owned event storage tracking how resources are used. Two event classes:
+
 - **view** — recorded on card/detail render; deduplicated per (salted-hash-of-user, day) to avoid render-loop inflation (ADR-0007).
 - **deliberate action** — `install`, `copy`, `download`; stored raw (each occurrence counts).
 
@@ -103,6 +114,7 @@ Telemetry is store-all, dedup at read. The caller is recorded as a one-way salte
 hash, never as a plain user identity.
 
 ### enrichment
+
 Additive, read-time decoration of a `ResourceSummary` with GitHub-sourced data
 (e.g. last-updated, stars). Enrichment is **not** the body resolver: the body
 resolver streams the full markdown body on a user action; enrichment augments card

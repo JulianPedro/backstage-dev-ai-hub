@@ -1,0 +1,14 @@
+{
+  "Disable": {
+    "IndentSize": true
+  },
+  "Exclude": [
+    "^node_modules/",
+    "^dist/",
+    "^dist-types/",
+    "^coverage/",
+    "^\\.yarn/",
+    "^\\.specs/",
+    "yarn\\.lock"
+  ]
+}
