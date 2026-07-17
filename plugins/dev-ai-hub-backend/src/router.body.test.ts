@@ -97,7 +97,7 @@ describe('GET /entity/:ref/raw — single-file body', () => {
     });
   });
 
-  it('serves a JSON body (mcp) with its own content type', async () => {
+  it('serves a JSON body (mcp-app) with its own content type', async () => {
     const readUrl = jest.fn().mockResolvedValue({
       buffer: async () => Buffer.from('{"mcpServers":{}}'),
     });

@@ -79,14 +79,14 @@ describe('ResourceDetailPanel — body', () => {
     );
   });
 
-  it('renders an mcp body as a code block, not markdown', async () => {
+  it('renders an mcp-app body as a code block, not markdown', async () => {
     api.getEntityBody.mockResolvedValue({
       content: '{"mcpServers":{}}',
       contentType: 'application/json',
     });
     render(
       <ResourceDetailPanel
-        resource={summary({ ...ACTIONABLE, type: 'mcp' })}
+        resource={summary({ ...ACTIONABLE, type: 'mcp-app' })}
         onClose={jest.fn()}
       />,
     );

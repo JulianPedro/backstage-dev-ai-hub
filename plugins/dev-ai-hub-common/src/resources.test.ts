@@ -81,7 +81,7 @@ describe('getFrameworks', () => {
   it('passes unknown tokens through', () => {
     expect(
       getFrameworks(
-        entity({ type: 'mcp', annotation: 'claude-code,futuretool' }),
+        entity({ type: 'mcp-app', annotation: 'claude-code,futuretool' }),
       ),
     ).toEqual(['claude-code', 'futuretool']);
   });
@@ -136,7 +136,7 @@ describe('RESOURCE_TYPE_REGISTRY', () => {
 });
 
 describe('isResourceType', () => {
-  it.each(['skill', 'agent', 'hook', 'mcp', 'plugin', 'marketplace'])(
+  it.each(['skill', 'agent', 'hook', 'mcp-app', 'plugin', 'marketplace'])(
     'accepts %s',
     t => {
       expect(isResourceType(t)).toBe(true);
@@ -149,8 +149,8 @@ describe('isResourceType', () => {
 });
 
 describe('getBodyShape', () => {
-  it('is json only for mcp', () => {
-    expect(getBodyShape('mcp')).toBe('json');
+  it('is json only for mcp-app', () => {
+    expect(getBodyShape('mcp-app')).toBe('json');
     for (const t of [
       'skill',
       'agent',
@@ -189,13 +189,13 @@ describe('getResourceInstallPath', () => {
     );
   });
 
-  it('points hook and mcp at their settings files', () => {
+  it('points hook and mcp-app at their settings files', () => {
     expect(
       getResourceInstallPath('hook', 'claude-code', 'post-edit-lint'),
     ).toBe('.claude/settings.json');
-    expect(getResourceInstallPath('mcp', 'claude-code', 'grafana-mcp')).toBe(
-      '.mcp.json',
-    );
+    expect(
+      getResourceInstallPath('mcp-app', 'claude-code', 'grafana-mcp'),
+    ).toBe('.mcp.json');
   });
 
   it('is undefined where no convention exists', () => {
@@ -213,7 +213,7 @@ describe('getResourceInstallPath', () => {
 
 describe('hasDownloadableArtifact', () => {
   it('is true only where the body is the artifact itself', () => {
-    for (const t of ['skill', 'agent', 'hook', 'mcp'] as const) {
+    for (const t of ['skill', 'agent', 'hook', 'mcp-app'] as const) {
       expect(hasDownloadableArtifact(t)).toBe(true);
     }
   });
@@ -226,7 +226,7 @@ describe('hasDownloadableArtifact', () => {
 
 describe('hasCopyableBody', () => {
   it('is false only for marketplace — its actionable copies are the journey commands', () => {
-    for (const t of ['skill', 'agent', 'hook', 'mcp', 'plugin'] as const) {
+    for (const t of ['skill', 'agent', 'hook', 'mcp-app', 'plugin'] as const) {
       expect(hasCopyableBody(t)).toBe(true);
     }
     expect(hasCopyableBody('marketplace')).toBe(false);
@@ -375,7 +375,7 @@ describe('getMcpInstallLinks', () => {
       {
         label: 'Claude',
         href: `claude-cli://open?q=${encodeURIComponent(
-          `Install this MCP server by running: claude mcp add-json grafana '${config}'`,
+          `Install this MCP app by running: claude mcp add-json grafana '${config}'`,
         )}`,
       },
       {

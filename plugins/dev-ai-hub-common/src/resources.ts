@@ -11,7 +11,7 @@ export const RESOURCE_TYPES = [
   'skill',
   'agent',
   'hook',
-  'mcp',
+  'mcp-app',
   'plugin',
   'marketplace',
 ] as const;
@@ -166,12 +166,12 @@ export const RESOURCE_TYPE_REGISTRY: Record<ResourceType, ResourceTypeInfo> = {
     icon: 'flash',
     colorRole: 'hook',
   },
-  mcp: {
-    type: 'mcp',
-    label: 'MCP',
-    pluralLabel: 'MCP Servers',
+  'mcp-app': {
+    type: 'mcp-app',
+    label: 'MCP App',
+    pluralLabel: 'MCP Apps',
     icon: 'plug',
-    colorRole: 'mcp',
+    colorRole: 'mcp-app',
   },
   plugin: {
     type: 'plugin',
@@ -224,13 +224,13 @@ export interface ResourceListResponse {
 export type BodyShape = 'markdown' | 'json';
 
 export function getBodyShape(type: ResourceType): BodyShape {
-  return type === 'mcp' ? 'json' : 'markdown';
+  return type === 'mcp-app' ? 'json' : 'markdown';
 }
 
 /**
  * Whether downloading the body delivers the artifact itself. True for the
  * types whose body IS the installable content (skill files, agent
- * definition, hook/mcp config to merge). False for the pointer-shaped
+ * definition, hook/mcp-app config to merge). False for the pointer-shaped
  * bodies: a `plugin` installs through its framework
  * (`/plugin install name@marketplace`) and a `marketplace` is *registered*,
  * not fetched — for both, a download could only deliver the instructions
@@ -255,8 +255,9 @@ export function hasCopyableBody(type: ResourceType): boolean {
 /**
  * Convention table: (type, framework) → workspace install path for the body.
  * `undefined` means the combination has no filesystem path — a `plugin` body
- * carries its own per-framework install links (ADR-0009), and a `hook`/`mcp`
- * body is merged into a settings file rather than dropped in as a file.
+ * carries its own per-framework install links (ADR-0009), and a
+ * `hook`/`mcp-app` body is merged into a settings file rather than dropped
+ * in as a file.
  */
 const INSTALL_PATHS: Record<
   ResourceType,
@@ -279,7 +280,7 @@ const INSTALL_PATHS: Record<
   hook: {
     'claude-code': () => `.claude/settings.json`,
   },
-  mcp: {
+  'mcp-app': {
     'claude-code': () => `.mcp.json`,
     'github-copilot': () => `.vscode/mcp.json`,
     'google-gemini': () => `.gemini/settings.json`,
@@ -474,7 +475,7 @@ export function getAgentInstallLinks(
 }
 
 /**
- * One-click install links for an `mcp` resource, derived from its body —
+ * One-click install links for an `mcp-app` resource, derived from its body —
  * the canonical `.mcp.json` snippet (spec §3.4). VS Code carries a native
  * `vscode:mcp/install?{json}` handler (Insiders scheme twin), Cursor a
  * documented `cursor://anysphere.cursor-deeplink/mcp/install` one, and
@@ -540,7 +541,7 @@ export function getMcpInstallLinks(
   for (const framework of capable) {
     if (framework === 'claude-code') {
       const prompt = encodeURIComponent(
-        `Install this MCP server by running: claude mcp add-json ${serverName} '${configJson}'`,
+        `Install this MCP app by running: claude mcp add-json ${serverName} '${configJson}'`,
       );
       links.push({ label: 'Claude', href: `claude-cli://open?q=${prompt}` });
     } else if (framework === 'github-copilot') {
