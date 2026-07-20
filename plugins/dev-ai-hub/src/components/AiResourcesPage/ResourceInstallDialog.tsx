@@ -52,7 +52,7 @@ const TYPE_HINTS: Record<ResourceSummary['type'], string> = {
   agent:
     'Download or copy the agent definition into the path for your framework.',
   hook: 'Merge the hook definition into your settings file.',
-  'mcp-app': 'Add this server entry to your MCP configuration file.',
+  'mcp-config': 'Add this server entry to your MCP configuration file.',
   plugin:
     'This plugin installs through its framework — follow the instructions below.',
   marketplace:
@@ -100,7 +100,7 @@ function getInstallLinks(resource: ResourceSummary, body?: ResourceBody) {
   if (resource.type === 'agent') {
     return getAgentInstallLinks(resource.sourceLocation, resource.name);
   }
-  if (resource.type === 'mcp-app') {
+  if (resource.type === 'mcp-config') {
     return getMcpInstallLinks(
       resource.frameworks,
       resource.name,

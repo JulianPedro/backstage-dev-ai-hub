@@ -48,5 +48,5 @@ prompted to install the marketplace automatically when they trust the folder:
 ## Included plugins
 
 - **secure-dev-bundle** — approved GitHub workflows skill, security threat
-  modeller agent, post-edit lint hook, and the Grafana MCP app in one
+  modeller agent, post-edit lint hook, and the Grafana MCP config in one
   package.

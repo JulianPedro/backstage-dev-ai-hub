@@ -86,7 +86,7 @@ spec:
 | `skill` | Reusable contextual knowledge (structured upstream). |
 | `agent` | An AI agent / subagent definition. |
 | `hook` | Event handler (e.g. `PostToolUse`). |
-| `mcp-app` | An MCP app — an MCP server configuration. |
+| `mcp-config` | An MCP server configuration. |
 | `plugin` | A composite container (Claude Code plugin) that bundles other resources. |
 | `marketplace` | A distribution point for plugins (e.g. a Claude Code plugin marketplace repo). Bundles `plugin` resources only (ADR-0010). |
 
@@ -166,11 +166,11 @@ metadata:
 
 **No native spec fields.** `devaihub.io/hook-event` is **recommended** — it tells the consumer which event triggers this hook (used for MCP server tool descriptions and card metadata). `devaihub.io/hook-matcher` is optional.
 
-### 3.4 `mcp-app` — default shape + annotations
+### 3.4 `mcp-config` — default shape + annotations
 
 ```yaml
 spec:
-  type: mcp-app
+  type: mcp-config
   lifecycle: production
   owner: group:observability
 
@@ -179,13 +179,13 @@ metadata:
     devaihub.io/compatible-frameworks: "claude-code,cursor"
 ```
 
-**No native spec fields.** The body of an `mcp-app` resource **is** the JSON snippet the
+**No native spec fields.** The body of an `mcp-config` resource **is** the JSON snippet the
 user merges into `.mcp.json` (or equivalent), and it is **canonical for install** —
 transport and endpoint live only there (CONTEXT.md: body). The former
 `devaihub.io/mcp-type` / `devaihub.io/mcp-uri` annotations are retired: duplicating
 config in annotations invited drift with the body (issue #30 decision record).
 
-> **Design fork (§8.4 of the main spec):** an MCP server could alternatively be modelled as an `API` entity (`spec.type: mcp-server`). This spec follows the direct `AiResource:mcp-app` directive. If you need runtime endpoint semantics, emit an additional `API:mcp-server` and relate them.
+> **Design fork (§8.4 of the main spec):** an MCP server could alternatively be modelled as an `API` entity (`spec.type: mcp-server`). This spec follows the direct `AiResource:mcp-config` directive. If you need runtime endpoint semantics, emit an additional `API:mcp-server` and relate them.
 
 ### 3.5 `plugin` — composite container with relations
 
@@ -340,21 +340,21 @@ spec:
   owner: group:ai-platform-team
 ```
 
-### mcp-app
+### mcp-config
 
 ```yaml
 apiVersion: backstage.io/v1alpha1
 kind: AiResource
 metadata:
   name: grafana-mcp
-  title: Grafana MCP App
-  description: MCP app providing Grafana dashboard and alerting tools
+  title: Grafana MCP Config
+  description: MCP server configuration providing Grafana dashboard and alerting tools
   tags: [observability, grafana]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/mcp/grafana-mcp.json
     devaihub.io/compatible-frameworks: "claude-code,cursor"
 spec:
-  type: mcp-app
+  type: mcp-config
   lifecycle: production
   owner: group:observability
 ```
@@ -429,6 +429,6 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 
 | If upstream ships… | Then DevAI Hub should… |
 |---|---|
-| Structured subtype for `agent` / `hook` / `mcp-app` / `plugin` / `marketplace` | Migrate annotation fields into native spec fields; drop annotations. |
+| Structured subtype for `agent` / `hook` / `mcp-config` / `plugin` / `marketplace` | Migrate annotation fields into native spec fields; drop annotations. |
 | Content-in-catalog reference (backstage/backstage#34318) | Drop the bespoke body resolver; serve body from catalog directly. |
 | AiResource graduates from alpha | Remove `/alpha` imports; drop type-guard adapters. |

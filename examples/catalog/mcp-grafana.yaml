@@ -2,13 +2,13 @@ apiVersion: backstage.io/v1alpha1
 kind: AiResource
 metadata:
   name: grafana-mcp
-  title: Grafana MCP App
-  description: An MCP app that exposes Grafana dashboards, alerts, and metrics queries as tools for AI agents. Supports HTTP transport.
+  title: Grafana MCP Config
+  description: An MCP server configuration exposing Grafana dashboards, alerts, and metrics queries as tools for AI agents. Supports HTTP transport.
   tags: [observability, grafana, metrics, mcp]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/mcp/grafana-mcp.json
     devaihub.io/compatible-frameworks: claude-code,github-copilot,cursor
 spec:
-  type: mcp-app
+  type: mcp-config
   lifecycle: production
   owner: group:observability

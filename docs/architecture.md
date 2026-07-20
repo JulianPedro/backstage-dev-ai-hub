@@ -59,7 +59,7 @@ interface ResourceSummary {
   title?: string;
   description?: string;
   tags: string[];
-  type: ResourceType;          // 'skill' | 'agent' | 'hook' | 'mcp-app' | 'plugin' | 'marketplace'
+  type: ResourceType;          // 'skill' | 'agent' | 'hook' | 'mcp-config' | 'plugin' | 'marketplace'
   lifecycle: string;
   owner?: string;
   sourceLocation?: string;
@@ -116,7 +116,7 @@ GET /api/dev-ai-hub/entity/:ref/raw
 | `skill` | green `#6AB04C` | 🧠 | Structured (`spec.agents`, `disciplines`, `categories`) |
 | `agent` | pink `#FF6B9D` | 🤖 | Default shape + annotations |
 | `hook` | yellow `#F9CA24` | 🪝 | Default shape + annotations |
-| `mcp-app` | teal `#00D2D3` | 🔌 | Default shape + annotations |
+| `mcp-config` | teal `#00D2D3` | 🔌 | Default shape + annotations |
 | `plugin` | blue `#54A0FF` | 🧩 | Default shape + `dependsOn` relations (children: skill/agent/hook/mcp) |
 | `marketplace` | coral `#F26B43` | 🏪 | Default shape + `dependsOn` relations (children: plugin only, ADR-0010) |
 

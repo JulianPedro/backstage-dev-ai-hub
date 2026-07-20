@@ -31,7 +31,7 @@ The `spec.type` of an `AiResource`. Exactly six canonical values:
 | `skill`  | Reusable contextual knowledge; the only type with a native upstream spec (`spec.agents`, `disciplines`, `categories`). |
 | `agent`  | An AI agent or subagent definition.                           |
 | `hook`   | An event handler (e.g. `PostToolUse`).                        |
-| `mcp-app` | An MCP app — an MCP server configuration.                    |
+| `mcp-config` | An MCP server configuration.                              |
 | `plugin` | A composite container (e.g. Claude Code plugin) that bundles other resources via `dependsOn` relations. |
 | `marketplace` | A distribution point for plugins (e.g. a Claude Code plugin marketplace repo). A container one level above `plugin`: it bundles `plugin` resources via `dependsOn` relations — plugins only. "Install" means registering the marketplace with the AI tool (e.g. `/plugin marketplace add`), after which its plugins can be installed from it. |
 
@@ -49,11 +49,11 @@ Backstage `Entity` — it only knows `ResourceSummary` (architecture.md).
 
 The consumable content of an `AiResource` — shaped by its `ResourceType`, not
 uniformly markdown: skill instructions, agent definition, and hook logic are
-markdown; an `mcp-app` body is the JSON snippet added to `.mcp.json`; a `plugin`
+markdown; an `mcp-config` body is the JSON snippet added to `.mcp.json`; a `plugin`
 body carries the install link; a `marketplace` body is a markdown doc carrying
 the marketplace-add command and repo link (never the `marketplace.json`
 manifest itself — users register the repo, they don't copy the manifest).
-Bodies are either **artifact-shaped** (skill, agent, hook, mcp-app — the body is
+Bodies are either **artifact-shaped** (skill, agent, hook, mcp-config — the body is
 the installable content, so it can be downloaded) or **pointer-shaped**
 (plugin, marketplace — the body points at a framework-native install, so
 there is nothing to download). The body is **canonical for install** — copy,
@@ -150,5 +150,5 @@ endpoint. Cards render fully without it.
 
 The six **ResourceTypes** drive the UI: each type has its own card colour, icon,
 and `getFrameworks()` read path. Two types have children (via `dependsOn`
-relations): a `plugin` bundles skills/agents/hooks/mcp-apps, and a `marketplace`
+relations): a `plugin` bundles skills/agents/hooks/mcp-configs, and a `marketplace`
 bundles plugins only. `childCount` is surfaced in `ResourceSummary` for both.

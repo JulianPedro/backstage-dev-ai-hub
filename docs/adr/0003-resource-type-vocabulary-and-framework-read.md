@@ -1,8 +1,9 @@
 # Resource-type vocabulary and best-effort framework reads
 
-> **Amendment (2026-07):** the `mcp` type token was renamed to `mcp-app` (displayed as "MCP App").
-> Mentions of `spec.type: mcp` below are the original text; read them as `mcp-app`.
-> Catalog entities still using `spec.type: mcp` are dropped by the consumer and must be updated.
+> **Amendment (2026-07):** the `mcp` type token was renamed to `mcp-config` (displayed as
+> "MCP Config"). Mentions of `spec.type: mcp` below are the original text; read them as
+> `mcp-config`. Catalog entities still using `spec.type: mcp` are dropped by the consumer and
+> must be updated.
 
 The kind is always `AiResource`. DevAI Hub recognises five `spec.type` values —
 `skill`, `agent`, `hook`, `mcp`, `plugin` — each rendered by its own card. Only `skill` has a
