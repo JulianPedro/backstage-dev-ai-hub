@@ -7,13 +7,16 @@ import type {
 } from '@backstage/backend-plugin-api';
 import type { CatalogService } from '@backstage/plugin-catalog-node';
 import type { AiAssetStore } from './database/AiAssetStore';
+import type { TelemetryStore } from './database/TelemetryStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import type { ProviderConfig, AssetListFilter } from './types';
 import type {
   AssetType,
   ResourceSummary,
 } from '@nospt/plugin-dev-ai-hub-common';
+import { TelemetryEventInputSchema } from '@nospt/plugin-dev-ai-hub-common';
 import { toResourceSummary } from './service/toResourceSummary';
+import { hashActor } from './service/telemetryHash';
 import {
   SOURCE_LOCATION_ANNOTATION,
   contentTypeFor,
@@ -24,6 +27,8 @@ import {
 interface RouterOptions {
   logger: LoggerService;
   store: AiAssetStore;
+  telemetryStore: TelemetryStore;
+  telemetrySalt: string;
   syncService: AiAssetSyncService;
   providers: ProviderConfig[];
   catalog: CatalogService;
@@ -32,7 +37,16 @@ interface RouterOptions {
 }
 
 export function createRouter(options: RouterOptions): express.Router {
-  const { store, syncService, providers, catalog, httpAuth, reader } = options;
+  const {
+    store,
+    telemetryStore,
+    telemetrySalt,
+    syncService,
+    providers,
+    catalog,
+    httpAuth,
+    reader,
+  } = options;
   const router = express.Router();
 
   router.use(express.json());
@@ -194,6 +208,57 @@ export function createRouter(options: RouterOptions): express.Router {
   router.get('/entity/:ref/raw/:filename', (req, res) =>
     handleBodyRequest(req, res, req.params.filename),
   );
+
+  // ── Telemetry (v2 — ADR-0007) ──────────────────────────────────────────────
+
+  router.post('/telemetry', async (req, res) => {
+    try {
+      const parsed = TelemetryEventInputSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: parsed.error.message });
+        return;
+      }
+
+      const credentials = await httpAuth.credentials(req);
+      const entity = await catalog.getEntityByRef(parsed.data.ref, {
+        credentials,
+      });
+      if (!entity) {
+        res.status(404).json({ error: 'Resource not found' });
+        return;
+      }
+
+      await telemetryStore.record({
+        entityRef: parsed.data.ref,
+        action: parsed.data.action,
+        actorHash: hashActor(credentials, telemetrySalt),
+        tool: parsed.data.tool,
+      });
+      res.sendStatus(204);
+    } catch (error) {
+      if ((error as Error).name === 'AuthenticationError') {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
+      options.logger.error(`POST /telemetry failed: ${error}`);
+      res.status(500).json({ error: 'Failed to record telemetry event' });
+    }
+  });
+
+  router.get('/telemetry/:ref', async (req, res) => {
+    try {
+      await httpAuth.credentials(req);
+      const counts = await telemetryStore.getCounts(req.params.ref);
+      res.json(counts);
+    } catch (error) {
+      if ((error as Error).name === 'AuthenticationError') {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
+      options.logger.error(`GET /telemetry/${req.params.ref} failed: ${error}`);
+      res.status(500).json({ error: 'Failed to fetch telemetry counts' });
+    }
+  });
 
   // ── Assets ────────────────────────────────────────────────────────────────
 

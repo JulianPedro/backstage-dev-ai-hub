@@ -122,6 +122,8 @@ function makeApp(storeOverrides: Partial<AiAssetStore> = {}) {
   const router = createRouter({
     logger: noopLogger,
     store,
+    telemetryStore: {} as any,
+    telemetrySalt: 'test-salt',
     syncService,
     providers: [PROVIDER],
     catalog: {

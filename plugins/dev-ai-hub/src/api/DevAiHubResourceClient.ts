@@ -6,6 +6,8 @@ import {
 import type {
   ResourceListResponse,
   ResourceSummary,
+  TelemetryAction,
+  TelemetryCounts,
 } from '@nospt/plugin-dev-ai-hub-common';
 
 /**
@@ -43,6 +45,10 @@ export interface DevAiHubResourceApi {
   ): Promise<string>;
   /** Trigger a browser download of the artifact (file, or zip if multi-file). */
   downloadEntityBody(entityRef: string): Promise<void>;
+  /** Record a telemetry event (ADR-0007). Fire-and-forget from callers. */
+  track(ref: string, action: TelemetryAction, tool?: string): Promise<void>;
+  /** Raw per-action counts for a resource (ADR-0007 — dedup for `view` is a follow-up). */
+  getInstallCount(ref: string): Promise<TelemetryCounts>;
 }
 
 export class DevAiHubResourceClient implements DevAiHubResourceApi {
@@ -113,5 +119,35 @@ export class DevAiHubResourceClient implements DevAiHubResourceApi {
     } finally {
       URL.revokeObjectURL(blobUrl);
     }
+  }
+
+  async track(
+    ref: string,
+    action: TelemetryAction,
+    tool?: string,
+  ): Promise<void> {
+    // Fire-and-forget (ADR-0007): a telemetry failure must never surface as
+    // a user-facing error or block the copy/download/install it's tracking.
+    try {
+      const base = await this.discoveryApi.getBaseUrl('dev-ai-hub');
+      await this.fetchApi.fetch(`${base}/telemetry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref, action, tool }),
+      });
+    } catch {
+      // ignored — see above
+    }
+  }
+
+  async getInstallCount(ref: string): Promise<TelemetryCounts> {
+    const base = await this.discoveryApi.getBaseUrl('dev-ai-hub');
+    const response = await this.fetchApi.fetch(
+      `${base}/telemetry/${encodeURIComponent(ref)}`,
+    );
+    if (!response.ok) {
+      throw new Error(`Dev AI Hub API error ${response.status}`);
+    }
+    return (await response.json()) as TelemetryCounts;
   }
 }

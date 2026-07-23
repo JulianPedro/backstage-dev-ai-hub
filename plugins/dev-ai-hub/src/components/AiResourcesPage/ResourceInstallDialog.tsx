@@ -263,6 +263,7 @@ export function ResourceInstallDialog({
   const handleCopy = async () => {
     if (!body) return;
     await navigator.clipboard.writeText(body.content);
+    api.track(resource.entityRef, 'copy');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -271,6 +272,7 @@ export function ResourceInstallDialog({
     setDownloadError(false);
     try {
       await api.downloadEntityBody(resource.entityRef);
+      api.track(resource.entityRef, 'download');
     } catch {
       setDownloadError(true);
     }

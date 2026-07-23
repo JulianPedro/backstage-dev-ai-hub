@@ -8,6 +8,7 @@ import {
   type AiAssetProvider,
 } from '@nospt/plugin-dev-ai-hub-node';
 import { AiAssetStore } from './database/AiAssetStore';
+import { TelemetryStore } from './database/TelemetryStore';
 import { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createRouter } from './router';
 import type { ProviderConfig } from './types';
@@ -45,6 +46,8 @@ export const devAiHubPlugin = createBackendPlugin({
         catalog,
       }) {
         const store = await AiAssetStore.create({ database });
+        const telemetryStore = await TelemetryStore.create({ database });
+        const telemetrySalt = config.getString('devAiHub.telemetry.salt');
 
         const providers: ProviderConfig[] = (
           config.getOptionalConfigArray('devAiHub.providers') ?? []
@@ -85,6 +88,8 @@ export const devAiHubPlugin = createBackendPlugin({
         const router = createRouter({
           logger,
           store,
+          telemetryStore,
+          telemetrySalt,
           syncService,
           providers,
           catalog,

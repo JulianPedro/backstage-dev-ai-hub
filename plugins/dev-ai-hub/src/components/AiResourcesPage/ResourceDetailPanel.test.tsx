@@ -32,6 +32,10 @@ jest.mock('@backstage/ui', () => ({
 const api = {
   getEntityBody: jest.fn(),
   downloadEntityBody: jest.fn(),
+  track: jest.fn(),
+  getInstallCount: jest
+    .fn()
+    .mockResolvedValue({ install: 0, copy: 0, download: 0, view: 0 }),
 };
 
 jest.mock('@backstage/core-plugin-api', () => ({

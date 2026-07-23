@@ -1,7 +1,10 @@
-import type { MouseEvent } from 'react';
+import { useEffect, type MouseEvent } from 'react';
+import { useApi } from '@backstage/core-plugin-api';
 import { Text } from '@backstage/ui';
-import { RiExternalLinkLine } from '@remixicon/react';
+import { RiExternalLinkLine, RiEyeLine } from '@remixicon/react';
 import type { ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
+import { devAiHubResourceApiRef } from '../../api/DevAiHubResourceClient';
+import { useTelemetryCounts } from '../../hooks/useTelemetryCounts';
 import { ToolIcon } from '../ToolIcon';
 import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { frameworkLabel, getTypeMeta } from './typeMeta';
@@ -18,9 +21,18 @@ interface ResourceCardProps {
  * badges, tags, version · owner footer, View source link.
  */
 const MAX_VISIBLE_TAGS = 3;
+const POPULAR_THRESHOLD = 5;
 
 export function ResourceCard({ resource, onView }: ResourceCardProps) {
   const meta = getTypeMeta(resource.type);
+  const api = useApi(devAiHubResourceApiRef);
+  const counts = useTelemetryCounts(resource.entityRef);
+
+  useEffect(() => {
+    api.track(resource.entityRef, 'view');
+    // Fires once per card mount, not per re-render (ADR-0007 anti-inflation intent).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resource.entityRef]);
 
   const handleSourceClick = (e: MouseEvent) => e.stopPropagation();
 
@@ -116,7 +128,10 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
         </div>
       )}
 
-      {(resource.version || ownerLabel) && (
+      {(resource.version ||
+        ownerLabel ||
+        !!counts?.install ||
+        !!counts?.view) && (
         <div className={styles.footer}>
           <Text variant="body-x-small" color="secondary">
             {[
@@ -126,6 +141,22 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
               .filter(Boolean)
               .join(' · ')}
           </Text>
+          <span className={styles.countsRow}>
+            {!!counts?.view && (
+              <span className={styles.count} title={`${counts.view} views`}>
+                <RiEyeLine size={13} /> {counts.view}
+              </span>
+            )}
+            {!!counts?.install && (
+              <span
+                className={styles.count}
+                title={`${counts.install} installs`}
+              >
+                {counts.install >= POPULAR_THRESHOLD ? '🔥' : '↓'}{' '}
+                {counts.install}
+              </span>
+            )}
+          </span>
         </div>
       )}
     </div>

@@ -109,6 +109,19 @@
     gap: var(--bui-space-1);
   }
 
+  .statsRow {
+    display: flex;
+    gap: var(--bui-space-3);
+  }
+
+  .statItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8125rem;
+    color: var(--bui-fg-secondary);
+  }
+
   .frameworkBadge {
     display: inline-flex;
     align-items: center;

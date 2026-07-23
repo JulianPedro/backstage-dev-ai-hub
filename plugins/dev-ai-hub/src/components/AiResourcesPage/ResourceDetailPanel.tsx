@@ -13,6 +13,7 @@ import {
   RiCloseLine,
   RiDownloadLine,
   RiExternalLinkLine,
+  RiEyeLine,
   RiFileCopyLine,
   RiInstallLine,
 } from '@remixicon/react';
@@ -26,6 +27,7 @@ import {
 } from '@nospt/plugin-dev-ai-hub-common';
 import { devAiHubResourceApiRef } from '../../api/DevAiHubResourceClient';
 import { useResourceBody } from '../../hooks/useResourceBody';
+import { useTelemetryCounts } from '../../hooks/useTelemetryCounts';
 import { ToolIcon } from '../ToolIcon';
 import { ResourceInstallDialog } from './ResourceInstallDialog';
 import { frameworkLabel, getTypeMeta } from './typeMeta';
@@ -49,6 +51,7 @@ export function ResourceDetailPanel({
   const api = useApi(devAiHubResourceApiRef);
   const actionable = !!resource?.sourceLocation;
   const bodyState = useResourceBody(resource?.entityRef, actionable);
+  const counts = useTelemetryCounts(resource?.entityRef);
   const [installOpen, setInstallOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -60,8 +63,19 @@ export function ResourceDetailPanel({
   const handleCopy = async () => {
     if (!bodyState.body) return;
     await navigator.clipboard.writeText(bodyState.body.content);
+    api.track(resource.entityRef, 'copy');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    api.track(resource.entityRef, 'download');
+    return api.downloadEntityBody(resource.entityRef);
+  };
+
+  const handleInstall = () => {
+    api.track(resource.entityRef, 'install');
+    setInstallOpen(true);
   };
 
   const metadataRows: [string, string | undefined][] = [
@@ -119,6 +133,21 @@ export function ResourceDetailPanel({
             </Text>
           )}
 
+          {(!!counts?.view || !!counts?.install) && (
+            <div className={styles.statsRow}>
+              {!!counts?.view && (
+                <span className={styles.statItem}>
+                  <RiEyeLine size={14} /> {counts.view} views
+                </span>
+              )}
+              {!!counts?.install && (
+                <span className={styles.statItem}>
+                  <RiInstallLine size={14} /> {counts.install} installs
+                </span>
+              )}
+            </div>
+          )}
+
           {actionable && (
             <div className={styles.actions}>
               {hasCopyableBody(resource.type) && (
@@ -137,7 +166,7 @@ export function ResourceDetailPanel({
                   size="small"
                   variant="secondary"
                   iconStart={<RiDownloadLine />}
-                  onPress={() => api.downloadEntityBody(resource.entityRef)}
+                  onPress={handleDownload}
                 >
                   Download
                 </Button>
@@ -146,7 +175,7 @@ export function ResourceDetailPanel({
                 size="small"
                 variant="primary"
                 iconStart={<RiInstallLine />}
-                onPress={() => setInstallOpen(true)}
+                onPress={handleInstall}
               >
                 Install
               </Button>

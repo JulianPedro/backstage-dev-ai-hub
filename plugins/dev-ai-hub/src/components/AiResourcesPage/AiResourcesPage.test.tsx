@@ -42,7 +42,14 @@ jest.mock('react-markdown', () => ({
 
 jest.mock('@backstage/core-plugin-api', () => ({
   ...jest.requireActual('@backstage/core-plugin-api'),
-  useApi: () => ({ getEntityBody: jest.fn(), downloadEntityBody: jest.fn() }),
+  useApi: () => ({
+    getEntityBody: jest.fn(),
+    downloadEntityBody: jest.fn(),
+    track: jest.fn().mockResolvedValue(undefined),
+    getInstallCount: jest
+      .fn()
+      .mockResolvedValue({ install: 0, copy: 0, download: 0, view: 0 }),
+  }),
 }));
 
 jest.mock('../../hooks/useResources', () => ({ useResources: jest.fn() }));

@@ -60,6 +60,8 @@ function makeApp({
   const router = createRouter({
     logger: noopLogger,
     store: {} as any,
+    telemetryStore: {} as any,
+    telemetrySalt: 'test-salt',
     syncService: {} as any,
     providers: [],
     catalog: catalog as any,

@@ -9,6 +9,10 @@
 #    app.addExtensions([devAiHub]);
 
 devAiHub:
+  telemetry:
+    # Stable salt for hashing telemetry caller identity (ADR-0007).
+    # Must not change across restarts/deploys. Set via env var, never literal.
+    salt: ${DEV_AI_HUB_TELEMETRY_SALT}
   providers:
     - id: main-ai-assets
       type: github

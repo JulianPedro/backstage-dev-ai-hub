@@ -15,6 +15,9 @@ backend:
     connection: ":memory:"
 
 devAiHub:
+  telemetry:
+    # Dev-only value — never reuse in a real deployment (ADR-0007).
+    salt: dev-only-telemetry-salt
   providers:
     - id: backstage-test-01
       type: github

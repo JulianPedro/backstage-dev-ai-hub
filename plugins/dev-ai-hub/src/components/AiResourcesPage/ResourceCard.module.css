@@ -115,5 +115,25 @@
     margin-top: auto;
     padding-top: var(--bui-space-2);
     border-top: 1px solid var(--bui-border-1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bui-space-2);
+  }
+
+  .countsRow {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    flex-shrink: 0;
+  }
+
+  .count {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.8125rem;
+    color: var(--bui-fg-secondary);
+    white-space: nowrap;
   }
 }

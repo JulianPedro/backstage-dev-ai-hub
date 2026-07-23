@@ -27,3 +27,12 @@ ref is validated to be a real `AiResource`, so garbage refs never land.
   telemetry is active.
 - Popularity counts mean "distinct viewers per day + raw deliberate actions", not raw event fires.
 - Per-user attribution/audit is intentionally not possible from stored data (hash is one-way).
+
+## Amendment (2026-07-22, slice [2.3c] / #31)
+
+`GET /telemetry/:ref` ships with **raw counts for all four actions**, including `view` —
+the per-(hash, day)-distinct dedup for `view` described above is deferred to a follow-up issue,
+not built in this slice. `actor_hash` is still captured on every write (store-all is unconditional
+regardless of what the read side currently does with it), so the deferred issue can dedup the
+existing history without needing a backfill. Until that issue lands, a resource's `view` count is
+literally "how many view events were recorded," including render-loop repeats.
