@@ -48,7 +48,6 @@
     "@backstage/catalog-model": "^1.9.0",
     "@backstage/plugin-catalog-node": "^2.2.2",
     "@nospt/plugin-dev-ai-hub-common": "workspace:^",
-    "@nospt/plugin-dev-ai-hub-node": "workspace:^",
     "archiver": "^6.0.0",
     "express": "^5.2.1",
     "js-yaml": "^4.1.0",

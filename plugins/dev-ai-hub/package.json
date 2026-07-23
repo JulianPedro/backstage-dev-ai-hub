@@ -52,8 +52,6 @@
     "@backstage/core-plugin-api": "^1.12.6",
     "@backstage/frontend-plugin-api": "^0.17.0",
     "@backstage/ui": "^0.15.0",
-    "@mui/icons-material": "^5.15.0",
-    "@mui/material": "^5.15.0",
     "@nospt/plugin-dev-ai-hub-common": "workspace:^",
     "@remixicon/react": "^4.6.0",
     "react-markdown": "^9.0.0",

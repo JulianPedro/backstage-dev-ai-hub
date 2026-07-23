@@ -49,11 +49,8 @@ function makeApp({
 
   const router = createRouter({
     logger: noopLogger,
-    store: {} as any,
     telemetryStore: telemetryStore as any,
     telemetrySalt: 'test-salt',
-    syncService: {} as any,
-    providers: [],
     catalog: catalog as any,
     httpAuth: httpAuth as any,
     reader: { readUrl: jest.fn(), readTree: jest.fn() } as any,

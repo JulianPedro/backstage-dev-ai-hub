@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Box, Flex, SearchField, Text } from '@backstage/ui';
 import { RiAppsLine, RiCheckLine } from '@remixicon/react';
-import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import type { FrameworkToken } from '@nospt/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import { frameworkLabel } from './typeMeta';
 import styles from './ResourceFilters.module.css';
@@ -227,7 +227,7 @@ export function ResourceFilters({
     ...availableFrameworks.map(fw => ({
       value: fw,
       label: frameworkLabel(fw),
-      icon: <ToolIcon tool={fw as AiTool} branded size={14} />,
+      icon: <ToolIcon tool={fw as FrameworkToken} branded size={14} />,
     })),
   ];
 

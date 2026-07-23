@@ -3,33 +3,17 @@ import {
   createBackendPlugin,
 } from '@backstage/backend-plugin-api';
 import { catalogServiceRef } from '@backstage/plugin-catalog-node';
-import {
-  devAiHubProviderExtensionPoint,
-  type AiAssetProvider,
-} from '@nospt/plugin-dev-ai-hub-node';
-import { AiAssetStore } from './database/AiAssetStore';
 import { TelemetryStore } from './database/TelemetryStore';
-import { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createRouter } from './router';
-import type { ProviderConfig } from './types';
 
 export const devAiHubPlugin = createBackendPlugin({
   pluginId: 'dev-ai-hub',
   register(env) {
-    const externalProviders: AiAssetProvider[] = [];
-
-    env.registerExtensionPoint(devAiHubProviderExtensionPoint, {
-      addProvider(provider) {
-        externalProviders.push(provider);
-      },
-    });
-
     env.registerInit({
       deps: {
         config: coreServices.rootConfig,
         logger: coreServices.logger,
         database: coreServices.database,
-        scheduler: coreServices.scheduler,
         httpRouter: coreServices.httpRouter,
         urlReader: coreServices.urlReader,
         httpAuth: coreServices.httpAuth,
@@ -39,72 +23,24 @@ export const devAiHubPlugin = createBackendPlugin({
         config,
         logger,
         database,
-        scheduler,
         httpRouter,
         urlReader,
         httpAuth,
         catalog,
       }) {
-        const store = await AiAssetStore.create({ database });
         const telemetryStore = await TelemetryStore.create({ database });
         const telemetrySalt = config.getString('devAiHub.telemetry.salt');
 
-        const providers: ProviderConfig[] = (
-          config.getOptionalConfigArray('devAiHub.providers') ?? []
-        ).map(p => ({
-          id: p.getString('id'),
-          type: p.getString('type') as ProviderConfig['type'],
-          target: p.getString('target'),
-          branch: p.getOptionalString('branch') ?? 'main',
-          schedule: {
-            frequency: {
-              minutes: p.getOptionalNumber('schedule.frequency.minutes'),
-              hours: p.getOptionalNumber('schedule.frequency.hours'),
-            },
-            timeout: {
-              minutes: p.getOptionalNumber('schedule.timeout.minutes'),
-              hours: p.getOptionalNumber('schedule.timeout.hours'),
-            },
-          },
-          filters: p.has('filters')
-            ? {
-                tools: p.getOptionalStringArray('filters.tools'),
-                types: p.getOptionalStringArray('filters.types'),
-              }
-            : undefined,
-        }));
-
-        const syncService = new AiAssetSyncService({
-          logger,
-          store,
-          scheduler,
-          urlReader,
-          providers,
-          externalProviders,
-        });
-
-        await syncService.start();
-
         const router = createRouter({
           logger,
-          store,
           telemetryStore,
           telemetrySalt,
-          syncService,
-          providers,
           catalog,
           httpAuth,
           reader: urlReader,
         });
 
         httpRouter.use(router);
-
-        httpRouter.addAuthPolicy({ path: '/assets', allow: 'unauthenticated' });
-        httpRouter.addAuthPolicy({
-          path: '/providers',
-          allow: 'unauthenticated',
-        });
-        httpRouter.addAuthPolicy({ path: '/stats', allow: 'unauthenticated' });
       },
     });
   },

@@ -22,7 +22,7 @@ import {
   getBodyShape,
   hasCopyableBody,
   hasDownloadableArtifact,
-  type AiTool,
+  type FrameworkToken,
   type ResourceSummary,
 } from '@nospt/plugin-dev-ai-hub-common';
 import { devAiHubResourceApiRef } from '../../api/DevAiHubResourceClient';
@@ -238,7 +238,7 @@ export function ResourceDetailPanel({
               <div className={styles.badges}>
                 {resource.frameworks.map(f => (
                   <span key={f} className={styles.frameworkBadge}>
-                    <ToolIcon tool={f as AiTool} size={14} />
+                    <ToolIcon tool={f as FrameworkToken} size={14} />
                     {frameworkLabel(f)}
                   </span>
                 ))}

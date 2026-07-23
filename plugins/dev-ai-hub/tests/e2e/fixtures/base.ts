@@ -6,24 +6,20 @@
  *   PROVIDER_STORAGE_KEY  → '@backstage/core:SignInPage:provider'
  *   enableLegacyGuestToken (guestProvider.tsx)
  *
- * The app's own dev bootstrap (dev/index.tsx) clears enableLegacyGuestToken
- * on every load (the v2 routes need a real minted token, ADR-0005), which
- * races with the localStorage seed above and can leave the guest loader
- * unable to auto-resolve when no backend is running (e2e's case). As a
- * fallback, page.goto() below drives the interactive Guest sign-in picker
- * directly and accepts the "fall back to legacy guest token?" confirm().
+ * playwright.config.ts only starts the frontend dev server for e2e (no
+ * backend), so guest sign-in can never mint a real token — page.goto()
+ * below drives the interactive Guest sign-in picker directly and accepts
+ * the "fall back to legacy guest token?" confirm(). This is independent of
+ * the v2 routes' own auth requirement (ADR-0005): every API call is
+ * intercepted via page.route() below before it would ever reach a real,
+ * auth-checking backend.
  *
  * API calls to the backend are intercepted via page.route() and served with
  * the canonical mock data from mock-api.ts, keeping tests predictable and
  * independent of a running backend.
  */
 import { test as base, expect, type Page } from '@playwright/test';
-import {
-  MOCK_ASSETS_FULL,
-  MOCK_PROVIDER,
-  MOCK_STATS,
-  buildListResponse,
-} from './mock-api';
+import { MOCK_RESOURCES, mockBodyFor, mockCountsFor } from './mock-api';
 
 export const test = base.extend<object>({
   page: async ({ page }, use) => {
@@ -59,19 +55,35 @@ export const test = base.extend<object>({
       const path = url.pathname.replace(/^.*\/api\/dev-ai-hub/, '');
       const method = route.request().method();
 
-      if (method === 'GET' && path === '/assets') {
-        await route.fulfill({ json: buildListResponse(url.searchParams) });
-      } else if (method === 'GET' && /^\/assets\/[^/]+$/.test(path)) {
-        const id = decodeURIComponent(path.split('/')[2]);
-        const asset = MOCK_ASSETS_FULL.find(a => a.id === id);
-        if (asset) await route.fulfill({ json: asset });
-        else await route.fulfill({ status: 404, json: { error: 'Not found' } });
-      } else if (method === 'GET' && path === '/stats') {
-        await route.fulfill({ json: MOCK_STATS });
-      } else if (method === 'GET' && path === '/providers') {
-        await route.fulfill({ json: [MOCK_PROVIDER] });
-      } else if (method === 'POST' && path.endsWith('/track-install')) {
+      const rawMatch = /^\/entity\/([^/]+)\/raw$/.exec(path);
+
+      if (method === 'GET' && path === '/resources') {
+        await route.fulfill({ json: { items: MOCK_RESOURCES } });
+      } else if (method === 'GET' && rawMatch) {
+        const ref = decodeURIComponent(rawMatch[1]);
+        const body = mockBodyFor(ref);
+        if (!body) {
+          await route.fulfill({
+            status: 404,
+            json: { error: 'Resource content not found' },
+          });
+          return;
+        }
+        const headers: Record<string, string> = {};
+        if (url.searchParams.get('download') === 'true') {
+          const filename = `${ref.split('/').pop()}.md`;
+          headers['content-disposition'] = `attachment; filename="${filename}"`;
+        }
+        await route.fulfill({
+          body: body.content,
+          contentType: body.contentType,
+          headers,
+        });
+      } else if (method === 'POST' && path === '/telemetry') {
         await route.fulfill({ status: 204, body: '' });
+      } else if (method === 'GET' && path.startsWith('/telemetry/')) {
+        const ref = decodeURIComponent(path.replace('/telemetry/', ''));
+        await route.fulfill({ json: mockCountsFor(ref) });
       } else {
         await route.continue();
       }

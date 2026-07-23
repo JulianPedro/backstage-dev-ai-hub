@@ -6,7 +6,7 @@ import type { ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
 import { devAiHubResourceApiRef } from '../../api/DevAiHubResourceClient';
 import { useTelemetryCounts } from '../../hooks/useTelemetryCounts';
 import { ToolIcon } from '../ToolIcon';
-import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import type { FrameworkToken } from '@nospt/plugin-dev-ai-hub-common';
 import { frameworkLabel, getTypeMeta } from './typeMeta';
 import styles from './ResourceCard.module.css';
 
@@ -103,7 +103,7 @@ export function ResourceCard({ resource, onView }: ResourceCardProps) {
         <div className={styles.badges}>
           {resource.frameworks.map(f => (
             <span key={f} className={styles.frameworkBadge}>
-              <ToolIcon tool={f as AiTool} size={14} />
+              <ToolIcon tool={f as FrameworkToken} size={14} />
               {frameworkLabel(f)}
             </span>
           ))}

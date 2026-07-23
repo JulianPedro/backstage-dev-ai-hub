@@ -12,9 +12,7 @@ import type {
 
 /**
  * v2 API client: consumes the catalog-backed `/resources` endpoint and knows
- * only the flat `ResourceSummary` contract (architecture.md). Kept separate
- * from the legacy asset-model `DevAiHubClient`, which is deleted with the
- * legacy silo (issue #34).
+ * only the flat `ResourceSummary` contract (architecture.md).
  */
 export const devAiHubResourceApiRef = createApiRef<DevAiHubResourceApi>({
   id: 'plugin.dev-ai-hub.resources',

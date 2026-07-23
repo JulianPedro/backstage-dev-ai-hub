@@ -28,7 +28,7 @@ import {
   getResourceInstallPath,
   hasCopyableBody,
   hasDownloadableArtifact,
-  type AiTool,
+  type FrameworkToken,
   type ResourceSummary,
 } from '@nospt/plugin-dev-ai-hub-common';
 import {
@@ -178,7 +178,7 @@ function MarketplaceJourney({ resource }: { resource: ResourceSummary }) {
         {addCommands.map(({ framework, command, deepLinks }) => (
           <div key={framework} className={styles.commandRow}>
             <dt className={styles.commandLabel}>
-              <ToolIcon tool={framework as AiTool} size={16} />
+              <ToolIcon tool={framework as FrameworkToken} size={16} />
               {frameworkLabel(framework)}
             </dt>
             <dd className={styles.commandCell}>
