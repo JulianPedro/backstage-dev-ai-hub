@@ -15,6 +15,9 @@ spec:
   # Native skill subtype fields (alpha — @backstage/plugin-catalog-backend-module-ai-model)
   agents:
     - github-copilot
+    - claude-code
+    - google-gemini
+    - cursor
   disciplines:
     - devops
   categories:

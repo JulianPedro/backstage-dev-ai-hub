@@ -44,7 +44,8 @@ the plugin if it is ever wanted.
   a one-click "Add in Claude" deep link on the documented `claude-cli://open?q=` handler — it
   opens a Claude Code session with the add command pre-filled, never auto-executes, and no-ops
   harmlessly where the scheme is unregistered, so it complements the copy button rather than
-  replacing it. Copilot's CLI has no URI scheme, so its row stays copy-only. The repo slug is
+  replacing it. Copilot's CLI has no URI scheme, so its row was copy-only — see the 2026-07
+  amendment below, which adds editor launchers. The repo slug is
   **derived from
   `source-location`**, which two producer-contract rules make sound by construction:
   the marketplace's body doc MUST live inside the marketplace repo itself, and
@@ -68,6 +69,26 @@ the plugin if it is ever wanted.
 The upstream `AiResource` JSON schema validates `spec.type` as any non-empty string (only
 `skill` has a structured subtype schema), so `spec.type: marketplace` ingests without any
 catalog change — verified against the installed `@backstage/catalog-model` alpha schema.
+
+## Amendment (2026-07): the Copilot row gains editor launchers
+
+"Copilot has no URI scheme, so its row stays copy-only" conflated Copilot's two surfaces. The CLI
+half is still true — `copilot plugin marketplace add` is terminal-only. But VS Code **1.113** ships
+`vscode://chat-plugin/add-marketplace?ref=<owner/repo>` (microsoft/vscode#302316), which accepts a
+plain or base64 slug, always shows a confirmation dialog, and dedupes against the user's configured
+marketplaces. Verified present in the 1.113.0 tag and absent in 1.110–1.112.
+
+The Copilot row therefore keeps its terminal command *and* gains "Add in VS Code" / "Add in VS Code
+Insiders" launchers — exactly the mapping `mcp-config` already uses, where `github-copilot` resolves
+to the VS Code stable/Insiders pair rather than to a CLI link. This does not weaken the reasoning
+above: a confirmed, user-reviewed registration is still registering a catalog with a tool, not
+fetching a catalog-gated body, so no auth model is swapped.
+
+Two caveats live with this. The handler is **not in the public VS Code docs** (it is covered by tests
+in-repo, but Microsoft has not committed to it in writing), and agent plugins may still require the
+`chat.plugins.enabled` preview setting — unverified for 1.113, so the launcher may no-op for users
+who have not enabled it. Both are tolerable because an unhandled scheme is already a harmless no-op
+and the copy command remains the guaranteed path.
 
 ## Consequences
 

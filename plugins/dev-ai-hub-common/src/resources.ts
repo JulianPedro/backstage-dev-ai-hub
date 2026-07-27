@@ -253,56 +253,130 @@ export function hasCopyableBody(type: ResourceType): boolean {
 }
 
 /**
- * Convention table: (type, framework) → workspace install path for the body.
- * `undefined` means the combination has no filesystem path — a `plugin` body
- * carries its own per-framework install links (ADR-0009), and a
- * `hook`/`mcp-config` body is merged into a settings file rather than dropped
- * in as a file.
+ * How a body reaches its install path.
+ *
+ * `drop-in` — the body becomes the file (or directory) at `path`, which is
+ * the resource's own; writing it touches nothing else.
+ *
+ * `merge` — `path` is a shared settings file the user already owns, and the
+ * body is a fragment to merge into it. The distinction is not cosmetic:
+ * following a `merge` target as if it were a `drop-in` overwrites the user's
+ * existing configuration, so the UI must never present the two identically.
+ */
+export type InstallMode = 'drop-in' | 'merge';
+
+export interface ResourceInstallTarget {
+  /** Workspace-relative path. */
+  path: string;
+  mode: InstallMode;
+}
+
+/**
+ * The concrete framework tokens a body can be installed into — `all` is a
+ * wildcard over these, never a destination itself.
+ */
+export const INSTALLABLE_FRAMEWORKS = [
+  'claude-code',
+  'github-copilot',
+  'google-gemini',
+  'cursor',
+] as const;
+
+/**
+ * Convention table: (type, framework) → where the body goes and how.
+ * A missing entry means the pair has no filesystem convention — `plugin` and
+ * `marketplace` bodies are pointers that install through their framework
+ * (ADR-0009, ADR-0010), so they carry install commands rather than paths.
  */
 const INSTALL_PATHS: Record<
   ResourceType,
-  Record<string, (name: string) => string>
+  Record<string, { mode: InstallMode; path: (name: string) => string }>
 > = {
+  // Every host reads a skill as a self-contained directory. Copilot also
+  // picks up `.claude/skills`, but each tool's own path is what we recommend;
+  // `.agents/skills` is the cross-tool alias Copilot and Gemini both honour,
+  // which makes it the right answer for an unrecognised framework.
   skill: {
-    'claude-code': name => `.claude/skills/${name}/`,
-    'github-copilot': name => `.claude/skills/${name}/`,
-    'google-gemini': name => `.claude/skills/${name}/`,
-    cursor: name => `.cursor/skills/${name}/`,
-    default: name => `.claude/skills/${name}/`,
+    'claude-code': { mode: 'drop-in', path: name => `.claude/skills/${name}/` },
+    'github-copilot': {
+      mode: 'drop-in',
+      path: name => `.github/skills/${name}/`,
+    },
+    'google-gemini': {
+      mode: 'drop-in',
+      path: name => `.gemini/skills/${name}/`,
+    },
+    cursor: { mode: 'drop-in', path: name => `.cursor/skills/${name}/` },
+    default: { mode: 'drop-in', path: name => `.agents/skills/${name}/` },
   },
   agent: {
-    'claude-code': name => `.claude/agents/${name}.md`,
-    'github-copilot': name => `.github/agents/${name}.agent.md`,
-    'google-gemini': () => `GEMINI.md`,
-    cursor: name => `.cursor/rules/${name}.mdc`,
-    default: name => `.ai/agents/${name}.md`,
+    'claude-code': {
+      mode: 'drop-in',
+      path: name => `.claude/agents/${name}.md`,
+    },
+    'github-copilot': {
+      mode: 'drop-in',
+      path: name => `.github/agents/${name}.agent.md`,
+    },
+    'google-gemini': {
+      mode: 'drop-in',
+      path: name => `.gemini/agents/${name}.md`,
+    },
+    cursor: { mode: 'drop-in', path: name => `.cursor/rules/${name}.mdc` },
+    default: { mode: 'drop-in', path: name => `.ai/agents/${name}.md` },
   },
+  // All four hosts have a hook system, but only Copilot gives each hook its
+  // own file; the rest register hooks inside a shared settings document.
   hook: {
-    'claude-code': () => `.claude/settings.json`,
+    'claude-code': { mode: 'merge', path: () => `.claude/settings.json` },
+    'github-copilot': {
+      mode: 'drop-in',
+      path: name => `.github/hooks/${name}.json`,
+    },
+    'google-gemini': { mode: 'merge', path: () => `.gemini/settings.json` },
+    cursor: { mode: 'merge', path: () => `.cursor/hooks.json` },
   },
   'mcp-config': {
-    'claude-code': () => `.mcp.json`,
-    'github-copilot': () => `.vscode/mcp.json`,
-    'google-gemini': () => `.gemini/settings.json`,
-    cursor: () => `.cursor/mcp.json`,
+    'claude-code': { mode: 'merge', path: () => `.mcp.json` },
+    'github-copilot': { mode: 'merge', path: () => `.vscode/mcp.json` },
+    'google-gemini': { mode: 'merge', path: () => `.gemini/settings.json` },
+    cursor: { mode: 'merge', path: () => `.cursor/mcp.json` },
   },
   plugin: {},
   marketplace: {},
 };
 
 /**
- * The recommended workspace path to install a resource's body into, for one
- * framework. Returns `undefined` when the (type, framework) pair has no
- * filesystem convention.
+ * Where a resource's body installs for one framework, and whether that path
+ * is the body's own file or a settings file to merge into. Returns
+ * `undefined` when the (type, framework) pair has no filesystem convention.
  */
-export function getResourceInstallPath(
+export function getResourceInstallTarget(
   type: ResourceType,
   framework: string,
   name: string,
-): string | undefined {
+): ResourceInstallTarget | undefined {
   const conventions = INSTALL_PATHS[type];
-  const fn = conventions[normalizeFramework(framework)] ?? conventions.default;
-  return fn?.(name);
+  const entry =
+    conventions[normalizeFramework(framework)] ?? conventions.default;
+  return entry ? { path: entry.path(name), mode: entry.mode } : undefined;
+}
+
+/**
+ * The frameworks to show install paths for. An empty list means the resource
+ * declared no compatibility and gets the neutral `default` convention; `all`
+ * is a wildcard and expands to every installable host, so it never collapses
+ * to a single row — or, for types with no `default`, to no rows at all.
+ */
+export function expandInstallFrameworks(frameworks: string[]): string[] {
+  const normalized = dedupe(frameworks.map(normalizeFramework));
+  if (normalized.length === 0) {
+    return ['default'];
+  }
+  if (normalized.includes('all')) {
+    return [...INSTALLABLE_FRAMEWORKS];
+  }
+  return normalized;
 }
 
 /*
@@ -321,6 +395,28 @@ export const MARKETPLACE_CAPABLE_FRAMEWORKS = [
   'claude-code',
   'github-copilot',
 ] as const;
+
+/**
+ * Narrow a resource's declared frameworks to those a given journey can
+ * actually launch. A deep link is a claim about compatibility: offering
+ * "Install in Claude" for a resource that never declared `claude-code` tells
+ * the user something untrue about the resource.
+ *
+ * `all` and an empty list both mean "unrestricted" and expand to every
+ * capable host. Anything else is intersected, so a declared framework with no
+ * handler (Gemini) — or an unknown token — yields no links rather than
+ * silently widening to every host.
+ */
+export function resolveCapableFrameworks(
+  declared: string[],
+  capable: readonly string[],
+): string[] {
+  const normalized = dedupe(declared.map(normalizeFramework));
+  if (normalized.length === 0 || normalized.includes('all')) {
+    return [...capable];
+  }
+  return normalized.filter(f => capable.includes(f));
+}
 
 /**
  * Derive the `owner/repo` slug from a marketplace's `source-location`.
@@ -375,17 +471,23 @@ export interface MarketplaceAddCommand {
  * Claude Code carries a single deep link on the CLI's documented
  * `claude-cli://open?q=` handler, which opens a Claude Code terminal
  * session with the command pre-filled regardless of the user's editor.
- * Copilot has no URI scheme for its CLI, so its row is copy-only.
+ *
+ * Copilot's CLI still has no URI scheme, but Copilot's *other* surface does:
+ * VS Code 1.113 ships `vscode://chat-plugin/add-marketplace?ref=`, which
+ * accepts a plain or base64 `owner/repo` and always shows a confirmation
+ * dialog before registering the marketplace (it also dedupes against the
+ * user's existing entries). So the Copilot row keeps its terminal command for
+ * CLI users *and* gains editor launchers, mirroring how `mcp-config` already
+ * maps `github-copilot` onto the VS Code stable/Insiders pair.
  */
 export function getMarketplaceAddCommands(
   frameworks: string[],
   repoSlug: string,
 ): MarketplaceAddCommand[] {
-  const normalized = dedupe(frameworks.map(normalizeFramework));
-  const capable =
-    normalized.length === 0 || normalized.includes('all')
-      ? [...MARKETPLACE_CAPABLE_FRAMEWORKS]
-      : normalized;
+  const capable = resolveCapableFrameworks(
+    frameworks,
+    MARKETPLACE_CAPABLE_FRAMEWORKS,
+  );
   const commands: MarketplaceAddCommand[] = [];
   for (const framework of capable) {
     if (framework === 'claude-code') {
@@ -401,10 +503,20 @@ export function getMarketplaceAddCommands(
         ],
       });
     } else if (framework === 'github-copilot') {
+      const ref = encodeURIComponent(repoSlug);
       commands.push({
         framework,
         command: `copilot plugin marketplace add ${repoSlug}`,
-        deepLinks: [],
+        deepLinks: [
+          {
+            label: 'VS Code',
+            href: `vscode://chat-plugin/add-marketplace?ref=${ref}`,
+          },
+          {
+            label: 'VS Code Insiders',
+            href: `vscode-insiders://chat-plugin/add-marketplace?ref=${ref}`,
+          },
+        ],
       });
     }
   }
@@ -439,39 +551,193 @@ function getRawGithubFileUrl(
 }
 
 /**
- * One-click install links for an `agent` resource. VS Code stable and
- * Insiders use the native `chat-agent/install?url=` handler (the mechanism
- * behind awesome-copilot's Install buttons): VS Code downloads the file at
- * `url` and asks the user where to save it. Claude Code uses the
- * `claude-cli://open?q=` handler with an install prompt pre-filled to the
- * convention path — reviewed and sent by the user, never auto-executed.
- * All three derive from the GitHub blob URL in `source-location`; anything
- * else returns `[]` (copy/download fallback).
+ * A launcher that opens an agent with an install prompt pre-filled. Neither
+ * host auto-executes: the user reads the prompt and presses Enter. Claude Code
+ * and Cursor are the two tools exposing a generic prompt URI — Copilot's
+ * editor has purpose-built routes but no prompt handler, and Gemini has
+ * neither (its `gemini.google.com/app?prompt=` link drives the web app, which
+ * cannot write to a local workspace).
+ *
+ * Cursor truncates a deeplink at the first raw `&`, so the prompt must be
+ * percent-encoded — `encodeURIComponent` handles that. Cursor also caps the
+ * URL at ~8000 characters; these prompts are a URL plus a path, far under it.
+ */
+function claudePromptLink(prompt: string): ResourceDeepLink {
+  return {
+    label: 'Claude',
+    href: `claude-cli://open?q=${encodeURIComponent(prompt)}`,
+  };
+}
+
+function cursorPromptLink(prompt: string): ResourceDeepLink {
+  return {
+    label: 'Cursor',
+    href: `cursor://anysphere.cursor-deeplink/prompt?text=${encodeURIComponent(
+      prompt,
+    )}`,
+  };
+}
+
+/** Frameworks with a one-click agent-install handler (Gemini has none). */
+export const AGENT_LINK_CAPABLE_FRAMEWORKS = [
+  'claude-code',
+  'github-copilot',
+  'cursor',
+] as const;
+
+/** Hosts reachable by a generic prompt URI — the only route for skill/hook. */
+export const PROMPT_LINK_CAPABLE_FRAMEWORKS = [
+  'claude-code',
+  'cursor',
+] as const;
+
+/**
+ * The plain http(s) URL behind a `source-location`. Unlike
+ * `getRawGithubFileUrl` this accepts **directory (`tree`) URLs**, which is what
+ * a multi-file `skill` actually carries — a raw-file URL would resolve to
+ * `undefined` for exactly the type that most needs a launcher.
+ */
+function getSourceUrl(sourceLocation: string | undefined): string | undefined {
+  if (!sourceLocation) {
+    return undefined;
+  }
+  try {
+    const url = new URL(sourceLocation.replace(/^url:/, ''));
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? url.toString()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * One-click launchers for the types with no purpose-built install route —
+ * `skill` and `hook`. Both ride the generic prompt handlers, so the prompt
+ * names the *host's own* install path and respects its install mode: a `merge`
+ * target is asked to be merged into, never overwritten, so a launcher can
+ * never cost the user their existing settings.
+ *
+ * Returns `[]` when the source URL cannot be derived, or for hosts with no
+ * prompt route (Copilot, Gemini) — the path list and copy/download remain.
+ */
+export function getPromptInstallLinks(
+  type: ResourceType,
+  sourceLocation: string | undefined,
+  name: string,
+  frameworks: string[] = [],
+): ResourceDeepLink[] {
+  return getInstallSteps(type, sourceLocation, name, frameworks)
+    .map(step => step.link)
+    .filter((link): link is ResourceDeepLink => !!link);
+}
+
+/**
+ * Everything a single host needs to install a resource: where the body goes,
+ * the prompt that puts it there, and a launcher when the host has a URI to
+ * launch.
+ *
+ * `link` is absent for hosts with no prompt route — Copilot and Gemini. That
+ * absence is why the step carries `prompt` as text: a host without a URI is
+ * not a host without an install path, and the same instruction that a launcher
+ * would pre-fill can be pasted into that agent by hand. Every declared
+ * framework therefore gets something actionable, not a bare path.
+ */
+export interface ResourceInstallStep {
+  framework: string;
+  target: ResourceInstallTarget;
+  /** The install instruction, ready to run in that host's agent. */
+  prompt: string;
+  /** One-click launcher, where the host exposes a generic prompt URI. */
+  link?: ResourceDeepLink;
+}
+
+export function getInstallSteps(
+  type: ResourceType,
+  sourceLocation: string | undefined,
+  name: string,
+  frameworks: string[] = [],
+): ResourceInstallStep[] {
+  const sourceUrl = getSourceUrl(sourceLocation);
+  if (!sourceUrl) {
+    return [];
+  }
+  const label = RESOURCE_TYPE_REGISTRY[type].label.toLowerCase();
+  const steps: ResourceInstallStep[] = [];
+  for (const framework of expandInstallFrameworks(frameworks)) {
+    const target = getResourceInstallTarget(type, framework, name);
+    if (!target) {
+      continue;
+    }
+    const prompt =
+      target.mode === 'merge'
+        ? `Install the "${name}" ${label}: fetch ${sourceUrl} and merge it into ${target.path}, keeping my existing settings intact.`
+        : `Install the "${name}" ${label}: fetch ${sourceUrl} and save it to ${target.path}.`;
+    let link: ResourceDeepLink | undefined;
+    if (framework === 'claude-code') {
+      link = claudePromptLink(prompt);
+    } else if (framework === 'cursor') {
+      link = cursorPromptLink(prompt);
+    }
+    steps.push({ framework, target, prompt, link });
+  }
+  return steps;
+}
+
+/** Frameworks with a one-click MCP-install handler (Gemini has none). */
+export const MCP_LINK_CAPABLE_FRAMEWORKS = [
+  'claude-code',
+  'github-copilot',
+  'cursor',
+] as const;
+
+/**
+ * One-click install links for an `agent` resource, restricted to the
+ * resource's own compatible frameworks. VS Code stable and Insiders use the
+ * native `chat-agent/install?url=` handler (the mechanism behind
+ * awesome-copilot's Install buttons) and are Copilot's hosts, so they follow
+ * `github-copilot`: VS Code downloads the file at `url` and asks the user
+ * where to save it. Claude Code uses the `claude-cli://open?q=` handler with
+ * an install prompt pre-filled to the convention path — reviewed and sent by
+ * the user, never auto-executed. All derive from the GitHub blob URL in
+ * `source-location`; anything else returns `[]` (copy/download fallback).
  */
 export function getAgentInstallLinks(
   sourceLocation: string | undefined,
   name: string,
+  frameworks: string[] = [],
 ): ResourceDeepLink[] {
   const rawUrl = getRawGithubFileUrl(sourceLocation);
   if (!rawUrl) {
     return [];
   }
-  const encodedRawUrl = encodeURIComponent(rawUrl);
-  const claudePath = getResourceInstallPath('agent', 'claude-code', name);
-  const claudePrompt = encodeURIComponent(
-    `Install this agent: fetch ${rawUrl} and save it to ${claudePath}`,
+  const capable = resolveCapableFrameworks(
+    frameworks,
+    AGENT_LINK_CAPABLE_FRAMEWORKS,
   );
-  return [
-    { label: 'Claude', href: `claude-cli://open?q=${claudePrompt}` },
-    {
-      label: 'VS Code',
-      href: `vscode:chat-agent/install?url=${encodedRawUrl}`,
-    },
-    {
-      label: 'VS Code Insiders',
-      href: `vscode-insiders:chat-agent/install?url=${encodedRawUrl}`,
-    },
-  ];
+  const encodedRawUrl = encodeURIComponent(rawUrl);
+  const installPrompt = (framework: string) => {
+    const target = getResourceInstallTarget('agent', framework, name);
+    return `Install this agent: fetch ${rawUrl} and save it to ${target?.path}`;
+  };
+  const links: ResourceDeepLink[] = [];
+  for (const framework of capable) {
+    if (framework === 'claude-code') {
+      links.push(claudePromptLink(installPrompt('claude-code')));
+    } else if (framework === 'cursor') {
+      links.push(cursorPromptLink(installPrompt('cursor')));
+    } else if (framework === 'github-copilot') {
+      links.push({
+        label: 'VS Code',
+        href: `vscode:chat-agent/install?url=${encodedRawUrl}`,
+      });
+      links.push({
+        label: 'VS Code Insiders',
+        href: `vscode-insiders:chat-agent/install?url=${encodedRawUrl}`,
+      });
+    }
+  }
+  return links;
 }
 
 /**
@@ -481,10 +747,11 @@ export function getAgentInstallLinks(
  * documented `cursor://anysphere.cursor-deeplink/mcp/install` one, and
  * Claude Code gets a `claude-cli://open?q=` prompt around
  * `claude mcp add-json` — pre-filled, reviewed, never auto-executed.
- * Hosts follow the compatible frameworks (`all`/empty/unknown-only expands
- * to every capable host; Gemini has no handler and gets none). A missing,
- * unparseable, or multi-server body returns `[]` (copy fallback) — the
- * body stays canonical, links are conveniences derived from it.
+ * Hosts follow the resource's own compatible frameworks: `all`/empty expand
+ * to every capable host, anything else is intersected, so an mcp-config
+ * declaring only Gemini (no handler) gets no links rather than every host's.
+ * A missing, unparseable, or multi-server body returns `[]` (copy fallback) —
+ * the body stays canonical, links are conveniences derived from it.
  */
 export function getMcpInstallLinks(
   frameworks: string[],
@@ -527,14 +794,10 @@ export function getMcpInstallLinks(
     return [];
   }
 
-  const MCP_CAPABLE_FRAMEWORKS = ['claude-code', 'github-copilot', 'cursor'];
-  const normalized = dedupe(frameworks.map(normalizeFramework));
-  const capable =
-    normalized.length === 0 ||
-    normalized.includes('all') ||
-    !normalized.some(f => MCP_CAPABLE_FRAMEWORKS.includes(f))
-      ? MCP_CAPABLE_FRAMEWORKS
-      : normalized;
+  const capable = resolveCapableFrameworks(
+    frameworks,
+    MCP_LINK_CAPABLE_FRAMEWORKS,
+  );
 
   const configJson = JSON.stringify(config);
   const links: ResourceDeepLink[] = [];

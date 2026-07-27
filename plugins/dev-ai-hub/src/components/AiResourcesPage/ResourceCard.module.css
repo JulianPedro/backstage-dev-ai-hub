@@ -4,11 +4,16 @@
     border: 1px solid var(--bui-border-1);
     border-left: 3px solid var(--card-accent);
     border-radius: var(--bui-radius-2);
-    padding: var(--bui-space-4);
+    /* Clips .header's own background to the card's rounded top corners. */
+    overflow: hidden;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    gap: var(--bui-space-3);
+    /* Every card reserves room for the tallest realistic combination (2-line
+       title, 2-line description, a badges row, a tags row, and the footer)
+       so cards read as a uniform grid instead of a ragged one. The footer's
+       margin-top: auto (below) absorbs any slack on lighter cards. */
+    min-height: 250px;
     transition: box-shadow 120ms ease, transform 120ms ease,
       border-color 120ms ease;
   }
@@ -29,6 +34,29 @@
     display: flex;
     align-items: center;
     gap: var(--bui-space-3);
+    padding: var(--bui-space-3) var(--bui-space-4);
+    /* BUI's neutral-2..4 tiers render identically in this theme, so blend
+       the (theme-aware) foreground colour into the card bg instead — this
+       guarantees a visibly darker band in both light and dark mode. */
+    background: color-mix(
+      in srgb,
+      var(--bui-fg-primary) 10%,
+      var(--bui-bg-neutral-1)
+    );
+    border-bottom: 1px solid var(--bui-border-1);
+    flex-shrink: 0;
+    /* Fixed so every header band is the same height regardless of whether
+       the title wraps to one line or two — shorter titles just centre
+       (align-items: center, above) within the reserved space. */
+    height: 84px;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-3);
+    padding: var(--bui-space-4);
+    flex: 1;
   }
 
   .iconBox {
@@ -46,10 +74,11 @@
   }
 
   .title {
-    display: block;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.3;
   }
 
   .typeLabel {
@@ -106,9 +135,10 @@
   }
 
   .tag {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     line-height: 1.7;
     color: var(--bui-fg-secondary);
+    opacity: 0.85;
   }
 
   .footer {

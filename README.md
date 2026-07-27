@@ -1,12 +1,10 @@
 # Dev AI Hub — Backstage Plugin
 
-A centralized hub for AI assets — Instructions, Agents, Skills, and Workflows — usable by **GitHub Copilot**, **Claude Code**, **Google Gemini**, **Cursor**, and other AI coding tools.
+A catalog-backed browser for AI assets — **Skills**, **Agents**, **Hooks**, **MCP Configs**, **Plugins**, and **Marketplaces** — usable by **GitHub Copilot**, **Claude Code**, **Google Gemini**, **Cursor**, and other AI coding tools.
 
-The plugin syncs one or more Git repositories as the source of truth, stores assets in your Backstage database, exposes them via a UI, and serves them through an embedded **MCP (Model Context Protocol) server** so AI tools can discover and install assets automatically.
+The Backstage **catalog** is the sole source of truth: entities are hand-authored `AiResource` catalog-info entries (or emitted by your own EntityProviders) pointing at content that lives in Git. The plugin never stores a second copy — the backend reads the catalog on demand, resolves each resource's body from its `source-location`, and records lightweight install/view telemetry. There's no sync service and no embedded MCP server.
 
 ![Project Screenshot](docs/screenshot.png)
-
-<https://github.com/user-attachments/assets/5728807d-2587-408b-88f2-4c2853606285>
 
 ---
 
@@ -30,22 +28,30 @@ Then install:
 yarn install
 ```
 
-### 2. Register the backend plugin
+### 2. Register the `AiResource` catalog kind
 
-In `packages/backend/src/index.ts`:
+DevAI Hub consumes `AiResource` entities but doesn't define the kind itself — that comes from Backstage's own alpha catalog module. In `packages/backend/src/index.ts`:
+
+```typescript
+backend.add(import('@backstage/plugin-catalog-backend-module-ai-model'));
+```
+
+### 3. Register the backend plugin
+
+Still in `packages/backend/src/index.ts`:
 
 ```typescript
 backend.add(import('@nospt/plugin-dev-ai-hub-backend'));
 ```
 
-### 3. Register the frontend plugin
+### 4. Register the frontend plugin
 
-In `packages/app/src/App.tsx`:
+DevAI Hub uses the Backstage **New Frontend System**. In `packages/app/src/App.tsx`:
 
 ```typescript
 import { devAiHubPlugin } from '@nospt/plugin-dev-ai-hub';
 
-const app = createApp({
+export const app = createApp({
   features: [
     // ...existing features
     devAiHubPlugin,
@@ -53,215 +59,74 @@ const app = createApp({
 });
 ```
 
-The sidebar item is registered automatically — no additional configuration needed.
+The sidebar item and `/dev-ai-hub` route are registered automatically.
 
-### 4. Configure `app-config.yaml`
+### 5. Configure `app-config.yaml`
 
 ```yaml
+catalog:
+  rules:
+    # AiResource must be allow-listed alongside your other kinds.
+    - allow: [Component, API, Resource, System, Domain, Location, AiResource]
+  locations:
+    # Hand-authored AiResource entities (ADR-0004 — DevAI Hub is a consumer,
+    # never a producer). Point this at wherever your org registers them.
+    - type: url
+      target: https://github.com/your-org/ai-assets/blob/main/catalog-info.yaml
+      rules:
+        - allow: [AiResource]
+
 devAiHub:
-  providers:
-    - id: "main-ai-assets"
-      type: "github"                                          # github | gitlab | bitbucket | azure-devops | git
-      target: "https://github.com/your-org/ai-assets.git"
-      branch: "main"
-      schedule:
-        frequency:
-          minutes: 30
-        timeout:
-          minutes: 5
-
-# Required: Git integration for reading repositories
-integrations:
-  github:
-    - host: github.com
-      token: ${GITHUB_TOKEN}
+  telemetry:
+    # Salts the per-user hash used to dedup `view` events (ADR-0007).
+    # Use a real secret in production — never commit it.
+    salt: ${DEV_AI_HUB_TELEMETRY_SALT}
 ```
 
-See `app-config.example.yaml` for more provider examples (GitLab, Bitbucket, filters).
+All backend routes require standard Backstage authentication (ADR-0005) — there are no unauthenticated endpoints.
 
 ---
 
-## Asset Format
+## Authoring `AiResource` entities
 
-Each AI asset is two files with the same base name in your repository:
-
-```
-agents/
-  product-manager.yaml   ← metadata envelope
-  product-manager.md     ← pure markdown content (never modified by the plugin)
-instructions/
-  security-guidelines.yaml
-  security-guidelines.md
-skills/
-  code-review/
-    code-review.yaml
-    SKILL.md
-workflows/
-  pr-review.yaml
-  pr-review.md
-```
-
-### YAML envelope (`<name>.yaml`)
+Each entity is a normal Backstage catalog entry with `kind: AiResource`. The body (markdown, or JSON for `mcp-config`) stays in Git — the entity only carries metadata plus a `backstage.io/source-location` pointer to it:
 
 ```yaml
-name: product-manager-agent
-label: Product Manager Agent
-description: AI agent specialized in product management tasks
-type: agent                          # instruction | agent | skill | workflow
-tools:
-  - github-copilot
-tags:
-  - product
-  - planning
-author: Your Name
-version: 1.0.0
-
-# Optional: override install path per tool
-# installPath: ".claude/agents/product-manager.md"
-# installPaths:
-#   claude-code: ".claude/agents/product-manager.md"
-#   github-copilot: ".github/agents/product-manager.agent.md"
+apiVersion: backstage.io/v1alpha1
+kind: AiResource
+metadata:
+  name: approved-github-workflows
+  title: Approved GitHub Workflows Skill
+  description: Ensures all GitHub Actions workflows are reviewed and approved before execution.
+  tags: [security, github, ci-cd]
+  annotations:
+    backstage.io/source-location: url:https://github.com/your-org/ai-assets/tree/main/skills/approved-github-workflows/
+    devaihub.io/compatible-frameworks: github-copilot,claude-code
+    devaihub.io/version: 1.0.0
+spec:
+  type: skill # skill | agent | hook | mcp-config | plugin | marketplace
+  lifecycle: production
+  owner: group:ai-platform-team
 ```
 
-If `content` is omitted, the parser looks for `<same-name>.md` in the same directory. For skills, it defaults to `SKILL.md`.
+`plugin` and `marketplace` resources additionally declare `spec.dependsOn` to relate to their child resources (rendered as containment on the card).
 
-Use `tools: [all]` for tool-agnostic assets that should appear for every tool.
-
-For more information about YAML envelope fields, see [YAML Envelope Reference](examples/envelop-manual.md).
-
-You can use assets in examples folder to see how to use assets in your project or as a base for your own assets.
-
-### Default install paths (auto-resolved per tool)
-
-| Type | Tool | Default path |
-|------|------|-------------|
-| `instruction` | `claude-code` | `.claude/rules/<name>.md` |
-| `instruction` | `github-copilot` | `.github/instructions/<name>.instructions.md` |
-| `instruction` | `google-gemini` | `GEMINI.md` |
-| `instruction` | `cursor` | `.cursor/rules/<name>.mdc` |
-| `agent` | `claude-code` | `.claude/agents/<name>.md` |
-| `agent` | `github-copilot` | `.github/agents/<name>.agent.md` |
-| `skill` | `claude-code` | `.claude/skills/<name>/SKILL.md` |
-| `skill` | `cursor` | `.cursor/skills/<name>/SKILL.md` |
-| `workflow` | `claude-code` | `.claude/workflows/<name>.md` |
-| `workflow` | `github-copilot` | `.github/workflows/<name>.workflow.md` |
-
----
-
-## MCP Server
-
-The MCP server runs **embedded** in the Backstage backend — no separate process needed. It uses the StreamableHTTP transport.
-
-**URL:** `http://<backstage-host>:7007/api/dev-ai-hub/mcp`
-
-The `?tool=` query parameter filters which assets the AI tool receives. Omit it to receive all assets.
-The `?provider=` query parameter filters which assets the AI tool receives. Omit it to receive all assets.
-The `?proactive=true` query parameter enable proactive mode. This mode is used to provide assets to the AI tool automatically when it is needed.
-
-### Claude Code
-
-In `.mcp.json` or `~/.claude/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "dev-ai-hub": {
-      "type": "http",
-      "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp?tool=claude-code"
-    }
-  }
-}
-```
-
-### GitHub Copilot (VS Code)
-
-In `.vscode/settings.json` or VS Code user settings:
-
-```json
-{
-  "github.copilot.chat.mcp.servers": {
-    "dev-ai-hub": {
-      "type": "http",
-      "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp?tool=github-copilot"
-    }
-  }
-}
-```
-
-### Google Gemini CLI
-
-In `~/.gemini/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "dev-ai-hub": {
-      "type": "http",
-      "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp?tool=google-gemini"
-    }
-  }
-}
-```
-
-### Cursor
-
-In `.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "dev-ai-hub": {
-      "type": "http",
-      "url": "http://<backstage-host>:7007/api/dev-ai-hub/mcp?tool=cursor"
-    }
-  }
-}
-```
-
-### Available MCP tools
-
-| Tool | Description |
-|------|-------------|
-| `list_assets` | List assets, optionally filtered by type. Supports pagination  |
-| `search_assets` | Full-text search across name, description, and content. Supports type and tag filters |
-| `get_asset` | Get full metadata and markdown content by exact ID or partial name match |
-| `install_asset` | Returns content + recommended install path for the active tool; the model writes the file. Increments the install counter |
-| `get_popular` | Returns the most-installed assets, optionally filtered by type |
-| `list_providers`| Lists all configured repositories with their sync status, asset count, and last sync time |
-| `suggest_assets` ⚡ | Proactively suggests assets based on a project context description. Only available when ?proactive=true |
-
-### Available MCP prompts
-
-| Prompt | Description |
-|------|-------------|
-| `check_for_assets` ⚡ | Instructs the model to call suggest_assets with the current task context and offer to install relevant assets before starting work. Only available when ?proactive=true  |
-
- ⚡ Proactive-only — registered only when the MCP URL includes ?proactive=true.
-
-Usage examples in chat:
-
-> "List the available agents in Dev AI Hub"
-> "Search for a code review asset in the hub"
-> "Install the Product Manager agent in this project"
+See [`docs/AIRESOURCE-SPEC.md`](docs/AIRESOURCE-SPEC.md) for the full per-type spec (required vs. recommended fields, the `devaihub.io/*` annotation namespace, and one worked example per type), and [`examples/catalog/`](examples/catalog/) for entities you can register as-is to try the plugin locally.
 
 ---
 
 ## REST API
 
 ```
-GET  /api/dev-ai-hub/assets                   List assets (filters: type, tool, tags, search, provider, page, pageSize)
-GET  /api/dev-ai-hub/assets/:id               Asset detail
-GET  /api/dev-ai-hub/assets/:id/raw           Pure markdown content
-GET  /api/dev-ai-hub/assets/:id/download      Download as .md or .zip (skills)
-POST /api/dev-ai-hub/assets/:id/track-install Increment install counter
-GET  /api/dev-ai-hub/providers                List configured providers with sync status
-POST /api/dev-ai-hub/providers/:id/sync       Trigger manual sync
-GET  /api/dev-ai-hub/stats                    Totals by type, tool, and provider
-
-POST   /api/dev-ai-hub/mcp                    Initialize MCP session or handle existing
-GET    /api/dev-ai-hub/mcp                    SSE stream for server-to-client notifications
-DELETE /api/dev-ai-hub/mcp                    Terminate MCP session
+GET  /api/dev-ai-hub/resources                    List AiResource entities as flat ResourceSummary items
+GET  /api/dev-ai-hub/entity/:ref/raw               Resolved body (markdown or JSON, by resource shape)
+GET  /api/dev-ai-hub/entity/:ref/raw/:filename     A specific file from a directory-shaped body
+GET  /api/dev-ai-hub/entity/:ref/raw?download=true Download the artifact (zipped if multi-file)
+POST /api/dev-ai-hub/telemetry                     Record an install/copy/download/view event
+GET  /api/dev-ai-hub/telemetry/:ref                 Per-action counts for a resource
 ```
+
+All routes require Backstage authentication; the frontend never talks to the catalog directly — it only ever sees the flat `ResourceSummary` contract the backend returns.
 
 ---
 
@@ -269,10 +134,19 @@ DELETE /api/dev-ai-hub/mcp                    Terminate MCP session
 
 | Package | Role | Description |
 |---------|------|-------------|
-| `@nospt/plugin-dev-ai-hub` | `frontend-plugin` | React UI — page, cards, filters, install dialog |
-| `@nospt/plugin-dev-ai-hub-backend` | `backend-plugin` | Sync service, REST API, embedded MCP server |
-| `@nospt/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, Zod schemas, install path conventions |
-| `@nospt/plugin-dev-ai-hub-node` | `node-library` | Extension points for external provider modules |
+| `@nospt/plugin-dev-ai-hub` | `frontend-plugin` | React UI (New Frontend System) — browse page, cards, filters, detail drawer, install dialog |
+| `@nospt/plugin-dev-ai-hub-backend` | `backend-plugin` | Reads the catalog on demand, resolves resource bodies, records telemetry |
+| `@nospt/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, the `ResourceSummary` contract, and telemetry schemas |
+| `@nospt/plugin-dev-ai-hub-node` | `node-library` | Reserved for future backend-integrator extension points (currently empty) |
+
+---
+
+## Further reading
+
+- [`docs/architecture.md`](docs/architecture.md) — system view and the catalog read flow
+- [`docs/CONTEXT.md`](docs/CONTEXT.md) — vocabulary and glossary
+- [`docs/AIRESOURCE-SPEC.md`](docs/AIRESOURCE-SPEC.md) — full `AiResource` entity spec
+- [`docs/adr/`](docs/adr/) — architecture decision records
 
 ---
 

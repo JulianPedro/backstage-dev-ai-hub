@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   Box,
@@ -45,18 +45,31 @@ interface ResourceDetailPanelProps {
  * source-location are browsable but not actionable — no action buttons.
  */
 export function ResourceDetailPanel({
-  resource,
+  resource: resourceProp,
   onClose,
 }: ResourceDetailPanelProps) {
+  const isOpen = !!resourceProp;
+  // The drawer slides out on close (issue: "add some flowers"), which needs
+  // content to stay rendered during the exit transition — the `resource` prop
+  // itself goes undefined the instant the URL param clears. `displayResource`
+  // mirrors the last real resource and is only ever updated while one is
+  // present, so the drawer keeps showing it while animating out instead of
+  // blanking.
+  const [displayResource, setDisplayResource] = useState(resourceProp);
+  useEffect(() => {
+    if (resourceProp) setDisplayResource(resourceProp);
+  }, [resourceProp]);
+
   const api = useApi(devAiHubResourceApiRef);
-  const actionable = !!resource?.sourceLocation;
-  const bodyState = useResourceBody(resource?.entityRef, actionable);
-  const counts = useTelemetryCounts(resource?.entityRef);
+  const actionable = !!displayResource?.sourceLocation;
+  const bodyState = useResourceBody(displayResource?.entityRef, actionable);
+  const counts = useTelemetryCounts(displayResource?.entityRef);
   const [installOpen, setInstallOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  if (!resource) return null;
+  if (!displayResource) return null;
 
+  const resource = displayResource;
   const meta = getTypeMeta(resource.type);
   const bodyShape = getBodyShape(resource.type);
 
@@ -88,12 +101,20 @@ export function ResourceDetailPanel({
 
   return (
     <>
-      <div className={styles.overlay} onClick={onClose} role="presentation" />
+      <div
+        className={styles.overlay}
+        data-open={isOpen}
+        onClick={onClose}
+        role="presentation"
+        aria-hidden={!isOpen}
+      />
       <div
         className={styles.drawer}
+        data-open={isOpen}
         style={{ '--drawer-accent': meta.color } as React.CSSProperties}
         role="dialog"
         aria-label={resource.title ?? resource.name}
+        aria-hidden={!isOpen}
       >
         <Flex className={styles.header}>
           <div

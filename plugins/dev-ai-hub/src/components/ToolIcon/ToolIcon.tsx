@@ -10,12 +10,22 @@ const CURSOR_PATH =
 
 type SvgTool = Exclude<FrameworkToken, 'all' | 'cursor'>;
 
-const TOOL_ICON: Record<SvgTool, { path: string; hex: string; label: string }> =
-  {
-    'claude-code': { ...siAnthropic, label: 'Claude Code' },
-    'github-copilot': { ...siGithub, label: 'GitHub Copilot' },
-    'google-gemini': { ...siGooglegemini, label: 'Google Gemini' },
-  };
+/**
+ * Anthropic's and GitHub's marks are monochrome brand assets (near-black,
+ * `#191919` / `#181717`) meant to be manually inverted per surface — used
+ * literally, they're invisible on the dark theme's dark backgrounds. Treat
+ * them like `cursor` below (theme-aware `--bui-fg-primary`) instead of their
+ * literal hex. Google's mark is an actual mid-tone brand colour (`#8E75B2`)
+ * that reads fine on both themes, so it keeps its literal hex.
+ */
+const TOOL_ICON: Record<
+  SvgTool,
+  { path: string; hex: string; label: string; monochrome?: boolean }
+> = {
+  'claude-code': { ...siAnthropic, label: 'Claude Code', monochrome: true },
+  'github-copilot': { ...siGithub, label: 'GitHub Copilot', monochrome: true },
+  'google-gemini': { ...siGooglegemini, label: 'Google Gemini' },
+};
 
 interface ToolIconProps {
   tool: FrameworkToken;
@@ -69,6 +79,8 @@ export function ToolIcon({
   const cfg = TOOL_ICON[tool as SvgTool];
   if (!cfg) return null;
 
+  const brandedColor = cfg.monochrome ? 'var(--bui-fg-primary)' : `#${cfg.hex}`;
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -77,7 +89,7 @@ export function ToolIcon({
       height={size}
       fill="currentColor"
       className={className}
-      style={{ color: branded ? `#${cfg.hex}` : 'inherit', ...style }}
+      style={{ color: branded ? brandedColor : 'inherit', ...style }}
       aria-label={cfg.label}
       role="img"
     >

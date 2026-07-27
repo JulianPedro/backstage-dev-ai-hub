@@ -7,7 +7,7 @@ metadata:
   tags: [api, architect, codegen]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/agents/api-architect.md
-    devaihub.io/compatible-frameworks: github-copilot
+    devaihub.io/compatible-frameworks: github-copilot,claude-code,google-gemini,cursor
     devaihub.io/version: 1.0.0
 spec:
   type: agent

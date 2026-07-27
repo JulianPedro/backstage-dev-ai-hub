@@ -6,15 +6,19 @@ import {
   getMarketplaceInstallTemplate,
   getMarketplaceRepoSlug,
   getMarketplaceTeamSnippet,
-  getResourceInstallPath,
+  expandInstallFrameworks,
+  getResourceInstallTarget,
   getAgentInstallLinks,
   getMcpInstallLinks,
+  getPromptInstallLinks,
   hasCopyableBody,
   hasDownloadableArtifact,
   isResourceType,
   normalizeFramework,
   RESOURCE_TYPE_REGISTRY,
   RESOURCE_TYPES,
+  type InstallMode,
+  type ResourceType,
 } from './resources';
 
 function entity({
@@ -163,51 +167,139 @@ describe('getBodyShape', () => {
   });
 });
 
-describe('getResourceInstallPath', () => {
-  it('resolves per-framework skill directories', () => {
-    expect(
-      getResourceInstallPath(
-        'skill',
-        'claude-code',
-        'approved-github-workflows',
-      ),
-    ).toBe('.claude/skills/approved-github-workflows/');
-    expect(getResourceInstallPath('skill', 'cursor', 'x')).toBe(
-      '.cursor/skills/x/',
+describe('getResourceInstallTarget', () => {
+  /**
+   * The full (type × framework) matrix, asserted as one table so a missing
+   * combination has to be declared here rather than discovered by a user
+   * staring at an empty install dialog. `null` means "deliberately no
+   * filesystem convention", not "not done yet".
+   */
+  const MATRIX: Record<
+    ResourceType,
+    Record<string, [path: string, mode: InstallMode] | null>
+  > = {
+    skill: {
+      'claude-code': ['.claude/skills/x/', 'drop-in'],
+      'github-copilot': ['.github/skills/x/', 'drop-in'],
+      'google-gemini': ['.gemini/skills/x/', 'drop-in'],
+      cursor: ['.cursor/skills/x/', 'drop-in'],
+      default: ['.agents/skills/x/', 'drop-in'],
+    },
+    agent: {
+      'claude-code': ['.claude/agents/x.md', 'drop-in'],
+      'github-copilot': ['.github/agents/x.agent.md', 'drop-in'],
+      'google-gemini': ['.gemini/agents/x.md', 'drop-in'],
+      cursor: ['.cursor/rules/x.mdc', 'drop-in'],
+      default: ['.ai/agents/x.md', 'drop-in'],
+    },
+    hook: {
+      'claude-code': ['.claude/settings.json', 'merge'],
+      'github-copilot': ['.github/hooks/x.json', 'drop-in'],
+      'google-gemini': ['.gemini/settings.json', 'merge'],
+      cursor: ['.cursor/hooks.json', 'merge'],
+      default: null,
+    },
+    'mcp-config': {
+      'claude-code': ['.mcp.json', 'merge'],
+      'github-copilot': ['.vscode/mcp.json', 'merge'],
+      'google-gemini': ['.gemini/settings.json', 'merge'],
+      cursor: ['.cursor/mcp.json', 'merge'],
+      default: null,
+    },
+    // Pointer-shaped bodies install through their framework (ADR-0009/0010).
+    plugin: {
+      'claude-code': null,
+      'github-copilot': null,
+      'google-gemini': null,
+      cursor: null,
+      default: null,
+    },
+    marketplace: {
+      'claude-code': null,
+      'github-copilot': null,
+      'google-gemini': null,
+      cursor: null,
+      default: null,
+    },
+  };
+
+  it.each(RESOURCE_TYPES)('resolves every framework for %s', type => {
+    const expected = Object.fromEntries(
+      Object.entries(MATRIX[type]).map(([framework, cell]) => [
+        framework,
+        cell && { path: cell[0], mode: cell[1] },
+      ]),
     );
+    const actual = Object.fromEntries(
+      Object.keys(MATRIX[type]).map(framework => [
+        framework,
+        getResourceInstallTarget(type, framework, 'x') ?? null,
+      ]),
+    );
+    expect(actual).toEqual(expected);
+  });
+
+  it('never points one host at another host’s directory', () => {
+    const OWN_PREFIX: Record<string, string> = {
+      'claude-code': '.claude/',
+      'github-copilot': '.github/',
+      'google-gemini': '.gemini/',
+      cursor: '.cursor/',
+    };
+    for (const type of ['skill', 'agent'] as const) {
+      for (const [framework, prefix] of Object.entries(OWN_PREFIX)) {
+        expect(getResourceInstallTarget(type, framework, 'x')?.path).toContain(
+          prefix,
+        );
+      }
+    }
   });
 
   it('normalises framework aliases', () => {
-    expect(getResourceInstallPath('agent', 'claude', 'threat-modeller')).toBe(
-      '.claude/agents/threat-modeller.md',
-    );
+    expect(
+      getResourceInstallTarget('agent', 'claude', 'threat-modeller'),
+    ).toEqual({ path: '.claude/agents/threat-modeller.md', mode: 'drop-in' });
   });
 
   it('falls back to the default convention for unknown frameworks', () => {
-    expect(getResourceInstallPath('agent', 'zed', 'threat-modeller')).toBe(
-      '.ai/agents/threat-modeller.md',
+    expect(getResourceInstallTarget('agent', 'zed', 'threat-modeller')).toEqual(
+      {
+        path: '.ai/agents/threat-modeller.md',
+        mode: 'drop-in',
+      },
     );
   });
+});
 
-  it('points hook and mcp-config at their settings files', () => {
-    expect(
-      getResourceInstallPath('hook', 'claude-code', 'post-edit-lint'),
-    ).toBe('.claude/settings.json');
-    expect(
-      getResourceInstallPath('mcp-config', 'claude-code', 'grafana-mcp'),
-    ).toBe('.mcp.json');
+describe('expandInstallFrameworks', () => {
+  it('expands `all` to every installable host rather than one row', () => {
+    expect(expandInstallFrameworks(['all'])).toEqual([
+      'claude-code',
+      'github-copilot',
+      'google-gemini',
+      'cursor',
+    ]);
   });
 
-  it('is undefined where no convention exists', () => {
+  it('gives `all` resources a path for types that have no default', () => {
+    // Regression: `all` previously resolved to a single lookup that missed,
+    // so hook/mcp-config resources rendered an empty install dialog.
+    for (const type of ['hook', 'mcp-config'] as const) {
+      const rows = expandInstallFrameworks(['all'])
+        .map(f => getResourceInstallTarget(type, f, 'x'))
+        .filter(Boolean);
+      expect(rows).toHaveLength(4);
+    }
+  });
+
+  it('uses the neutral default when nothing is declared', () => {
+    expect(expandInstallFrameworks([])).toEqual(['default']);
+  });
+
+  it('passes declared frameworks through, normalised and deduped', () => {
     expect(
-      getResourceInstallPath('plugin', 'claude-code', 'bundle'),
-    ).toBeUndefined();
-    expect(
-      getResourceInstallPath('hook', 'github-copilot', 'x'),
-    ).toBeUndefined();
-    expect(
-      getResourceInstallPath('marketplace', 'claude-code', 'nos'),
-    ).toBeUndefined();
+      expandInstallFrameworks(['claude', 'claude-code', 'cursor']),
+    ).toEqual(['claude-code', 'cursor']);
   });
 });
 
@@ -288,8 +380,8 @@ describe('getMarketplaceAddCommands', () => {
     ]);
   });
 
-  it('carries a prefill deep link for Claude Code; Copilot is copy-only', () => {
-    const [claude, copilot] = getMarketplaceAddCommands(
+  it('carries a prefill deep link for Claude Code', () => {
+    const [claude] = getMarketplaceAddCommands(
       ['claude-code', 'github-copilot'],
       'org/repo',
     );
@@ -301,7 +393,27 @@ describe('getMarketplaceAddCommands', () => {
         )}`,
       },
     ]);
-    expect(copilot.deepLinks).toEqual([]);
+  });
+
+  it('carries VS Code add-marketplace launchers for Copilot', () => {
+    // Copilot's CLI has no URI scheme, but VS Code 1.113 ships
+    // `vscode://chat-plugin/add-marketplace` — the row keeps its terminal
+    // command for CLI users and gains editor launchers.
+    const [, copilot] = getMarketplaceAddCommands(
+      ['claude-code', 'github-copilot'],
+      'org/repo',
+    );
+    expect(copilot.command).toBe('copilot plugin marketplace add org/repo');
+    expect(copilot.deepLinks).toEqual([
+      {
+        label: 'VS Code',
+        href: 'vscode://chat-plugin/add-marketplace?ref=org%2Frepo',
+      },
+      {
+        label: 'VS Code Insiders',
+        href: 'vscode-insiders://chat-plugin/add-marketplace?ref=org%2Frepo',
+      },
+    ]);
   });
 
   it('expands "all" and an empty list to every capable framework', () => {
@@ -329,7 +441,7 @@ describe('getMarketplaceAddCommands', () => {
 });
 
 describe('getAgentInstallLinks', () => {
-  it('builds Claude, VS Code, and Insiders install links from a GitHub blob URL', () => {
+  it('builds Claude, VS Code, Insiders, and Cursor install links from a GitHub blob URL', () => {
     const rawUrl =
       'https://raw.githubusercontent.com/nosportugal/backstage-plugin-dev-ai-hub/main-nos/examples/agents/api-architect.md';
     const encodedRawUrl = encodeURIComponent(rawUrl);
@@ -353,6 +465,12 @@ describe('getAgentInstallLinks', () => {
         label: 'VS Code Insiders',
         href: `vscode-insiders:chat-agent/install?url=${encodedRawUrl}`,
       },
+      {
+        label: 'Cursor',
+        href: `cursor://anysphere.cursor-deeplink/prompt?text=${encodeURIComponent(
+          `Install this agent: fetch ${rawUrl} and save it to .cursor/rules/api-architect.mdc`,
+        )}`,
+      },
     ]);
   });
 
@@ -366,6 +484,130 @@ describe('getAgentInstallLinks', () => {
   ])('is empty for %s (copy/download fallback)', input => {
     expect(getAgentInstallLinks(input as string | undefined, 'x')).toEqual([]);
   });
+
+  describe('follows the resource’s declared frameworks', () => {
+    const blob =
+      'url:https://github.com/org/repo/blob/main/agents/api-architect.md';
+    const labels = (frameworks: string[]) =>
+      getAgentInstallLinks(blob, 'api-architect', frameworks).map(l => l.label);
+
+    it('offers only Claude when only claude-code is declared', () => {
+      expect(labels(['claude-code'])).toEqual(['Claude']);
+    });
+
+    it('offers only the VS Code pair when only github-copilot is declared', () => {
+      expect(labels(['github-copilot'])).toEqual([
+        'VS Code',
+        'VS Code Insiders',
+      ]);
+    });
+
+    it('offers a prompt launcher for Cursor, pointed at Cursor’s own path', () => {
+      const [link] = getAgentInstallLinks(blob, 'api-architect', ['cursor']);
+      expect(link.label).toBe('Cursor');
+      expect(link.href).toContain(
+        'cursor://anysphere.cursor-deeplink/prompt?text=',
+      );
+      expect(decodeURIComponent(link.href)).toContain(
+        '.cursor/rules/api-architect.mdc',
+      );
+    });
+
+    it('percent-encodes the prompt so Cursor does not truncate at a raw &', () => {
+      const [link] = getAgentInstallLinks(blob, 'api-architect', ['cursor']);
+      expect(link.href.split('?text=')[1]).not.toContain('&');
+    });
+
+    it('offers nothing for hosts with no launcher at all', () => {
+      // Gemini's only prompt URL drives the web app, which cannot write to a
+      // local workspace — so it gets no launcher rather than a broken one.
+      expect(labels(['google-gemini'])).toEqual([]);
+    });
+
+    it('treats `all` and an empty list as unrestricted', () => {
+      expect(labels(['all'])).toEqual([
+        'Claude',
+        'VS Code',
+        'VS Code Insiders',
+        'Cursor',
+      ]);
+      expect(labels([])).toEqual([
+        'Claude',
+        'VS Code',
+        'VS Code Insiders',
+        'Cursor',
+      ]);
+    });
+
+    it('resolves aliases before gating', () => {
+      expect(labels(['claude'])).toEqual(['Claude']);
+    });
+  });
+});
+
+describe('getPromptInstallLinks', () => {
+  // Skills carry a directory (`tree`) source-location, not a blob — the raw
+  // file helper returns undefined for these, which is why skill launchers
+  // need their own source resolution.
+  const tree = 'url:https://github.com/org/repo/tree/main/skills/my-skill/';
+
+  it('offers Claude and Cursor launchers for a tree-shaped skill source', () => {
+    expect(
+      getPromptInstallLinks('skill', tree, 'my-skill', ['all']).map(
+        l => l.label,
+      ),
+    ).toEqual(['Claude', 'Cursor']);
+  });
+
+  it('names each host’s own install path in its prompt', () => {
+    const [claude] = getPromptInstallLinks('skill', tree, 'my-skill', [
+      'claude-code',
+    ]);
+    const [cursor] = getPromptInstallLinks('skill', tree, 'my-skill', [
+      'cursor',
+    ]);
+    expect(decodeURIComponent(claude.href)).toContain(
+      '.claude/skills/my-skill/',
+    );
+    expect(decodeURIComponent(cursor.href)).toContain(
+      '.cursor/skills/my-skill/',
+    );
+  });
+
+  it('asks for a merge, never an overwrite, on merge-mode targets', () => {
+    const [claude] = getPromptInstallLinks('hook', tree, 'post-edit-lint', [
+      'claude-code',
+    ]);
+    const prompt = decodeURIComponent(claude.href);
+    expect(prompt).toContain('merge it into .claude/settings.json');
+    expect(prompt).toContain('keeping my existing settings intact');
+  });
+
+  it('offers nothing for hosts without a prompt route', () => {
+    for (const fw of ['github-copilot', 'google-gemini']) {
+      expect(getPromptInstallLinks('skill', tree, 'my-skill', [fw])).toEqual(
+        [],
+      );
+    }
+  });
+
+  it('percent-encodes so Cursor does not truncate at a raw &', () => {
+    const [cursor] = getPromptInstallLinks('skill', tree, 'my-skill', [
+      'cursor',
+    ]);
+    expect(cursor.href.split('?text=')[1]).not.toContain('&');
+  });
+
+  it.each([[undefined], ['not a url'], ['file:///local/path']])(
+    'is empty for source %s (copy/download fallback)',
+    input => {
+      expect(
+        getPromptInstallLinks('skill', input as string | undefined, 'x', [
+          'all',
+        ]),
+      ).toEqual([]);
+    },
+  );
 });
 
 describe('getMcpInstallLinks', () => {
@@ -407,12 +649,21 @@ describe('getMcpInstallLinks', () => {
     ]);
   });
 
-  it('expands empty, "all", and unknown-only framework lists to every capable host', () => {
-    for (const frameworks of [[], ['all'], ['google-gemini']]) {
+  it('expands empty and "all" framework lists to every capable host', () => {
+    for (const frameworks of [[], ['all']]) {
       expect(
         getMcpInstallLinks(frameworks, 'grafana-mcp', body).map(l => l.label),
       ).toEqual(['Claude', 'VS Code', 'VS Code Insiders', 'Cursor']);
     }
+  });
+
+  it('offers no links when no declared framework has a handler', () => {
+    // Regression: a declared-but-incapable host (Gemini) used to widen to
+    // every host, advertising installs the resource never claimed to support.
+    expect(getMcpInstallLinks(['google-gemini'], 'grafana-mcp', body)).toEqual(
+      [],
+    );
+    expect(getMcpInstallLinks(['zed'], 'grafana-mcp', body)).toEqual([]);
   });
 
   it('accepts a bare config body, naming the server after the resource', () => {

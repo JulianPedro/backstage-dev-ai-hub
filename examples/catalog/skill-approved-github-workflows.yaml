@@ -7,7 +7,7 @@ metadata:
   tags: [security, github, ci-cd, review]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/tree/main-nos/examples/skills/approved-github-workflows/
-    devaihub.io/compatible-frameworks: github-copilot,claude-code
+    devaihub.io/compatible-frameworks: github-copilot,claude-code,google-gemini,cursor
     devaihub.io/version: 1.0.0
 spec:
   type: skill
@@ -17,6 +17,8 @@ spec:
   agents:
     - github-copilot
     - claude-code
+    - google-gemini
+    - cursor
   disciplines:
     - devops
     - security

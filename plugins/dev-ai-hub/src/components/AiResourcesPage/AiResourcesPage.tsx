@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Flex, Skeleton, TablePagination, Text } from '@backstage/ui';
 import {
@@ -39,6 +39,17 @@ export function AiResourcesPage() {
   );
   const [filters, setFilters] = useState<ResourceFiltersValue>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
+
+  // Staggered card entrance plays once, on the initial load only — re-playing
+  // it on every filter/search keystroke would be noisy rather than delightful
+  // ("add some flowers"), and cards already remount when they re-enter the
+  // filtered set (a separate, pre-existing telemetry consideration).
+  const [playEntrance, setPlayEntrance] = useState(true);
+  useEffect(() => {
+    if (loading || !playEntrance) return undefined;
+    const timer = setTimeout(() => setPlayEntrance(false), 900);
+    return () => clearTimeout(timer);
+  }, [loading, playEntrance]);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedRef = searchParams.get('resource');
@@ -136,10 +147,10 @@ export function AiResourcesPage() {
 
       {error && (
         <div className={styles.emptyState}>
-          <Text variant="title-small" color="secondary" weight="bold">
+          <Text variant="title-small" color="secondary" weight="bold" as="p">
             Could not load resources
           </Text>
-          <Text variant="body-small" color="secondary">
+          <Text variant="body-small" color="secondary" as="p">
             {error.message}
           </Text>
         </div>
@@ -153,11 +164,17 @@ export function AiResourcesPage() {
             </Text>
           </Box>
           <div className={styles.grid}>
-            {pageItems.map(r => (
+            {pageItems.map((r, i) => (
               <ResourceCard
                 key={r.entityRef}
                 resource={r}
                 onView={openDetail}
+                className={playEntrance ? styles.cardEntrance : undefined}
+                style={
+                  playEntrance
+                    ? ({ '--card-index': i } as React.CSSProperties)
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -180,10 +197,10 @@ export function AiResourcesPage() {
       {!loading && !error && visible.length === 0 && (
         <div className={styles.emptyState}>
           <div className={styles.emptyEmoji}>🤖</div>
-          <Text variant="title-small" color="secondary" weight="bold">
+          <Text variant="title-small" color="secondary" weight="bold" as="p">
             No AI resources found
           </Text>
-          <Text variant="body-small" color="secondary">
+          <Text variant="body-small" color="secondary" as="p">
             {items && items.length > 0
               ? 'No resources match the current filters.'
               : 'Register AiResource entities in the catalog to see them here.'}

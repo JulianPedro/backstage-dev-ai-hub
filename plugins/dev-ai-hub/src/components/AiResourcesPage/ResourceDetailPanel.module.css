@@ -4,6 +4,14 @@
     inset: 0;
     background-color: rgba(0, 0, 0, 0.55);
     z-index: 1299;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+
+  .overlay[data-open='true'] {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .drawer {
@@ -21,6 +29,21 @@
     z-index: 1300;
     display: flex;
     flex-direction: column;
+    transform: translateX(100%);
+    pointer-events: none;
+    transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .drawer[data-open='true'] {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .overlay,
+    .drawer {
+      transition: none;
+    }
   }
 
   .header {

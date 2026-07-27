@@ -23,6 +23,7 @@ jest.mock('@backstage/ui', () => ({
       {children}
     </button>
   ),
+  ButtonLink: ({ children, href }: any) => <a href={href}>{children}</a>,
   Dialog: ({ children, isOpen }: any) =>
     isOpen ? <div role="dialog">{children}</div> : null,
   DialogHeader: ({ children }: any) => <div>{children}</div>,
@@ -158,6 +159,16 @@ describe('ResourceDetailPanel — body', () => {
     fireEvent.click(screen.getByText('Install'));
     expect(screen.getByText('Install My Skill')).toBeInTheDocument();
     expect(screen.getByText('.claude/skills/my-skill/')).toBeInTheDocument();
+
+    // A skill must offer a one-click launcher, not just a path to copy.
+    const launcher = screen.getByText('Install in Claude').closest('a');
+    expect(launcher).toHaveAttribute(
+      'href',
+      expect.stringContaining('claude-cli://open?q='),
+    );
+    expect(decodeURIComponent(launcher!.getAttribute('href')!)).toContain(
+      '.claude/skills/my-skill/',
+    );
   });
 
   it('downloads via the client on Download', async () => {

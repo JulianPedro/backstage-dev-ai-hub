@@ -7,7 +7,7 @@ metadata:
   tags: [linting, quality, automation]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/hooks/post-edit-lint.md
-    devaihub.io/compatible-frameworks: claude-code
+    devaihub.io/compatible-frameworks: claude-code,github-copilot,google-gemini,cursor
     devaihub.io/hook-event: PostToolUse
     devaihub.io/hook-matcher: .*Edit.*
 spec:

@@ -18,6 +18,7 @@ import {
 import { siClaude } from 'simple-icons';
 import { useApi } from '@backstage/core-plugin-api';
 import {
+  expandInstallFrameworks,
   getAgentInstallLinks,
   getBodyShape,
   getMarketplaceAddCommands,
@@ -25,10 +26,13 @@ import {
   getMarketplaceInstallTemplate,
   getMarketplaceRepoSlug,
   getMarketplaceTeamSnippet,
-  getResourceInstallPath,
+  getInstallSteps,
+  getResourceInstallTarget,
   hasCopyableBody,
   hasDownloadableArtifact,
   type FrameworkToken,
+  type MarketplaceAddCommand,
+  type ResourceInstallTarget,
   type ResourceSummary,
 } from '@nospt/plugin-dev-ai-hub-common';
 import {
@@ -51,7 +55,7 @@ const TYPE_HINTS: Record<ResourceSummary['type'], string> = {
     'Download the skill (multi-file skills arrive as one zip) and extract it into the path for your framework.',
   agent:
     'Download or copy the agent definition into the path for your framework.',
-  hook: 'Merge the hook definition into your settings file.',
+  hook: 'Register the hook definition at the path for your framework — most hosts merge it into a shared settings file.',
   'mcp-config': 'Add this server entry to your MCP configuration file.',
   plugin:
     'This plugin installs through its framework — follow the instructions below.',
@@ -95,10 +99,19 @@ function ClaudeIcon() {
   );
 }
 
-/** The one-click install links for the resource types that have them. */
+/**
+ * The one-click install links for the types with a *native* install route,
+ * rendered once in the actions row. `skill` and `hook` are absent on purpose:
+ * their launchers are per-host and live in their own rows, so returning them
+ * here too would render every button twice.
+ */
 function getInstallLinks(resource: ResourceSummary, body?: ResourceBody) {
   if (resource.type === 'agent') {
-    return getAgentInstallLinks(resource.sourceLocation, resource.name);
+    return getAgentInstallLinks(
+      resource.sourceLocation,
+      resource.name,
+      resource.frameworks,
+    );
   }
   if (resource.type === 'mcp-config') {
     return getMcpInstallLinks(
@@ -154,21 +167,43 @@ function CopyCommandButton({ text }: { text: string }) {
 }
 
 /**
+ * Clipboard fallback for a host with no prompt URI (Copilot, Gemini). It
+ * carries the identical instruction a launcher would pre-fill, so the only
+ * difference is the delivery — the user pastes it into their own agent.
+ */
+function CopyPromptButton({ text, label }: { text: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Button
+      size="small"
+      variant="secondary"
+      iconStart={copied ? <RiCheckLine /> : <RiFileCopyLine />}
+      onPress={async () => {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+    >
+      {copied ? 'Copied!' : `Copy prompt for ${label}`}
+    </Button>
+  );
+}
+
+/**
  * The two-step marketplace journey (ADR-0010): ① register the catalog with
  * the AI tool, ② install plugins from it — plus a team-distribution snippet.
- * Commands are derived from the repo slug in `source-location`; when the
- * slug cannot be derived this renders nothing and the canonical body below
- * carries the guidance alone.
+ * Whether this can render at all is decided by the caller, which needs the
+ * same answer to know if the body doc is still required as a fallback.
  */
-function MarketplaceJourney({ resource }: { resource: ResourceSummary }) {
-  const repoSlug = getMarketplaceRepoSlug(resource.sourceLocation);
-  if (!repoSlug) {
-    return null;
-  }
-  const addCommands = getMarketplaceAddCommands(resource.frameworks, repoSlug);
-  if (addCommands.length === 0) {
-    return null;
-  }
+function MarketplaceJourney({
+  resource,
+  repoSlug,
+  addCommands,
+}: {
+  resource: ResourceSummary;
+  repoSlug: string;
+  addCommands: MarketplaceAddCommand[];
+}) {
   return (
     <div className={styles.journey}>
       <Text variant="body-small" as="p" className={styles.stepTitle}>
@@ -251,14 +286,51 @@ export function ResourceInstallDialog({
 
   const shape = getBodyShape(resource.type);
   const installLinks = getInstallLinks(resource, body);
-  const frameworks =
-    resource.frameworks.length > 0 ? resource.frameworks : ['default'];
-  const pathRows = frameworks
+
+  // A marketplace body doc repeats the generated journey almost verbatim —
+  // same two steps, same commands — so rendering both doubles the dialog's
+  // height to say one thing twice. The journey wins when it can be derived;
+  // the body stays as ADR-0010's fallback for when the slug cannot be.
+  const marketplaceRepoSlug =
+    resource.type === 'marketplace'
+      ? getMarketplaceRepoSlug(resource.sourceLocation)
+      : undefined;
+  const marketplaceAddCommands = marketplaceRepoSlug
+    ? getMarketplaceAddCommands(resource.frameworks, marketplaceRepoSlug)
+    : [];
+  const hasMarketplaceJourney = marketplaceAddCommands.length > 0;
+  const showBodyDoc =
+    resource.type === 'plugin' ||
+    (resource.type === 'marketplace' && !hasMarketplaceJourney);
+
+  // skill/hook install by instructing the agent, so each host gets a row that
+  // is actionable on its own: a launcher where the host has a prompt URI, a
+  // copyable prompt where it does not. Other types keep the plain path list —
+  // their launchers are native routes, rendered once in the actions row.
+  const usesPromptInstall =
+    resource.type === 'skill' || resource.type === 'hook';
+  const installSteps = usesPromptInstall
+    ? getInstallSteps(
+        resource.type,
+        resource.sourceLocation,
+        resource.name,
+        resource.frameworks,
+      )
+    : [];
+  const pathRows = expandInstallFrameworks(resource.frameworks)
     .map(f => ({
       framework: f,
-      path: getResourceInstallPath(resource.type, f, resource.name),
+      target: getResourceInstallTarget(resource.type, f, resource.name),
     }))
-    .filter((row): row is { framework: string; path: string } => !!row.path);
+    .filter(
+      (row): row is { framework: string; target: ResourceInstallTarget } =>
+        !!row.target,
+    );
+  const hasMergeTarget = (
+    installSteps.length > 0
+      ? installSteps.map(s => s.target)
+      : pathRows.map(r => r.target)
+  ).some(t => t.mode === 'merge');
 
   const handleCopy = async () => {
     if (!body) return;
@@ -283,11 +355,14 @@ export function ResourceInstallDialog({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       /* Size to the widest command line so generated commands stay unwrapped,
-         clamped so prose-heavy bodies can't balloon the dialog. */
+         clamped so prose-heavy bodies can't balloon the dialog. The height cap
+         keeps a long fallback body scrolling inside the dialog rather than
+         running off-screen — the install actions must always stay reachable. */
       style={{
         width: 'fit-content',
         minWidth: 'min(480px, calc(100vw - 3rem))',
         maxWidth: 'min(760px, calc(100vw - 3rem))',
+        maxHeight: 'min(80vh, calc(100vh - 4rem))',
       }}
     >
       <DialogHeader>Install {resource.title ?? resource.name}</DialogHeader>
@@ -303,32 +378,105 @@ export function ResourceInstallDialog({
             </pre>
           )}
 
-          {resource.type === 'marketplace' && (
-            <MarketplaceJourney resource={resource} />
+          {hasMarketplaceJourney && marketplaceRepoSlug && (
+            <MarketplaceJourney
+              resource={resource}
+              repoSlug={marketplaceRepoSlug}
+              addCommands={marketplaceAddCommands}
+            />
           )}
 
-          {body &&
-            (resource.type === 'plugin' || resource.type === 'marketplace') && (
-              <div className={styles.markdown}>
-                <ReactMarkdown>{body.content}</ReactMarkdown>
-              </div>
-            )}
+          {body && showBodyDoc && (
+            <div className={styles.markdown}>
+              <ReactMarkdown>{body.content}</ReactMarkdown>
+            </div>
+          )}
 
-          {pathRows.length > 0 && (
-            <dl className={styles.pathList}>
-              {pathRows.map(({ framework, path }) => (
-                <div key={framework} className={styles.pathRow}>
-                  <dt>
-                    {framework === 'default'
-                      ? 'Any framework'
-                      : frameworkLabel(framework)}
+          {installSteps.length > 0 && (
+            <dl className={styles.commandList}>
+              {installSteps.map(({ framework, target, prompt, link }) => (
+                <div key={framework} className={styles.commandRow}>
+                  <dt className={styles.commandLabel}>
+                    <ToolIcon tool={framework as FrameworkToken} size={16} />
+                    {frameworkLabel(framework)}
                   </dt>
-                  <dd>
-                    <code>{path}</code>
+                  <dd className={styles.pathRow}>
+                    <code>{target.path}</code>
+                    {target.mode === 'merge' && (
+                      <span className={styles.mergeBadge}>merge into</span>
+                    )}
+                  </dd>
+                  <dd className={styles.deepLinks}>
+                    {link ? (
+                      (() => {
+                        const brand = launchBrand(link.label);
+                        return (
+                          <ButtonLink
+                            size="small"
+                            variant="secondary"
+                            className={brand.className}
+                            iconStart={brand.icon}
+                            href={link.href}
+                            onPress={() =>
+                              api.track(
+                                resource.entityRef,
+                                'install',
+                                framework,
+                              )
+                            }
+                          >
+                            Install in {link.label}
+                          </ButtonLink>
+                        );
+                      })()
+                    ) : (
+                      /* No prompt URI for this host — the same instruction,
+                         delivered by clipboard so the row is still actionable. */
+                      <CopyPromptButton
+                        text={prompt}
+                        label={frameworkLabel(framework)}
+                      />
+                    )}
                   </dd>
                 </div>
               ))}
             </dl>
+          )}
+
+          {installSteps.length === 0 && pathRows.length > 0 && (
+            <>
+              <dl className={styles.pathList}>
+                {pathRows.map(({ framework, target }) => (
+                  <div key={framework} className={styles.pathRow}>
+                    <dt>
+                      {framework === 'default'
+                        ? 'Any framework'
+                        : frameworkLabel(framework)}
+                    </dt>
+                    <dd>
+                      <code>{target.path}</code>
+                      {/* A merge target is a file the user already owns —
+                          flagged inline so the path is never mistaken for a
+                          drop-in destination to overwrite. */}
+                      {target.mode === 'merge' && (
+                        <span className={styles.mergeBadge}>merge into</span>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              {hasMergeTarget && (
+                <Text
+                  variant="body-x-small"
+                  as="p"
+                  className={styles.mergeNote}
+                >
+                  Paths marked <strong>merge into</strong> are shared
+                  configuration files. Add this entry to the existing file —
+                  replacing it discards your other settings.
+                </Text>
+              )}
+            </>
           )}
 
           <div className={styles.actions}>

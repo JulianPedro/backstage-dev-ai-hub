@@ -3,6 +3,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--bui-space-4);
+    /* Pairs with the dialog's maxHeight: overflow scrolls here instead of
+       pushing the dialog past the viewport. */
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .codeBlock {
@@ -51,6 +55,26 @@
 
   .pathRow dd {
     margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: var(--bui-space-2);
+  }
+
+  /* Marks a shared settings file rather than a drop-in destination; uses the
+     warning intent so the difference survives a glance at the path list. */
+  .mergeBadge {
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 1px var(--bui-space-2);
+    border-radius: var(--bui-radius-1);
+    color: var(--bui-fg-warning);
+    background-color: var(--bui-bg-warning-1);
+  }
+
+  .mergeNote {
+    color: var(--bui-fg-secondary);
   }
 
   .pathRow code {
