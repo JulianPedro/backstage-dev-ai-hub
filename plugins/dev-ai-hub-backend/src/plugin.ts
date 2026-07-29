@@ -29,7 +29,12 @@ export const devAiHubPlugin = createBackendPlugin({
         catalog,
       }) {
         const telemetryStore = await TelemetryStore.create({ database });
-        const telemetrySalt = config.getString('devAiHub.telemetry.salt');
+        // Optional on purpose (#56): unset means "generate and persist one",
+        // not "fail". Requiring it here took the whole backend down on any
+        // deployment that had not configured this plugin.
+        const telemetrySalt = await telemetryStore.resolveSalt(
+          config.getOptionalString('devAiHub.telemetry.salt'),
+        );
 
         const router = createRouter({
           logger,

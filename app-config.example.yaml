@@ -1,20 +1,61 @@
-# Example Backstage app-config.yaml additions for Dev AI Hub plugin
-# Add these sections to your Backstage instance's app-config.yaml
-
-# 1. Register the backend plugin in packages/backend/src/index.ts:
-#    backend.add(import('@nospt/plugin-dev-ai-hub-backend'));
+# Example Backstage app-config.yaml additions for the Dev AI Hub plugin.
+# Requires Backstage 1.51 or later — the AiResource kind comes from Backstage's
+# own alpha catalog module.
 #
-# 2. Register the frontend plugin (New Frontend System) in packages/app/src/App.tsx:
-#    import devAiHub from '@nospt/plugin-dev-ai-hub';
-#    app.addExtensions([devAiHub]);
+# 1. Register the AiResource kind and the backend plugin in
+#    packages/backend/src/index.ts:
+#
+#      backend.add(import('@backstage/plugin-catalog-backend-module-ai-model'));
+#      backend.add(import('@nospt/plugin-dev-ai-hub-backend'));
+#
+# 2. Register the frontend plugin (New Frontend System) in
+#    packages/app/src/App.tsx:
+#
+#      import { devAiHubPlugin } from '@nospt/plugin-dev-ai-hub';
+#
+#      export const app = createApp({
+#        features: [devAiHubPlugin],
+#      });
+
+catalog:
+  rules:
+    # AiResource must be allow-listed alongside your other kinds, or the
+    # entities are rejected before the plugin ever sees them.
+    - allow: [Component, API, Resource, System, Domain, Location, AiResource]
+
+  locations:
+    # Hand-authored AiResource entities (ADR-0004 — Dev AI Hub is a consumer,
+    # never a producer). Point this at wherever your org registers them.
+    - type: url
+      target: https://github.com/your-org/ai-assets/blob/main/catalog-info.yaml
+      rules:
+        - allow: [AiResource]
+
+  # How long after someone edits an entity YAML before the catalog — and so
+  # this plugin — sees it. The plugin schedules nothing of its own: the backend
+  # reads the catalog live on every request, so this interval is the only thing
+  # governing freshness.
+  #
+  # Unset means a random 100–150s per entity. Lower it with care: processing
+  # queries the VCS hosting your catalog-info files, and a short interval on a
+  # large catalog can exhaust rate limits.
+  #
+  # processingInterval: { minutes: 30 }
 
 devAiHub:
   telemetry:
-    # Stable salt for hashing telemetry caller identity (ADR-0007).
-    # Must not change across restarts/deploys. Set via env var, never literal.
+    # Optional (ADR-0007). Leave it out and the plugin generates a salt on
+    # first start and persists it in its own database, which keeps the hashed
+    # caller identity stable across restarts.
+    #
+    # Set it to keep the salt outside the database it protects, or to control
+    # rotation — and then it must not change across restarts/deploys, or the
+    # historical per-day dedup keys become unrecoverable. Env var, never a
+    # literal.
     salt: ${DEV_AI_HUB_TELEMETRY_SALT}
 
-# GitHub integration (required for reading GitHub repositories)
+# GitHub integration — required for the backend to resolve resource bodies from
+# the source-location each entity points at.
 integrations:
   github:
     - host: github.com

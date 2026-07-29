@@ -28,6 +28,32 @@ ref is validated to be a real `AiResource`, so garbage refs never land.
 - Popularity counts mean "distinct viewers per day + raw deliberate actions", not raw event fires.
 - Per-user attribution/audit is intentionally not possible from stored data (hash is one-way).
 
+## Amendment (2026-07-29, #56): the salt is generated, not required from config
+
+"The dedup salt **must be stable and configured**" conflated two things. Stability is the real
+requirement — a per-process salt breaks per-day dedup across restarts. *Configured* was an
+implementation choice, and it was implemented as `config.getString`, which throws when the key is
+absent. Because the read is unconditional, a deployment that never configured this plugin at all
+still failed, and a failing plugin `init` takes the whole backend down: verified by starting the
+backend against a config with no `devAiHub` block, which produced `BackendStartupError` after
+`catalog` and `auth` had already initialised.
+
+The salt is therefore generated once and persisted in the plugin's own database (migration 009),
+which is what actually delivers stability. Config remains an optional override, for deployments
+that want the salt held outside the database it protects, and a configured value is never
+persisted.
+
+The cost is accepted deliberately: a generated salt lives alongside the hashes, so a database dump
+yields both, and hashing protects against casual reading rather than against a dump. The threat it
+still answers is the one that matters here — the user ref space is a few thousand enumerable
+catalog entries, so *unsalted* hashes would be trivially reversible. A hardcoded constant in the
+source was rejected outright: it ships in the npm tarball, identical and public for every
+deployment, which is "plaintext user ref" (already rejected above) with extra steps.
+
+Changing the salt source makes existing hashes incomparable with new ones. That is free while only
+dev data exists and stops being free the moment production records anything, which is the argument
+for landing it before the v2 release rather than after.
+
 ## Amendment (2026-07-22, slice [2.3c] / #31)
 
 `GET /telemetry/:ref` ships with **raw counts for all four actions**, including `view` —

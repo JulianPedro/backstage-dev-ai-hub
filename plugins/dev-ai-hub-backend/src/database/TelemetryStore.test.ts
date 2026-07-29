@@ -25,6 +25,46 @@ beforeEach(async () => {
 
 const REF = 'airesource:default/example-skill';
 
+describe('resolveSalt', () => {
+  beforeEach(async () => {
+    await knex('telemetry_settings').delete();
+  });
+
+  it('generates and persists a salt when none is configured', async () => {
+    const salt = await store.resolveSalt();
+
+    expect(salt).toMatch(/^[0-9a-f]{64}$/);
+    await expect(
+      knex('telemetry_settings').where('key', 'actor_salt').first('value'),
+    ).resolves.toEqual({ value: salt });
+  });
+
+  it('returns the same salt on every call, so hashes survive restarts', async () => {
+    const first = await store.resolveSalt();
+
+    // A second store over the same database stands in for a restart.
+    const restarted = await TelemetryStore.create({
+      database: { getClient: async () => knex } as any,
+    });
+
+    await expect(restarted.resolveSalt()).resolves.toBe(first);
+  });
+
+  it('prefers a configured salt and does not persist it', async () => {
+    await expect(store.resolveSalt('from-config')).resolves.toBe('from-config');
+    await expect(
+      knex('telemetry_settings').where('key', 'actor_salt').first('value'),
+    ).resolves.toBeUndefined();
+  });
+
+  it('keeps the stored salt when a configured one is supplied later', async () => {
+    const generated = await store.resolveSalt();
+
+    await expect(store.resolveSalt('from-config')).resolves.toBe('from-config');
+    await expect(store.resolveSalt()).resolves.toBe(generated);
+  });
+});
+
 describe('getCounts', () => {
   it('returns zero counts for a ref with no events', async () => {
     await expect(store.getCounts(REF)).resolves.toEqual({

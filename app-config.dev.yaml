@@ -33,8 +33,13 @@ catalog:
       target: ../../examples/catalog/all.yaml
       rules:
         - allow: [AiResource, Location]
+  # Local files only, so there is no VCS rate limit to respect — edits to the
+  # seed entities show up in seconds rather than after the 100–150s default.
+  processingInterval:
+    seconds: 15
 
-# GitHub integration — required for the sync to fetch files
+# GitHub integration — required to resolve resource bodies from each entity's
+# source-location
 integrations:
   github:
     - host: github.com

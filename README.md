@@ -10,23 +10,21 @@ The Backstage **catalog** is the sole source of truth: entities are hand-authore
 
 ## Installation
 
-### 1. Copy plugin packages
+**Requires Backstage 1.51 or later** — the `AiResource` kind comes from Backstage's own alpha
+catalog module, which is not available before that.
 
-Copy the four plugin directories into your Backstage monorepo's `plugins/` folder:
+### 1. Install the packages
 
-```
-plugins/
-  dev-ai-hub/
-  dev-ai-hub-backend/
-  dev-ai-hub-common/
-  dev-ai-hub-node/
-```
-
-Then install:
+The packages are published publicly on npm under the `@nospt` scope, so nothing needs copying into
+your monorepo and no registry configuration is required:
 
 ```bash
-yarn install
+yarn --cwd packages/app add @nospt/plugin-dev-ai-hub
+yarn --cwd packages/backend add @nospt/plugin-dev-ai-hub-backend
 ```
+
+`@nospt/plugin-dev-ai-hub-common` arrives as a dependency of both — you never install it directly.
+`@nospt/plugin-dev-ai-hub-node` is only needed if you build against its extension points.
 
 ### 2. Register the `AiResource` catalog kind
 
@@ -61,6 +59,10 @@ export const app = createApp({
 
 The sidebar item and `/dev-ai-hub` route are registered automatically.
 
+The UI is built on Backstage UI design tokens. Apps scaffolded by a current `create-app` already
+load them; if yours predates that, make sure `packages/app/src/index.tsx` imports
+`@backstage/ui/css/styles.css`, or the components render unstyled.
+
 ### 5. Configure `app-config.yaml`
 
 ```yaml
@@ -78,8 +80,10 @@ catalog:
 
 devAiHub:
   telemetry:
-    # Salts the per-user hash used to dedup `view` events (ADR-0007).
-    # Use a real secret in production — never commit it.
+    # Optional. Salts the per-user hash used to dedup `view` events (ADR-0007).
+    # Omit it and the plugin generates one on first start and persists it in
+    # its own database. Set it to keep the salt outside that database, or to
+    # control rotation — a real secret, never committed, and stable once set.
     salt: ${DEV_AI_HUB_TELEMETRY_SALT}
 ```
 
@@ -109,7 +113,7 @@ spec:
   owner: group:ai-platform-team
 ```
 
-`plugin` and `marketplace` resources additionally declare `spec.dependsOn` to relate to their child resources (rendered as containment on the card).
+`plugin` and `marketplace` resources additionally declare `spec.dependsOn` to relate to their child resources. The relation is stored in the catalog and readable there; the cards do not render containment yet ([issue #32](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/32)).
 
 See [`docs/AIRESOURCE-SPEC.md`](docs/AIRESOURCE-SPEC.md) for the full per-type spec (required vs. recommended fields, the `devaihub.io/*` annotation namespace, and one worked example per type), and [`examples/catalog/`](examples/catalog/) for entities you can register as-is to try the plugin locally.
 
