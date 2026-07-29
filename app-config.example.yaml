@@ -13,34 +13,6 @@ devAiHub:
     # Stable salt for hashing telemetry caller identity (ADR-0007).
     # Must not change across restarts/deploys. Set via env var, never literal.
     salt: ${DEV_AI_HUB_TELEMETRY_SALT}
-  providers:
-    - id: main-ai-assets
-      type: github
-      target: https://github.com/your-org/ai-assets-repo.git
-      branch: main
-      schedule:
-        frequency:
-          minutes: 30
-        timeout:
-          minutes: 5
-      # Optional: sync only specific tools/types
-      # filters:
-      #   tools:
-      #     - github-copilot
-      #     - claude-code
-      #   types:
-      #     - agent
-      #     - instruction
-
-    # - id: "team-assets"
-    #   type: "bitbucket"
-    #   target: "https://bitbucket.org/your-org/team-ai-assets.git"
-    #   branch: "main"
-    #   schedule:
-    #     frequency:
-    #       hours: 1
-    #     timeout:
-    #       minutes: 10
 
 # GitHub integration (required for reading GitHub repositories)
 integrations:

@@ -2,7 +2,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: rgba(0, 0, 0, 0.3);
     z-index: 1299;
     opacity: 0;
     pointer-events: none;
@@ -21,7 +21,10 @@
     bottom: 0;
     width: 520px;
     max-width: 100vw;
-    background-color: var(--bui-bg-neutral-1);
+    /* An opaque surface token, not `--bui-bg-neutral-1`: that token is a
+       translucent 10% white in dark mode, meant to layer over a solid
+       background. The drawer floats over the page, so it must bring its own. */
+    background-color: var(--bui-bg-app);
     /* The accent mirrors the open resource's type colour (set inline by the
        component); brand teal is only the no-type fallback. */
     border-top: 3px solid var(--drawer-accent, var(--devaihub-brand-teal));

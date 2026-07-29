@@ -18,26 +18,6 @@ devAiHub:
   telemetry:
     # Dev-only value — never reuse in a real deployment (ADR-0007).
     salt: dev-only-telemetry-salt
-  providers:
-    - id: backstage-test-01
-      type: github
-      target: https://github.com/nosportugal/backstage-test-01.git
-      branch: main
-      schedule:
-        frequency:
-          minutes: 60
-        timeout:
-          minutes: 5
-    - id: flai-ai-dev-coe-toolkit
-      type: github
-      target: https://github.com/nosportugal/flai-ai-dev-coe-toolkit.git
-      branch: main
-      schedule:
-        frequency:
-          minutes: 60
-        timeout:
-          minutes: 5
-
 
 # Guest sign-in for local dev — the v2 routes require Backstage auth (ADR-0005)
 auth:

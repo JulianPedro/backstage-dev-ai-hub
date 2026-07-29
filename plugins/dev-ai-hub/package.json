@@ -34,6 +34,9 @@
     ]
   },
   "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "backstage-cli package start --config ../../app-config.dev.yaml",
     "build": "backstage-cli package build",
@@ -62,12 +65,18 @@
   "devDependencies": {
     "@backstage/cli": "^0.36.2",
     "@backstage/dev-utils": "^1.1.23",
+    "@backstage/frontend-defaults": "^0.5.2",
+    "@backstage/plugin-app-react": "^0.2.3",
+    "@backstage/plugin-catalog": "^2.0.5",
+    "@backstage/plugin-catalog-react": "^3.0.0",
+    "@backstage/plugin-user-settings": "^0.9.3",
     "@playwright/test": "^1.60.0",
     "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^16.3.1",
     "@types/jest": "^30.0.0",
     "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
     "@types/react-syntax-highlighter": "^15.0.0",
     "jest": "^30.2.0",
     "jsdom": "^27.1.0",
