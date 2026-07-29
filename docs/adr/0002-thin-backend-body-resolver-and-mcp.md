@@ -1,5 +1,10 @@
 # Thin backend: body resolver, install telemetry, and MCP server
 
+> **Partially implemented.** (1) and (2) below shipped. The MCP server (3) was never built and is
+> not planned for the current line of work — the backend exposes no MCP endpoint, and AI tools read
+> resources through the same authenticated REST routes the browser uses. The decision is recorded
+> here as taken; only the MCP element is unrealised.
+
 The plugin retains a thin backend, but with a drastically reduced surface. It does three things:
 (1) a **body resolver** that, given an `AiResource` entity ref, reads the entity's
 `backstage.io/source-location` annotation and fetches the body via `UrlReader` (and assembles a

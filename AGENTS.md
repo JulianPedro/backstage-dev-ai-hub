@@ -39,7 +39,7 @@ Local git hooks use [pre-commit](https://pre-commit.com) — one-time setup: `pi
 
 Four packages under `plugins/`, published in lockstep under the `@nospt` scope:
 
-- **`dev-ai-hub`** — frontend plugin (New Frontend System, plus a legacy shim in `pluginLegacy.ts`).
+- **`dev-ai-hub`** — frontend plugin (New Frontend System only; the legacy shim was removed in the 2.6 slice).
 - **`dev-ai-hub-backend`** — backend plugin: routes, database migrations, catalog reads.
   It ships no ingestion path — no EntityProvider, no Git discovery, no scheduled sync (ADR-0004).
 - **`dev-ai-hub-common`** — isomorphic contracts (`ResourceSummary`, schemas, install paths) shared by frontend and backend.

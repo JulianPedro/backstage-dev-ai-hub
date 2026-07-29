@@ -5,9 +5,10 @@ version: 2
 # it bumps both the SHA and the trailing version comment, keeping the
 # AGENTS.md "pin third-party actions to a full-length SHA" rule intact.
 #
-# Backstage / npm dependencies are intentionally NOT managed here — the
-# provisioning workflow bumps them once via `backstage-cli versions:bump`,
-# and thereafter `yarn backstage-cli versions:bump` is the maintained path.
+# Routine npm version bumps stay OUT of Dependabot's hands — `yarn
+# backstage-cli versions:bump` is the maintained path for those, and letting
+# Dependabot race it produces conflicting PRs against a pinned Backstage line.
+# Security fixes are the exception: see the npm entry below.
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -21,3 +22,25 @@ updates:
       prefix: chore(actions)
     labels:
       - dependencies
+
+  # Security updates only. `open-pull-requests-limit: 0` switches off routine
+  # version updates for npm while leaving Dependabot security updates free to
+  # raise PRs — and to pick up the labels/prefix below when they do. Without an
+  # npm entry those PRs would still open, just unlabelled and unroutable.
+  #
+  # This is what should retire the hand-maintained CVE `resolutions` block in
+  # the root package.json: as advisories land, prefer a real dependency bump
+  # from one of these PRs over adding another manual pin.
+  #
+  # Requires "Dependabot security updates" to be ON in repo settings — this
+  # file cannot enable it.
+  - package-ecosystem: npm
+    directory: /
+    open-pull-requests-limit: 0
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: fix(deps)
+    labels:
+      - dependencies
+      - security

@@ -94,7 +94,7 @@ Unsupported types are silently dropped by the consumer.
 
 ### 2.2 `devaihub.io/compatible-frameworks` (annotation)
 
-Comma-separated list. Tokens are normalised by `normalizeFramework()` in `@julianpedro/plugin-dev-ai-hub-common`:
+Comma-separated list. Tokens are normalised by `normalizeFramework()` in `@nospt/plugin-dev-ai-hub-common`:
 
 | Token | Normalises to | Rendered as |
 |---|---|---|

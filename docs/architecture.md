@@ -10,13 +10,12 @@ flowchart LR
 
   subgraph Backstage["🏛️ Backstage"]
     C["Catalog<br/>AiResource entities"]
-    BE["DevAI Hub Backend<br/>resolver · telemetry · MCP"]
+    BE["DevAI Hub Backend<br/>resolver · telemetry"]
     FE["DevAI Hub Frontend<br/>cards + filters"]
   end
 
   subgraph Users["👤 Users"]
     B["Browser"]
-    AI["AI Tools"]
   end
 
   GH -->|"1. Ingest"| C
@@ -26,14 +25,12 @@ flowchart LR
   FE -->|"5. Telemetry"| BE
   BE <-->|"6. Resolve"| GH
   B --> FE
-  AI --> BE
 
   style GH fill:#F3F4F6,stroke:#9CA3AF,color:#1F2937
   style C  fill:#EFF6FF,stroke:#3B82F6,color:#1E3A8A
   style FE fill:#FFF7ED,stroke:#F97316,color:#7C2D12
   style BE fill:#ECFDF5,stroke:#10B981,color:#064E3B
   style B  fill:#F0FDF4,stroke:#22C55E,color:#14532D
-  style AI fill:#FAF5FF,stroke:#A855F7,color:#3B0764
 ```
 
 ## Key architectural principles
@@ -44,8 +41,8 @@ flowchart LR
 | **Entities are metadata-only** (ADR-0001) | The entity carries title, description, owner, tags, and a `backstage.io/source-location` pointer. The **body** (markdown) stays in Git. |
 | **DevAI Hub is a consumer, never a producer** (ADR-0004) | The plugin *reads* entities from the catalog. It never creates, edits, or ingests them. Producers are separate (hand-authored YAML, future EntityProviders). |
 | **Body reads inherit catalog visibility** (ADR-0006) | When resolving a body, the backend re-fetches the entity **as the calling user**. If the catalog hides the entity from that user, the body is never served. |
-| **Telemetry is store-all, dedup at read** (ADR-0007) | Every event is stored. `install`/`copy`/`download` are counted raw; `view` is counted distinct per (salted-hash-of-user, day) to stop render-loop inflation. |
-| **The backend is intentionally thin** (ADR-0002) | Three things only: body resolver, telemetry, and an optional MCP server. No asset store, no REST CRUD, no Git enumeration. |
+| **Telemetry is store-all, dedup at read** (ADR-0007) | Every event is stored, and every action is currently counted raw. Counting `view` distinct per (salted-hash-of-user, day) — the read-time dedup ADR-0007 calls for, to stop render-loop inflation — is not implemented yet ([#47](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/47)). The salted actor hash is already recorded, so the data to dedup on is there. |
+| **The backend is intentionally thin** (ADR-0002) | Two things only: body resolver and telemetry. No asset store, no REST CRUD, no Git enumeration. The MCP server ADR-0002 anticipated was never built. |
 | **Frontend is dumb; backend owns all catalog reads** | The frontend never talks to the catalog. It receives a flat `ResourceSummary` list from `GET /api/dev-ai-hub/resources`. All extraction, auth validation, and transformation happens server-side. |
 
 ## The `ResourceSummary` flat contract
@@ -122,7 +119,7 @@ GET /api/dev-ai-hub/entity/:ref/raw
 
 ## Trust model (ADR-0005)
 
-All routes require Backstage authentication by default. The backend is treated as an **internal Backstage service** — it never exposes unauthenticated endpoints. The MCP server's dedicated external-auth model is left as a future follow-up.
+All routes require Backstage authentication by default. The backend is treated as an **internal Backstage service** — it never exposes unauthenticated endpoints.
 
 ## Why the backend owns every catalog read
 
@@ -138,10 +135,11 @@ We considered having the frontend read the catalog directly for the browse list 
 
 **Trade-off**: The backend adds one network hop for the initial list. That hop is tiny (lightweight JSON, no markdown payload), and the gains in decoupling, security, and maintainability outweigh the cost.
 
-## MCP server lifecycle
+## On the MCP server
 
-The backend can host an optional MCP server. Sessions are bounded:
+ADR-0002 anticipated a catalog-backed MCP server as the backend's third responsibility.
+It was never built, and no session lifecycle, TTL, or concurrency cap exists to configure.
+AI tools reach resources the same way the browser does — through the authenticated REST routes above.
 
-- **Idle TTL**: Unreferenced `setInterval` sweeps sessions older than a configured TTL (default 10 min).
-- **Max cap**: Hard limit on concurrent sessions → `503 Service Unavailable` when exhausted.
-- **No persistent state**: Session state is in-memory only; reconnecting clients start fresh.
+Note that `mcp-config` is a *resource type*: an entity describing an MCP server someone else runs.
+That is unrelated to this plugin hosting an MCP server of its own.

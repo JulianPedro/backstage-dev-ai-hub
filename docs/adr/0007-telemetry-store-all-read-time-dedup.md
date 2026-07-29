@@ -1,5 +1,10 @@
 # Telemetry stores all events; popularity is deduplicated at read time
 
+> **Partially implemented.** The store-all write path, the salted actor hash, and raw counts shipped.
+> Read-time dedup of `view` per (hash, day) has not — every action is currently counted raw
+> ([#47](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/47)). The salt is also no
+> longer required from config; see the amended consequence below.
+
 Install telemetry records **every** event (`install`, `copy`, `download`, `view`) as its own row
 and never rejects a write for deduplication purposes. "Popularity" is computed at **read time**:
 `install`/`copy`/`download` are counted raw, while `view` is counted as distinct per user per day
@@ -22,10 +27,15 @@ ref is validated to be a real `AiResource`, so garbage refs never land.
 ## Consequences
 
 - A new migration adds an `actor_hash` column (nullable for legacy rows).
-- The dedup salt **must be stable and configured** (e.g. `devAiHub.telemetry.salt`); a
-  random-per-process salt would break per-day dedup across restarts. The salt is required when
-  telemetry is active.
-- Popularity counts mean "distinct viewers per day + raw deliberate actions", not raw event fires.
+- The dedup salt **must be stable across restarts** — a random-per-process salt would break per-day
+  dedup. It need not come from config: `devAiHub.telemetry.salt` is an optional override, and when
+  it is unset the backend generates a salt once and persists it in its own database. Requiring it
+  from config was the original decision and it was reversed — a missing value failed plugin init and
+  took the whole backend down with it
+  ([#56](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/56)).
+- Popularity counts are intended to mean "distinct viewers per day + raw deliberate actions" rather
+  than raw event fires; until [#47](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/47)
+  lands they are raw event fires.
 - Per-user attribution/audit is intentionally not possible from stored data (hash is one-way).
 
 ## Amendment (2026-07-29, #56): the salt is generated, not required from config

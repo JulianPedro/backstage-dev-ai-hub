@@ -115,6 +115,10 @@ spec:
 
 `plugin` and `marketplace` resources additionally declare `spec.dependsOn` to relate to their child resources. The relation is stored in the catalog and readable there; the cards do not render containment yet ([issue #32](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/32)).
 
+Registered entities show up in the Backstage catalog like any other kind, filterable by `AiResource`:
+
+![AiResource entities in the Backstage catalog](docs/screenshot-catalog-airesources.png)
+
 See [`docs/AIRESOURCE-SPEC.md`](docs/AIRESOURCE-SPEC.md) for the full per-type spec (required vs. recommended fields, the `devaihub.io/*` annotation namespace, and one worked example per type), and [`examples/catalog/`](examples/catalog/) for entities you can register as-is to try the plugin locally.
 
 ---
@@ -147,6 +151,7 @@ All routes require Backstage authentication; the frontend never talks to the cat
 
 ## Further reading
 
+- [`docs/0.3.0/CHANGELOG.md`](docs/0.3.0/CHANGELOG.md) — **upgrading from 0.2.x**: breaking changes, route mapping, and known gaps
 - [`docs/architecture.md`](docs/architecture.md) — system view and the catalog read flow
 - [`docs/CONTEXT.md`](docs/CONTEXT.md) — vocabulary and glossary
 - [`docs/AIRESOURCE-SPEC.md`](docs/AIRESOURCE-SPEC.md) — full `AiResource` entity spec

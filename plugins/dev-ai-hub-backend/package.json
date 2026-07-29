@@ -1,6 +1,6 @@
 {
   "name": "@nospt/plugin-dev-ai-hub-backend",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "Backend plugin for Dev AI Hub",
   "license": "Apache-2.0",
   "main": "src/index.ts",
@@ -23,6 +23,12 @@
       ]
     }
   },
+  "files": [
+    "dist",
+    "migrations",
+    "config.d.ts"
+  ],
+  "configSchema": "config.d.ts",
   "backstage": {
     "role": "backend-plugin",
     "pluginId": "dev-ai-hub",

@@ -7,7 +7,6 @@ playwright-report
 test-results
 .claude
 .vscode
-docs/index.html
 .auth.json
 *.yaml
 *.yml

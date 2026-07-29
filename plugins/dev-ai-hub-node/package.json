@@ -1,6 +1,6 @@
 {
   "name": "@nospt/plugin-dev-ai-hub-node",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "Node.js extension points for Dev AI Hub",
   "license": "Apache-2.0",
   "main": "src/index.ts",
@@ -23,6 +23,9 @@
       ]
     }
   },
+  "files": [
+    "dist"
+  ],
   "backstage": {
     "role": "node-library",
     "pluginId": "dev-ai-hub",
