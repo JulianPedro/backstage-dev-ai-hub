@@ -129,15 +129,42 @@ test.describe('Resource install dialog', () => {
   });
 });
 
-test.describe('Resource install dialog — every card fires a view event', () => {
-  test('a view telemetry event is recorded when the page loads', async ({
+test.describe('View telemetry fires on opening a resource, not on browsing', () => {
+  test('records a view for the resource whose drawer was opened', async ({
     page,
   }) => {
-    const viewEvent = waitForTelemetry(page, 'view');
     await page.goto(PAGE_URL);
+    await expect(page.getByText(RESOURCE.title!)).toBeVisible();
+
+    const viewEvent = waitForTelemetry(page, 'view');
+    await page.getByRole('button', { name: `View ${RESOURCE.title}` }).click();
     const request = await viewEvent;
-    expect(MOCK_RESOURCES.map(r => r.entityRef)).toContain(
-      request.postDataJSON().ref,
-    );
+
+    expect(request.postDataJSON().ref).toBe(RESOURCE.entityRef);
+  });
+
+  test('records no view while the grid is merely browsed', async ({ page }) => {
+    // Observe rather than intercept — the base fixture already fulfils these.
+    const views: string[] = [];
+    page.on('request', req => {
+      if (
+        req.method() === 'POST' &&
+        req.url().includes('/api/dev-ai-hub/telemetry') &&
+        req.postDataJSON()?.action === 'view'
+      ) {
+        views.push(req.postDataJSON().ref);
+      }
+    });
+
+    await page.goto(PAGE_URL);
+    await expect(page.getByText(RESOURCE.title!)).toBeVisible();
+    // Filtering remounts every card — the old render-time trigger counted a
+    // view for each one, for a user who opened nothing.
+    await page
+      .getByRole('searchbox', { name: 'Search resources' })
+      .fill(RESOURCE.title!.slice(0, 4));
+    await expect(page.getByText(RESOURCE.title!)).toBeVisible();
+
+    expect(views).toEqual([]);
   });
 });

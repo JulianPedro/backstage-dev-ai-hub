@@ -1,78 +1,85 @@
 /*
  * Plugin-owned colour tokens for the six ResourceType roles (ADR-0008,
- * ADR-0010). NOS company palette — do not substitute other colours (see
- * docs/adr/0008; marketplace coral is NOS Coral from the brand reference).
- * The ONLY place raw hex may appear for type identity; components reference
- * the custom properties. Dark values keep the hue and tune lightness only.
+ * ADR-0010, amended 2026-08-03).
+ *
+ * Source of truth is the NOS *digital* brand palette — `brand` in
+ * nosportugal/backstage `packages/app/src/themes/palette.ts`, the same one
+ * that app's MUI themes and BUI variable overrides derive from. Hue and
+ * saturation come from there and never change; only lightness moves, and only
+ * far enough to clear 3:1 against the card background of the theme the value
+ * is used in (`--bui-bg-neutral-1`: #ededeb in nos-light, #252830 in
+ * nos-dark). Several values are the brand hex untouched, because they already
+ * cleared it.
+ *
+ * marketplace is the exception: it keeps NOS Coral (#f26b43, from the
+ * presentation brand reference) rather than taking brand.red, which that
+ * palette binds to `error` — a semantic colour used for identity is the
+ * misuse ADR-0008 exists to avoid.
+ *
+ * This is the ONLY place raw hex may appear for type identity; components
+ * reference the custom properties. Chrome accents are NOT here — they use
+ * BUI's own tokens, so they track the host theme instead of competing.
  */
 :global(:root),
 :global([data-theme-mode='light']) {
-  --devaihub-type-skill: #6ab04c;
-  --devaihub-type-agent: #ff6b9d;
-  --devaihub-type-hook: #f9ca24;
-  --devaihub-type-plugin: #54a0ff;
-  --devaihub-type-mcp-config: #00d2d3;
+  /* green / pink / yellow / blue / turquoise darkened onto the off-white card */
+  --devaihub-type-skill: #609112;
+  --devaihub-type-agent: #e042b2;
+  --devaihub-type-hook: #9b8100;
+  --devaihub-type-plugin: #4f60d2;
+  --devaihub-type-mcp-config: #1d9381;
+  --devaihub-type-marketplace: #ef4716;
+
+  --devaihub-type-skill-bg: rgba(96, 145, 18, 0.14);
+  --devaihub-type-agent-bg: rgba(224, 66, 178, 0.14);
+  --devaihub-type-hook-bg: rgba(155, 129, 0, 0.14);
+  --devaihub-type-plugin-bg: rgba(79, 96, 210, 0.14);
+  --devaihub-type-mcp-config-bg: rgba(29, 147, 129, 0.14);
+  --devaihub-type-marketplace-bg: rgba(239, 71, 22, 0.14);
+}
+
+:global([data-theme-mode='dark']) {
+  /* The brand hexes as published — all but blue already clear 3:1 on #252830 */
+  --devaihub-type-skill: #6ea514;
+  --devaihub-type-agent: #eb84cd;
+  --devaihub-type-hook: #fcd200;
+  --devaihub-type-plugin: #5d6dd6;
+  --devaihub-type-mcp-config: #4bdbc5;
   --devaihub-type-marketplace: #f26b43;
 
-  --devaihub-type-skill-bg: rgba(106, 176, 76, 0.14);
-  --devaihub-type-agent-bg: rgba(255, 107, 157, 0.14);
-  --devaihub-type-hook-bg: rgba(249, 202, 36, 0.16);
-  --devaihub-type-plugin-bg: rgba(84, 160, 255, 0.14);
-  --devaihub-type-mcp-config-bg: rgba(0, 210, 211, 0.14);
-  --devaihub-type-marketplace-bg: rgba(242, 107, 67, 0.14);
+  --devaihub-type-skill-bg: rgba(110, 165, 20, 0.2);
+  --devaihub-type-agent-bg: rgba(235, 132, 205, 0.2);
+  --devaihub-type-hook-bg: rgba(252, 210, 0, 0.2);
+  --devaihub-type-plugin-bg: rgba(93, 109, 214, 0.2);
+  --devaihub-type-mcp-config-bg: rgba(75, 219, 197, 0.2);
+  --devaihub-type-marketplace-bg: rgba(242, 107, 67, 0.2);
 }
 
 /*
- * Stat-tile gradient pairs (start → deep), identical in both themes — the
- * legacy boxes the tiles reproduce. Text on tiles is always white.
+ * Stat-tile fills. The tiles are solid blocks of the type's colour, so unlike
+ * the accents above they take the NOS brand hex **as published, identically in
+ * both themes** — a filled tile carries its own contrast and has no page
+ * behind it to react to.
+ *
+ * This is deliberately not `--devaihub-type-*`. Those values are tuned for
+ * legibility *against* a card surface, which in light mode means darkened —
+ * filling a tile with the light-mode accent produces the olive/dull row this
+ * palette exists to avoid. Same hues, different job, so different tokens.
+ *
+ * White on these measures 5.34:1 (blue) down to 1.46:1 (yellow) and 1.72:1
+ * (turquoise): three of six are below WCAG AA. That is a known trade, made
+ * with the alternatives rendered — see ADR-0008. It is contained to this row;
+ * every type accent on the cards is AA in both themes.
  */
 :global(:root) {
-  --devaihub-tile-skill: #6ab04c;
-  --devaihub-tile-skill-deep: #4a8f2e;
-  --devaihub-tile-agent: #ff6b9d;
-  --devaihub-tile-agent-deep: #e0507a;
-  --devaihub-tile-hook: #f9ca24;
-  --devaihub-tile-hook-deep: #d4a800;
-  --devaihub-tile-plugin: #54a0ff;
-  --devaihub-tile-plugin-deep: #2980ff;
-  --devaihub-tile-mcp-config: #00d2d3;
-  --devaihub-tile-mcp-config-deep: #00a8a9;
+  --devaihub-tile-fg: #ffffff;
+
+  --devaihub-tile-skill: #6ea514;
+  --devaihub-tile-agent: #eb84cd;
+  --devaihub-tile-hook: #fcd200;
+  --devaihub-tile-plugin: #4f60d2;
+  --devaihub-tile-mcp-config: #4bdbc5;
   --devaihub-tile-marketplace: #f26b43;
-  --devaihub-tile-marketplace-deep: #dc4618;
-}
-
-:global([data-theme-mode='dark']) {
-  --devaihub-type-skill: #83c368;
-  --devaihub-type-agent: #ff85ae;
-  --devaihub-type-hook: #fbd54f;
-  --devaihub-type-plugin: #74b1ff;
-  --devaihub-type-mcp-config: #2fdedf;
-  --devaihub-type-marketplace: #f58f70;
-
-  --devaihub-type-skill-bg: rgba(131, 195, 104, 0.18);
-  --devaihub-type-agent-bg: rgba(255, 133, 174, 0.18);
-  --devaihub-type-hook-bg: rgba(251, 213, 79, 0.18);
-  --devaihub-type-plugin-bg: rgba(116, 177, 255, 0.18);
-  --devaihub-type-mcp-config-bg: rgba(47, 222, 223, 0.18);
-  --devaihub-type-marketplace-bg: rgba(245, 143, 112, 0.18);
-}
-
-/*
- * NOS corporate brand accent — the real NOS Teal, kept separate from the
- * per-type palette above (that palette is functional/informational, not
- * a brand statement; ADR-0008 still owns type identity). Used sparingly
- * as a "touch of NOS" on neutral plugin chrome (e.g. the detail drawer).
- * Source: NOS presentation brand reference
- * (.github/skills/nos-presenting-colors/references/branding.md).
- */
-:global(:root),
-:global([data-theme-mode='light']) {
-  --devaihub-brand-teal: #00b3ad;
-}
-
-:global([data-theme-mode='dark']) {
-  /* Light Teal — the palette's own "highlights" shade, for dark backgrounds */
-  --devaihub-brand-teal: #00e6e1;
 }
 
 @layer components {

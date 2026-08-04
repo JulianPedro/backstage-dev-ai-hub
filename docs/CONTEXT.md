@@ -32,8 +32,8 @@ The `spec.type` of an `AiResource`. Exactly six canonical values:
 | `agent`  | An AI agent or subagent definition.                           |
 | `hook`   | An event handler (e.g. `PostToolUse`).                        |
 | `mcp-config` | An MCP server configuration.                              |
-| `plugin` | A composite container (e.g. Claude Code plugin) that bundles other resources via `dependsOn` relations. |
-| `marketplace` | A distribution point for plugins (e.g. a Claude Code plugin marketplace repo). A container one level above `plugin`: it bundles `plugin` resources via `dependsOn` relations — plugins only. "Install" means registering the marketplace with the AI tool (e.g. `/plugin marketplace add`), after which its plugins can be installed from it. |
+| `plugin` | A composite container (e.g. Claude Code plugin) that bundles other resources. |
+| `marketplace` | A distribution point for plugins (e.g. a Claude Code plugin marketplace repo). A container one level above `plugin`: it bundles `plugin` resources — plugins only. "Install" means registering the marketplace with the AI tool (e.g. `/plugin marketplace add`), after which its plugins can be installed from it. |
 
 Entities with an unsupported `spec.type` are silently dropped by the consumer.
 
@@ -42,8 +42,21 @@ Entities with an unsupported `spec.type` are silently dropped by the consumer.
 The flat JSON contract the backend returns to the frontend. Contains only the
 fields the UI actually needs (`entityRef`, `name`, `title`, `description`, `tags`,
 `type`, `lifecycle`, `owner`, `sourceLocation`, `frameworks`, `version`, `kind`,
-`childCount`, `helpText`, `annotations`). The frontend never sees a raw
-Backstage `Entity` — it only knows `ResourceSummary` (architecture.md).
+`parents`, `children`, `childCount`, `helpText`, `annotations`). The frontend
+never sees a raw Backstage `Entity` — it only knows `ResourceSummary`
+(architecture.md).
+
+### containment
+
+The relationship between a container and the resources it bundles: a `plugin`
+contains skills/agents/hooks/mcp-configs, a `marketplace` contains plugins only.
+Declared **by the child**, in a comma-separated `devaihub.io/parent` annotation
+naming its container(s) — upstream emits `dependsOn` relations for
+`spec.type: skill` only, so the containers cannot express containment natively
+(ADR-0013). The backend inverts the declarations over its own catalog read and
+serves both directions (`parents`, `children`, `childCount`). A resource may
+name several parents. Links to a parent of the wrong type, or to one the caller
+cannot see, are silently not rendered.
 
 ### body
 
@@ -107,11 +120,12 @@ to the annotation otherwise. Resolved to a canonical token by
 
 Plugin-owned event storage tracking how resources are used. Two event classes:
 
-- **view** — recorded on card/detail render; deduplicated per (salted-hash-of-user, day) to avoid render-loop inflation (ADR-0007).
-- **deliberate action** — `install`, `copy`, `download`; stored raw (each occurrence counts).
+- **view** — recorded when a user opens a resource's detail drawer (click or `?resource=` deep link), never on card render (ADR-0007).
+- **deliberate action** — `install`, `copy`, `download`.
 
-Telemetry is store-all, dedup at read. The caller is recorded as a one-way salted
-hash, never as a plain user identity.
+All four are stored raw and read back as raw lifetime totals — a card's view count is
+the resource's total views. The caller is recorded as a one-way salted hash, never as
+a plain user identity.
 
 ### enrichment
 
@@ -149,6 +163,7 @@ GitHub-sourced metadata, served by the backend as an optional per-resource
 endpoint. Cards render fully without it.
 
 The six **ResourceTypes** drive the UI: each type has its own card colour, icon,
-and `getFrameworks()` read path. Two types have children (via `dependsOn`
-relations): a `plugin` bundles skills/agents/hooks/mcp-configs, and a `marketplace`
-bundles plugins only. `childCount` is surfaced in `ResourceSummary` for both.
+and `getFrameworks()` read path. Two types have children (via **containment**,
+declared child-side): a `plugin` bundles skills/agents/hooks/mcp-configs, and a
+`marketplace` bundles plugins only. `parents`, `children`, and `childCount` are
+surfaced in `ResourceSummary` for every resource.

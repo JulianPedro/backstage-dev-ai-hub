@@ -1,21 +1,33 @@
 @layer components {
+  /*
+   * One continuous surface, generous radius, hairline edges — the macOS card
+   * idiom. What made the previous card read as clunky was structural rather
+   * than stylistic: a two-tone header band with its own background and bottom
+   * rule, a second rule above the footer, and 4px corners. Three hard lines
+   * cutting a small card into three boxes.
+   *
+   * Separation is now done with space and type weight instead of lines and
+   * fills, which is the same trade the rest of the plugin makes.
+   */
   .card {
     background: var(--bui-bg-neutral-1);
     border: 1px solid var(--bui-border-1);
-    border-left: 3px solid var(--card-accent);
-    border-radius: var(--bui-radius-2);
-    /* Clips .header's own background to the card's rounded top corners. */
+    /* The type's colour, kept as the card's identity at a glance in the grid.
+       2px rather than 3: on a 16px radius a thick stripe fights the curve. */
+    border-left: 2px solid var(--card-accent);
+    border-radius: var(--bui-radius-5);
     overflow: hidden;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    /* Every card reserves room for the tallest realistic combination (2-line
-       title, 2-line description, a badges row, a tags row, and the footer)
-       so cards read as a uniform grid instead of a ragged one. The footer's
-       margin-top: auto (below) absorbs any slack on lighter cards. */
-    min-height: 250px;
-    transition: box-shadow 120ms ease, transform 120ms ease,
-      border-color 120ms ease;
+    gap: var(--bui-space-2);
+    padding: var(--bui-space-4);
+    /* Room for the tallest realistic card (2-line title, badges, tags,
+       footer) so the grid reads as a grid. The footer's margin-top: auto
+       absorbs the slack on lighter cards. */
+    min-height: 176px;
+    transition: box-shadow 160ms ease,
+      transform 160ms cubic-bezier(0.16, 1, 0.3, 1), border-color 160ms ease;
   }
 
   .card:hover {
@@ -25,44 +37,36 @@
       var(--bui-border-1)
     );
     border-left-color: var(--card-accent);
-    box-shadow: 0 4px 16px
-      color-mix(in srgb, var(--card-accent) 15%, transparent);
-    transform: translateY(-1px);
+    /* Two-part shadow: a soft ambient one and a tighter contact one. A single
+       large blur reads as a glow rather than as elevation. */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06),
+      0 12px 28px -12px color-mix(in srgb, var(--card-accent) 40%, transparent);
+    transform: translateY(-2px);
   }
 
+  .card:focus-visible {
+    outline: 2px solid var(--bui-ring, var(--card-accent));
+    outline-offset: 2px;
+  }
+
+  /* The header is a fixed-height zone with its contents centred, rather than
+     a top-aligned block with a reserved second title line. Same outcome for
+     alignment across the grid — everything below starts at one height — but a
+     one-line title now sits centred in that zone instead of leaving an
+     orphaned gap beneath it, which is what made short-titled cards read as
+     detached from their own content. */
   .header {
     display: flex;
     align-items: center;
     gap: var(--bui-space-3);
-    padding: var(--bui-space-3) var(--bui-space-4);
-    /* BUI's neutral-2..4 tiers render identically in this theme, so blend
-       the (theme-aware) foreground colour into the card bg instead — this
-       guarantees a visibly darker band in both light and dark mode. */
-    background: color-mix(
-      in srgb,
-      var(--bui-fg-primary) 10%,
-      var(--bui-bg-neutral-1)
-    );
-    border-bottom: 1px solid var(--bui-border-1);
     flex-shrink: 0;
-    /* Fixed so every header band is the same height regardless of whether
-       the title wraps to one line or two — shorter titles just centre
-       (align-items: center, above) within the reserved space. */
-    height: 84px;
-  }
-
-  .body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--bui-space-3);
-    padding: var(--bui-space-4);
-    flex: 1;
+    min-height: 3.5rem;
   }
 
   .iconBox {
     background: var(--card-accent-bg);
     color: var(--card-accent);
-    border-radius: var(--bui-radius-2);
+    border-radius: var(--bui-radius-4);
     padding: var(--bui-space-2);
     display: flex;
     flex-shrink: 0;
@@ -71,6 +75,9 @@
   .headerText {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .title {
@@ -78,36 +85,26 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.3;
+    /* Tighter leading than body copy: a two-line title should read as one
+       object rather than as two stacked lines. */
+    line-height: 1.25;
   }
 
   .typeLabel {
-    color: var(--card-accent);
-    font-weight: 600;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .sourceLink {
+    display: block;
     color: var(--bui-fg-secondary);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .body {
     display: flex;
-    padding: var(--bui-space-1);
-    border-radius: var(--bui-radius-1);
-    align-self: flex-start;
-  }
-
-  .sourceLink:hover {
-    color: var(--card-accent);
-    background: var(--card-accent-bg);
-  }
-
-  .description {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.5;
+    flex-direction: column;
+    gap: var(--bui-space-3);
+    flex: 1;
   }
 
   .badges {
@@ -116,39 +113,49 @@
     gap: var(--bui-space-1);
   }
 
+  /* Holds a single tool icon, so the padding is square and the badge reads as
+     a circle rather than a pill. */
   .frameworkBadge {
     display: inline-flex;
     align-items: center;
-    gap: var(--bui-space-1);
+    justify-content: center;
     background: var(--bui-bg-neutral-2);
     border-radius: var(--bui-radius-full, 999px);
-    padding: 0 var(--bui-space-2);
+    padding: var(--bui-space-1);
     font-size: 0.8125rem;
-    line-height: 1.9;
+    line-height: 1;
     color: var(--bui-fg-primary);
   }
 
   .tags {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--bui-space-1) var(--bui-space-2);
+    gap: var(--bui-space-1);
   }
 
+  /* Quiet chips rather than bare "#text": a chip reads as a discrete value,
+     which is what a tag is, and the surface keeps them from competing with the
+     description. Not interactive, so they stay low-contrast. */
   .tag {
-    font-size: 0.75rem;
-    line-height: 1.7;
+    font-size: 0.6875rem;
+    line-height: 1.6;
+    padding: 0 var(--bui-space-2);
+    border-radius: var(--bui-radius-full, 999px);
+    background: var(--bui-bg-neutral-2);
     color: var(--bui-fg-secondary);
-    opacity: 0.85;
+    white-space: nowrap;
   }
 
+  /* No rule above the footer — the gap does the separating, and the meta is
+     already de-emphasised enough to read as a different tier. */
   .footer {
     margin-top: auto;
-    padding-top: var(--bui-space-2);
-    border-top: 1px solid var(--bui-border-1);
+    padding-top: var(--bui-space-1);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--bui-space-2);
+    font-size: 0.6875rem;
   }
 
   .countsRow {
@@ -158,12 +165,37 @@
     flex-shrink: 0;
   }
 
+  /* Chips, not footnotes: views and installs are the signal a browser scans
+     for, so they carry a surface and the full foreground colour while the
+     version/owner meta stays secondary beside them. */
   .count {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    font-size: 0.8125rem;
-    color: var(--bui-fg-secondary);
+    gap: var(--bui-space-1);
+    padding: 2px var(--bui-space-2);
+    border-radius: var(--bui-radius-full, 999px);
+    background: var(--bui-bg-neutral-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--bui-fg-primary);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
+  }
+
+  /* The glyph takes the card's accent while the number stays foreground: a
+     fully monochrome chip reads as detached on a card that is otherwise
+     colour-coded, and colouring the number too would cost its legibility. */
+  .count svg {
+    color: var(--card-accent);
+    flex-shrink: 0;
+  }
+
+  /* Past the popularity threshold the install chip takes the type's own
+     colour — the one place on the card where the accent marks a value rather
+     than an identity. */
+  .countPopular {
+    composes: count;
+    background: var(--card-accent-bg);
+    color: var(--card-accent);
   }
 }

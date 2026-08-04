@@ -1,0 +1,184 @@
+/*
+ * EXPERIMENT — tile variant "aurora" (see TILE_VARIANT in StatTiles.tsx).
+ *
+ * Frosted glass panes floating over a blurred colour field made from the six
+ * brand hues. Each pane picks its type's colour up *through* the glass rather
+ * than being filled with it, so — as in the console variant — colour is light
+ * and text never sits on a saturated field.
+ *
+ * The material is deliberate: nosportugal/backstage already uses acrylic with
+ * backdrop blur for its sidebar submenu, so this is the host app's own glass
+ * turned expressive. Distinct from the rest of Backstage without looking like
+ * a third-party widget bolted on.
+ */
+@layer components {
+  .grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--bui-space-3);
+    margin-bottom: var(--bui-space-5);
+    padding: var(--bui-space-3);
+    border-radius: var(--bui-radius-3);
+    isolation: isolate;
+    /* The field is clipped to the row: unclipped, a 36px blur bleeds across
+       the page and washes out everything around it. */
+    overflow: hidden;
+    background: var(--bui-bg-neutral-1);
+  }
+
+  /* The aurora: the six brand hues as soft overlapping lights, blurred into a
+     field. Sits behind the panes and is what they refract. */
+  .grid::before {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    z-index: -1;
+    background: radial-gradient(28% 60% at 8% 40%, #6ea514 0%, transparent 70%),
+      radial-gradient(26% 60% at 26% 60%, #eb84cd 0%, transparent 70%),
+      radial-gradient(26% 60% at 44% 35%, #fcd200 0%, transparent 70%),
+      radial-gradient(26% 60% at 62% 65%, #4bdbc5 0%, transparent 70%),
+      radial-gradient(26% 60% at 80% 38%, #4f60d2 0%, transparent 70%),
+      radial-gradient(28% 60% at 96% 60%, #f26b43 0%, transparent 70%);
+    filter: blur(44px) saturate(150%);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .tile {
+    position: relative;
+    /* Glass is transparent, so the text is the theme's own foreground rather
+       than white — the only variant where that is true, and the reason these
+       are tokens. */
+    --devaihub-tile-fg: var(--bui-fg-primary);
+    --devaihub-tile-fg-muted: var(--bui-fg-secondary);
+    /* Frosted pane: a translucent tint of the page surface, blurred behind. */
+    background: color-mix(in srgb, var(--bui-bg-app) 62%, transparent);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: var(--bui-radius-3);
+    /* Tighter than it looks like it should be: the pane sits inside the grid's
+       own padding, so the two paddings stack and "MCP Configs" wraps. */
+    padding: var(--bui-space-3);
+    padding-bottom: var(--bui-space-5);
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      0 4px 20px -8px rgba(0, 0, 0, 0.35);
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 180ms ease, background-color 180ms ease;
+  }
+
+  /* The type's own colour, caught in the glass. */
+  .tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      120% 100% at 0% 0%,
+      color-mix(in srgb, var(--tile-fill) 34%, transparent),
+      transparent 72%
+    );
+    pointer-events: none;
+    transition: opacity 180ms ease;
+    opacity: 0.9;
+  }
+
+  .tile:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--tile-fill) 55%, transparent);
+  }
+
+  .tile:hover::before {
+    opacity: 1;
+  }
+
+  .tile:focus-visible {
+    outline: 2px solid var(--bui-fg-primary);
+    outline-offset: 3px;
+  }
+
+  .tileActive {
+    composes: tile;
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--tile-fill) 75%, transparent);
+    background: color-mix(in srgb, var(--bui-bg-app) 45%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 0 0 1px color-mix(in srgb, var(--tile-fill) 40%, transparent),
+      0 8px 28px -10px color-mix(in srgb, var(--tile-fill) 70%, transparent);
+  }
+
+  .tileIconBox {
+    position: relative;
+    color: var(--tile-fill);
+    background: color-mix(in srgb, var(--tile-fill) 16%, transparent);
+    border-radius: var(--bui-radius-2);
+    padding: var(--bui-space-1);
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .tileText {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .tile .tileValue {
+    color: var(--bui-fg-primary);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    display: block;
+  }
+
+  .tile .tileLabel {
+    color: var(--bui-fg-secondary);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    display: block;
+  }
+
+  .shareTrack {
+    position: absolute;
+    left: var(--bui-space-3);
+    right: var(--bui-space-3);
+    bottom: var(--bui-space-3);
+    height: 2px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bui-fg-primary) 12%, transparent);
+    overflow: hidden;
+  }
+
+  .shareFill {
+    display: block;
+    height: 100%;
+    width: var(--tile-share);
+    border-radius: inherit;
+    background: var(--tile-fill);
+    transition: width 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile,
+    .tile::before,
+    .shareFill {
+      transition: none;
+    }
+
+    .tile:hover,
+    .tileActive {
+      transform: none;
+    }
+  }
+}

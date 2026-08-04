@@ -45,7 +45,7 @@ export interface DevAiHubResourceApi {
   downloadEntityBody(entityRef: string): Promise<void>;
   /** Record a telemetry event (ADR-0007). Fire-and-forget from callers. */
   track(ref: string, action: TelemetryAction, tool?: string): Promise<void>;
-  /** Raw per-action counts for a resource (ADR-0007 — dedup for `view` is a follow-up). */
+  /** Raw per-action lifetime counts for a resource (ADR-0007). */
   getInstallCount(ref: string): Promise<TelemetryCounts>;
 }
 

@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 /**
- * Telemetry actions (ADR-0007). All four are stored raw; read-time dedup for
- * `view` is deferred (follow-up to #31) — `GET /telemetry/:ref` currently
- * returns raw counts for all four.
+ * Telemetry actions (ADR-0007). All four are stored raw and returned raw by
+ * `GET /telemetry/:ref` as lifetime totals. `view` is recorded when a user
+ * opens a resource, not when a card renders.
  */
 export const TelemetryActionEnum = z.enum([
   'install',

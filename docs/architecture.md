@@ -41,7 +41,7 @@ flowchart LR
 | **Entities are metadata-only** (ADR-0001) | The entity carries title, description, owner, tags, and a `backstage.io/source-location` pointer. The **body** (markdown) stays in Git. |
 | **DevAI Hub is a consumer, never a producer** (ADR-0004) | The plugin *reads* entities from the catalog. It never creates, edits, or ingests them. Producers are separate (hand-authored YAML, future EntityProviders). |
 | **Body reads inherit catalog visibility** (ADR-0006) | When resolving a body, the backend re-fetches the entity **as the calling user**. If the catalog hides the entity from that user, the body is never served. |
-| **Telemetry is store-all, dedup at read** (ADR-0007) | Every event is stored, and every action is currently counted raw. Counting `view` distinct per (salted-hash-of-user, day) — the read-time dedup ADR-0007 calls for, to stop render-loop inflation — is not implemented yet ([#47](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/47)). The salted actor hash is already recorded, so the data to dedup on is there. |
+| **Telemetry is store-all** (ADR-0007) | Every event is stored and every action is counted raw, as a lifetime total — cards show a resource's *total* views. A `view` is recorded when a user **opens** a resource, not when a card renders, which is what keeps the number honest; the read-time dedup the ADR originally called for was dropped once that trigger moved (2026-08-03 amendment). |
 | **The backend is intentionally thin** (ADR-0002) | Two things only: body resolver and telemetry. No asset store, no REST CRUD, no Git enumeration. The MCP server ADR-0002 anticipated was never built. |
 | **Frontend is dumb; backend owns all catalog reads** | The frontend never talks to the catalog. It receives a flat `ResourceSummary` list from `GET /api/dev-ai-hub/resources`. All extraction, auth validation, and transformation happens server-side. |
 
@@ -63,7 +63,9 @@ interface ResourceSummary {
   frameworks: string[];
   version?: string;
   kind: string;
-  childCount?: number;         // e.g. plugin dependsOn count
+  parents: string[];           // entityRefs, from devaihub.io/parent (ADR-0013)
+  children: string[];          // entityRefs, inverted backend-side
+  childCount?: number;         // children.length
   helpText?: string;           // parsed from devaihub.io/help annotation
   annotations: Record<string, string>;
 }
@@ -105,17 +107,25 @@ GET /api/dev-ai-hub/entity/:ref/raw
 
 ## The six entity types
 
-> Colours are the NOS palette per ADR-0008 (`--devaihub-type-*` tokens); marketplace coral
-> comes from the in-repo NOS brand reference (ADR-0010).
+> Colours are the NOS **digital** brand palette — `brand` in `nosportugal/backstage`
+> `packages/app/src/themes/palette.ts`, the same source that app's own themes use — delivered as
+> the plugin-owned `--devaihub-type-*` tokens (ADR-0008, 2026-08-03 amendment). The hex below is
+> the brand value; each theme darkens or lightens it only as far as 3:1 on that theme's card
+> background requires. Marketplace coral comes from the presentation brand reference (ADR-0010).
 
 | Type | Colour | Icon | Upstream structure |
 |---|---|---|---|
-| `skill` | green `#6AB04C` | 🧠 | Structured (`spec.agents`, `disciplines`, `categories`) |
-| `agent` | pink `#FF6B9D` | 🤖 | Default shape + annotations |
-| `hook` | yellow `#F9CA24` | 🪝 | Default shape + annotations |
-| `mcp-config` | teal `#00D2D3` | 🔌 | Default shape + annotations |
-| `plugin` | blue `#54A0FF` | 🧩 | Default shape + `dependsOn` relations (children: skill/agent/hook/mcp) |
-| `marketplace` | coral `#F26B43` | 🏪 | Default shape + `dependsOn` relations (children: plugin only, ADR-0010) |
+| `skill` | green `#6EA514` | 🧠 | Structured (`spec.agents`, `disciplines`, `categories`) |
+| `agent` | pink `#EB84CD` | 🤖 | Default shape + annotations |
+| `hook` | yellow `#FCD200` | 🪝 | Default shape + annotations |
+| `mcp-config` | turquoise `#4BDBC5` | 🔌 | Default shape + annotations |
+| `plugin` | blue `#4F60D2` | 🧩 | Default shape + `devaihub.io/parent` containment (children: skill/agent/hook/mcp-config, ADR-0013) |
+| `marketplace` | coral `#F26B43` | 🏪 | Default shape + `devaihub.io/parent` containment (children: plugin only, ADR-0010) |
+
+> Upstream emits `dependsOn` relations for `spec.type: skill` only — never for the two container
+> types — so containment is declared by the child in a comma-separated `devaihub.io/parent`
+> annotation and inverted backend-side over the same catalog read `/resources` already makes
+> (ADR-0013).
 
 ## Trust model (ADR-0005)
 

@@ -84,6 +84,12 @@ read-time concern.
 
 ## `plugin` stays body-only
 
+> **Superseded by [ADR-0013](0013-containment-is-declared-child-side.md).** The relationship this
+> section waited on does not exist upstream for non-`skill` types, so containment moved to a
+> `devaihub.io/parent` annotation and `plugin` now generates the same two-step journey
+> `marketplace` does. The argument below against an annotation that *duplicates* an existing
+> mechanism still holds — `devaihub.io/parent` replaces the mechanism rather than shadowing it.
+
 `plugin` is command-shaped but can generate no commands: nothing in the contract links a plugin to
 its marketplace, and `childCount` is unpopulated until containment lands (issue #32). We considered a
 `devaihub.io/marketplace` annotation to unblock it now, and rejected it — ADR-0010 already refused a

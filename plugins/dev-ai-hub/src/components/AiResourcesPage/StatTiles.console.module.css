@@ -1,0 +1,176 @@
+/*
+ * EXPERIMENT — tile variant "console" (see TILE_VARIANT in StatTiles.tsx).
+ *
+ * The six types as one instrument panel rather than six boxes: a single dark
+ * recessed strip, each type a segment lit by its own colour.
+ *
+ * The central move is that colour is *light*, not paint — it appears as a glow,
+ * a light bar and the icon, and never as a field behind text. Text is always
+ * near-white on the same dark panel, so every type is equally legible and the
+ * white-on-yellow problem that dogged the filled tiles cannot arise. The panel
+ * is dark in both themes on purpose: it is the page's signature element.
+ */
+@layer components {
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    /* The 1px gap plus this background paints the divider lines, so the row
+       reads as one instrument with segments rather than six objects. */
+    background: rgba(255, 255, 255, 0.07);
+    padding: 1px;
+    border-radius: var(--bui-radius-3);
+    margin-bottom: var(--bui-space-5);
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .tile {
+    position: relative;
+    --devaihub-tile-fg: #f2f4f8;
+    --devaihub-tile-fg-muted: rgba(242, 244, 248, 0.62);
+    background: #12141c;
+    padding: var(--bui-space-4);
+    padding-top: var(--bui-space-5);
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-3);
+    cursor: pointer;
+    isolation: isolate;
+    transition: background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  /* The segment's light: a bar across the top edge in the type's colour, with
+     the glow it casts down into the panel. */
+  .tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--tile-fill);
+    box-shadow: 0 0 12px 0 var(--tile-fill);
+    opacity: 0.75;
+    transition: opacity 180ms ease, box-shadow 180ms ease;
+  }
+
+  /* The colour bleeding into the segment from that light source. */
+  .tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      120% 90% at 50% 0%,
+      color-mix(in srgb, var(--tile-fill) 30%, transparent),
+      transparent 70%
+    );
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: -1;
+    transition: opacity 180ms ease;
+  }
+
+  .tile:hover {
+    background: #171a24;
+  }
+
+  .tile:hover::before {
+    opacity: 1;
+    box-shadow: 0 0 18px 1px var(--tile-fill);
+  }
+
+  .tile:hover::after {
+    opacity: 0.8;
+  }
+
+  .tile:focus-visible {
+    outline: 2px solid var(--tile-fill);
+    outline-offset: -2px;
+  }
+
+  .tileActive {
+    composes: tile;
+    background: #1b1f2b;
+  }
+
+  .tileActive::before {
+    opacity: 1;
+    height: 3px;
+    box-shadow: 0 0 22px 2px var(--tile-fill);
+  }
+
+  .tileActive::after {
+    opacity: 1;
+  }
+
+  .tileIconBox {
+    color: var(--tile-fill);
+    display: flex;
+    flex-shrink: 0;
+    /* The glyph is a light source too, so it gets the same bloom. */
+    filter: drop-shadow(
+      0 0 6px color-mix(in srgb, var(--tile-fill) 60%, transparent)
+    );
+  }
+
+  .tileText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .tile .tileValue {
+    color: #f2f4f8;
+    font-size: 1.625rem;
+    font-weight: 700;
+    line-height: 1.1;
+    /* Tabular figures: the counts sit in a fixed column like an instrument
+       readout instead of shifting as values change. */
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    display: block;
+  }
+
+  .tile .tileLabel {
+    color: rgba(242, 244, 248, 0.62);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    display: block;
+  }
+
+  /* Share readout, drawn in the segment's own light. */
+  .shareTrack {
+    position: absolute;
+    left: var(--bui-space-4);
+    right: var(--bui-space-4);
+    bottom: var(--bui-space-3);
+    height: 2px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    overflow: hidden;
+  }
+
+  .shareFill {
+    display: block;
+    height: 100%;
+    width: var(--tile-share);
+    border-radius: inherit;
+    background: var(--tile-fill);
+    box-shadow: 0 0 8px 0 var(--tile-fill);
+    transition: width 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile,
+    .tile::before,
+    .tile::after,
+    .shareFill {
+      transition: none;
+    }
+  }
+}

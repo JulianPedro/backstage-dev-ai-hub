@@ -42,8 +42,7 @@ export function AiResourcesPage() {
 
   // Staggered card entrance plays once, on the initial load only — re-playing
   // it on every filter/search keystroke would be noisy rather than delightful
-  // ("add some flowers"), and cards already remount when they re-enter the
-  // filtered set (a separate, pre-existing telemetry consideration).
+  // ("add some flowers").
   const [playEntrance, setPlayEntrance] = useState(true);
   useEffect(() => {
     if (loading || !playEntrance) return undefined;

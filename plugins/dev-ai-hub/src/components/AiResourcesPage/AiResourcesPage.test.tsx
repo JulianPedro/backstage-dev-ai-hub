@@ -108,7 +108,10 @@ describe('AiResourcesPage', () => {
     renderPage();
     expect(screen.getByText('My Skill')).toBeInTheDocument();
     expect(screen.getByText('My Agent')).toBeInTheDocument();
-    expect(screen.getByText('Claude Code')).toBeInTheDocument();
+    // Badges are icon-only on a card; the tool name is the accessible name.
+    expect(
+      screen.getAllByRole('img', { name: 'Claude Code' }).length,
+    ).toBeGreaterThan(0);
   });
 
   it('shows per-type counts on the stat tiles', () => {
@@ -174,11 +177,13 @@ describe('AiResourcesPage', () => {
     expect(screen.queryByText('My Agent')).not.toBeInTheDocument();
   });
 
-  it('shows "View source" only when sourceLocation is present', () => {
+  it('keeps "View source" off the cards — it lives in the drawer', () => {
     mockUseResources.mockReturnValue({ items: ITEMS, loading: false });
     renderPage();
-    // Only the skill has a sourceLocation
-    expect(screen.getAllByLabelText('View source')).toHaveLength(1);
+
+    // A second click target inside a clickable card, for an action that only
+    // matters once you are deciding on a resource.
+    expect(screen.queryByLabelText('View source')).not.toBeInTheDocument();
   });
 
   it('opens the detail drawer on card click', () => {

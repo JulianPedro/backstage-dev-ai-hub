@@ -1,0 +1,31 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "command",
+  "commandRunner": {
+    "command": "yarn workspace @nospt/plugin-dev-ai-hub-backend run test"
+  },
+  "coverageAnalysis": "off",
+  "timeoutMS": 30000,
+  "timeoutFactor": 3,
+  "concurrency": 2,
+  "checkers": ["typescript"],
+  "tsconfigFile": "plugins/dev-ai-hub-backend/tsconfig.json",
+  "mutate": [
+    "plugins/dev-ai-hub-backend/src/database/TelemetryStore.ts",
+    "plugins/dev-ai-hub-backend/src/service/**/*.ts",
+    "plugins/dev-ai-hub-backend/src/router.ts",
+    "!plugins/dev-ai-hub-backend/src/**/*.test.ts"
+  ],
+  "reporters": ["html", "json", "clear-text", "progress"],
+  "htmlReporter": {
+    "fileName": "reports/mutation/backend/mutation.html"
+  },
+  "jsonReporter": {
+    "fileName": "reports/mutation/backend/mutation.json"
+  },
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": null
+  }
+}

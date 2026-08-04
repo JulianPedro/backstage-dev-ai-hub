@@ -187,39 +187,49 @@ config in annotations invited drift with the body (issue #30 decision record).
 
 > **Design fork (§8.4 of the main spec):** an MCP server could alternatively be modelled as an `API` entity (`spec.type: mcp-server`). This spec follows the direct `AiResource:mcp-config` directive. If you need runtime endpoint semantics, emit an additional `API:mcp-server` and relate them.
 
-### 3.5 `plugin` — composite container with relations
+### 3.5 `plugin` — composite container (ADR-0013)
+
+A plugin does not list its children.
+**Each child names the plugin**, in a `devaihub.io/parent` annotation on the child entity — upstream emits `dependsOn` relations for `spec.type: skill` only, so a container cannot express containment natively (ADR-0013).
 
 ```yaml
+# The plugin itself declares no children.
 spec:
   type: plugin
   lifecycle: production
   owner: group:ai-platform-team
-  # Relations: the plugin *contains* these child resources.
-  dependsOn:
-    - airesource:default/approved-github-workflows
-    - airesource:default/security-threat-modeller
-    - airesource:default/post-edit-lint
-    - airesource:default/grafana-mcp
 
 metadata:
   annotations:
+    devaihub.io/parent: nos-plugin-marketplace   # its marketplace(s), if any
     devaihub.io/compatible-frameworks: "github-copilot,claude-code"
     devaihub.io/version: "2.0.0"
     devaihub.io/plugin-manifest: "true"
 ```
 
-**Rendering behaviour:** the `PluginCard` lists all `dependsOn` children, linking to each child's detail panel. The **inverse** relation (`dependencyOf`) lets a child card show "part of: security-toolkit".
+```yaml
+# Each child claims membership, e.g. examples/catalog/skill-approved-github-workflows.yaml
+metadata:
+  name: approved-github-workflows
+  annotations:
+    devaihub.io/parent: secure-dev-bundle
+spec:
+  type: skill
+```
+
+**Rendering behaviour:** the backend inverts every `devaihub.io/parent` declaration over its catalog read and serves `parents`, `children`, and `childCount` on `ResourceSummary`.
+The `PluginCard` lists its children, linking to each child's detail panel; the child card shows "part of: secure-dev-bundle" straight from its own `parents`.
+Children of the wrong type (a plugin claiming a skill as parent) and parents the caller cannot see are silently not rendered.
 
 ### 3.6 `marketplace` — plugin distribution point (ADR-0010)
 
 ```yaml
+# The marketplace declares no plugins; each plugin claims membership
+# with devaihub.io/parent: <this marketplace's metadata.name> (ADR-0013).
 spec:
   type: marketplace
   lifecycle: production
   owner: group:ai-platform-team
-  # Relations: the marketplace *distributes* these plugins — plugin children ONLY.
-  dependsOn:
-    - airesource:default/security-toolkit
 
 metadata:
   annotations:
@@ -259,6 +269,7 @@ All custom annotations use the `devaihub.io/` prefix. These are namespaced to av
 | Annotation | Applies to | Meaning |
 |---|---|---|
 | `devaihub.io/compatible-frameworks` | all types | Comma-separated framework tokens (§2.2). |
+| `devaihub.io/parent` | all types | Comma-separated container(s) this resource belongs to — bare `metadata.name` (own namespace) or full `airesource:ns/name`. Containment is declared child-side (ADR-0013). |
 | `devaihub.io/version` | all types | Semantic version string; displayed on cards. |
 | `devaihub.io/role` | agent | Display subtitle (e.g. "security reviewer"). |
 | `devaihub.io/hook-event` | hook | Event name that triggers this hook. |

@@ -23,6 +23,10 @@ the plugin if it is ever wanted.
 
 - **Containment:** `marketplace ⊃ plugin ⊃ {skill, agent, hook, mcp}` — a marketplace
   `dependsOn` **plugins only**, mirroring the real `marketplace.json`, which lists plugins.
+  *(Mechanism superseded by [ADR-0013](0013-containment-is-declared-child-side.md): upstream emits
+  `dependsOn` relations for `spec.type: skill` only, so containment is declared child-side in a
+  `devaihub.io/parent` annotation. The containment shape below — plugins-only, many-to-many,
+  rendering convention rather than validation, the "part of" badge — is unchanged.)*
   A producer who wants a loose skill in a marketplace wraps it in a plugin, exactly as the
   real tool forces. Plugins-only is a rendering convention, not hard validation: non-plugin
   children are silently not rendered as children (consistent with `plugin` containment).
@@ -63,6 +67,10 @@ the plugin if it is ever wanted.
   from the in-repo NOS brand reference
   (`.github/skills/nos-presenting-colors/references/branding.md`), not invented — delivered as
   the plugin-owned `--devaihub-type-marketplace` token pair per ADR-0008.
+  Coral survived ADR-0008's 2026-08-03 repalette, which moved the other five roles onto the NOS
+  *digital* brand: it was the one value that was genuinely sourced, and the nearest digital-brand
+  hue (`brand.red`) is bound to `error` in that palette, so taking it would have been the
+  semantic misuse ADR-0008 exists to avoid.
 
 ## Why this is safe upstream
 

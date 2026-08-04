@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { ResourceCard } from './ResourceCard';
 import type { ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
 
@@ -7,9 +7,11 @@ jest.mock('@backstage/ui', () => ({
   Text: ({ children }: any) => <span>{children}</span>,
 }));
 
+const api = { track: jest.fn(), getInstallCount: jest.fn() };
+
 jest.mock('@backstage/core-plugin-api', () => ({
   ...jest.requireActual('@backstage/core-plugin-api'),
-  useApi: () => ({ track: jest.fn(), getInstallCount: jest.fn() }),
+  useApi: () => api,
 }));
 
 jest.mock('../../hooks/useTelemetryCounts', () => ({
@@ -30,46 +32,63 @@ function summary(overrides: Partial<ResourceSummary>): ResourceSummary {
   };
 }
 
-describe('ResourceCard — framework badge overflow', () => {
-  it('renders every badge when there are 2 or fewer frameworks', () => {
+describe('ResourceCard — framework badges', () => {
+  it('shows the icon alone, with the tool name on hover rather than inline', () => {
     render(
       <ResourceCard
-        resource={summary({ frameworks: ['claude-code', 'cursor'] })}
+        resource={summary({ frameworks: ['claude-code'] })}
         onView={jest.fn()}
       />,
     );
-    expect(screen.getByText('Claude Code')).toBeInTheDocument();
-    expect(screen.getByText('Cursor')).toBeInTheDocument();
+    // The label must not take up card width...
+    expect(screen.queryByText('Claude Code')).not.toBeInTheDocument();
+    // ...but must still be reachable, by pointer and by assistive tech.
+    const icon = screen.getByRole('img', { name: 'Claude Code' });
+    expect(icon.closest('span')).toHaveAttribute('title', 'Claude Code');
+  });
+
+  it('renders an icon for every framework — none are collapsed behind a +N pill', () => {
+    render(
+      <ResourceCard
+        resource={summary({
+          frameworks: ['claude-code', 'cursor', 'github-copilot', 'all'],
+        })}
+        onView={jest.fn()}
+      />,
+    );
+    for (const name of ['Claude Code', 'Cursor', 'GitHub Copilot', 'Universal'])
+      expect(screen.getByRole('img', { name })).toBeVisible();
     expect(screen.queryByText(/^\+/)).not.toBeInTheDocument();
   });
 
-  it('caps at 2 badges and collapses the rest into a +N pill', () => {
+  it('renders no badge row for a resource with no frameworks', () => {
     render(
       <ResourceCard
-        resource={summary({
-          frameworks: ['claude-code', 'cursor', 'github-copilot', 'all'],
-        })}
+        resource={summary({ frameworks: [] })}
         onView={jest.fn()}
       />,
     );
-    expect(screen.getByText('Claude Code')).toBeInTheDocument();
-    expect(screen.getByText('Cursor')).toBeInTheDocument();
-    expect(screen.queryByText('GitHub Copilot')).not.toBeInTheDocument();
-    expect(screen.getByText('+2')).toBeInTheDocument();
+
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
+  });
+});
+
+describe('ResourceCard — telemetry', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('records nothing on render — browsing the grid is not a view', () => {
+    render(<ResourceCard resource={summary({})} onView={jest.fn()} />);
+
+    expect(api.track).not.toHaveBeenCalled();
   });
 
-  it('the overflow pill title lists the hidden framework labels', () => {
-    render(
-      <ResourceCard
-        resource={summary({
-          frameworks: ['claude-code', 'cursor', 'github-copilot', 'all'],
-        })}
-        onView={jest.fn()}
-      />,
-    );
-    expect(screen.getByText('+2')).toHaveAttribute(
-      'title',
-      'GitHub Copilot, All tools',
-    );
+  it('opens the resource on click, leaving the view to the detail panel', () => {
+    const onView = jest.fn();
+    render(<ResourceCard resource={summary({})} onView={onView} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^View / }));
+
+    expect(onView).toHaveBeenCalledWith('airesource:default/x');
+    expect(api.track).not.toHaveBeenCalled();
   });
 });

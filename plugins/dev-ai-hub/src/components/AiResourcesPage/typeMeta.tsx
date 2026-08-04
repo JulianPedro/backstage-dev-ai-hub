@@ -29,9 +29,11 @@ export interface TypeMeta extends ResourceTypeInfo {
   /** The plugin-owned colour tokens for this role (ADR-0008). */
   color: string;
   colorBg: string;
-  /** Stat-tile gradient pair (legacy boxes): start → deep. */
-  tileColor: string;
-  tileDeep: string;
+  /**
+   * The stat tile's solid fill: the brand hex as published, which is NOT
+   * `color` — that one is darkened in light mode to read against a card.
+   */
+  tileFill: string;
 }
 
 export function getTypeMeta(type: ResourceType): TypeMeta {
@@ -41,8 +43,7 @@ export function getTypeMeta(type: ResourceType): TypeMeta {
     Icon: ICONS[info.icon],
     color: `var(--devaihub-type-${info.colorRole})`,
     colorBg: `var(--devaihub-type-${info.colorRole}-bg)`,
-    tileColor: `var(--devaihub-tile-${info.colorRole})`,
-    tileDeep: `var(--devaihub-tile-${info.colorRole}-deep)`,
+    tileFill: `var(--devaihub-tile-${info.colorRole})`,
   };
 }
 

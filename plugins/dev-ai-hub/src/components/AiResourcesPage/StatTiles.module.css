@@ -1,69 +1,153 @@
 @layer components {
-  /* Faithful to the legacy stat boxes: two-stop gradient, always-white text. */
+  /*
+   * The type filter: a row of solid brand-coloured blocks, each carrying a
+   * share bar along its bottom edge — the type's proportion of the catalog.
+   *
+   * The bar is the data-ink. It answers "what is this catalog made of?" in the
+   * space the tile already occupied, and it breaks the uniformity of six
+   * identical tiles, which is what makes attention drop off across a repeated
+   * row (eye-tracking: users barely register the last two of five).
+   *
+   * A full-height proportional fill was built first — the saturated part being
+   * the share, the remainder the same hue dimmed — and rejected on sight: the
+   * dimmed remainder is the muddy tone this palette has repeatedly failed on,
+   * and it covered most of every tile. The bar keeps the encoding and leaves
+   * the colour alone.
+   *
+   * The fill is `--devaihub-tile-*` (the brand hex, identical in both themes),
+   * NOT `--devaihub-type-*`: those are darkened in light mode to read against
+   * a card surface, and filling with them turns the row olive. See the token
+   * block in AiResourcesPage.module.css.
+   */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: var(--bui-space-4);
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: var(--bui-space-3);
     margin-bottom: var(--bui-space-5);
   }
 
   .tile {
-    background: linear-gradient(
-      135deg,
-      var(--tile-color) 0%,
-      var(--tile-deep) 100%
-    );
+    position: relative;
+    /* The variant owns its foreground: the components reference these tokens
+       inline, which is what lets one DOM serve three treatments. */
+    --devaihub-tile-fg: #ffffff;
+    --devaihub-tile-fg-muted: rgba(255, 255, 255, 0.92);
+    background: var(--tile-fill);
     border-radius: var(--bui-radius-3);
     padding: var(--bui-space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-3);
     cursor: pointer;
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--tile-color) 25%, transparent);
-    transition: all 0.2s ease;
+    /* A lit top edge and a shadow tinted with the tile's own hue, so the row
+       sits on the page rather than being pasted onto it. */
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 1px 2px rgba(0, 0, 0, 0.12),
+      0 8px 18px -10px color-mix(in srgb, var(--tile-fill) 60%, transparent);
+    /* Room for the share bar under the label. */
+    padding-bottom: var(--bui-space-5);
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 160ms ease;
   }
 
   .tile:hover {
     transform: translateY(-2px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32),
+      0 2px 4px rgba(0, 0, 0, 0.14),
+      0 14px 26px -12px color-mix(in srgb, var(--tile-fill) 70%, transparent);
   }
 
+  .tile:focus-visible {
+    outline: 2px solid var(--bui-fg-primary);
+    outline-offset: 3px;
+  }
+
+  /* The ring sits OUTSIDE, on the page background, and takes the theme's
+     foreground. A tint or an inset white ring cannot read on a solid fill —
+     white is invisible on the yellow and turquoise tiles, which is exactly
+     where selection has to be legible. */
   .tileActive {
     composes: tile;
-    box-shadow: 0 8px 24px
-      color-mix(in srgb, var(--tile-color) 25%, transparent);
     transform: translateY(-2px);
-    outline: 2px solid rgba(255, 255, 255, 0.6);
-    outline-offset: 2px;
+    outline: 2px solid var(--bui-fg-primary);
+    outline-offset: 3px;
   }
 
-  .tileInner {
+  /* Share bar: a track across the full width with the fill sized to this
+     type's proportion of the catalog. Drawn in the tile's own foreground so it
+     works on every hue without a second colour decision. */
+  .shareTrack {
+    position: absolute;
+    left: var(--bui-space-4);
+    right: var(--bui-space-4);
+    bottom: var(--bui-space-3);
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+    overflow: hidden;
+  }
+
+  .shareFill {
+    display: block;
+    height: 100%;
+    width: var(--tile-share);
+    border-radius: inherit;
+    background: var(--devaihub-tile-fg);
+    transition: width 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .tileIconBox {
+    background: rgba(255, 255, 255, 0.22);
+    color: var(--devaihub-tile-fg);
+    border-radius: var(--bui-radius-2);
+    padding: var(--bui-space-2);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--bui-space-2);
+    flex-shrink: 0;
   }
 
-  /* Scoped under .tile so they outrank BUI's Text colour rule regardless of
-     stylesheet injection order (same layer, same base specificity). */
+  .tileText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* Colour and size are set inline on the components too: BUI's Text carries
+     its own, and which wins depends on the order BUI's styles land in the host
+     app relative to this plugin's. These rules cover hosts where the plugin
+     lands last. */
   .tile .tileValue {
-    color: #fff;
-    line-height: 1;
+    color: var(--devaihub-tile-fg);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
     display: block;
   }
 
   .tile .tileLabel {
-    color: rgba(255, 255, 255, 0.85);
-    font-weight: 500;
-    margin-top: var(--bui-space-1);
+    color: var(--devaihub-tile-fg);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
     display: block;
   }
 
-  .tileIconBox {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--bui-radius-2);
-    background-color: rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    flex-shrink: 0;
+  @media (prefers-reduced-motion: reduce) {
+    .tile {
+      transition: none;
+    }
+
+    .tile:hover,
+    .tileActive {
+      transform: none;
+    }
+
+    .shareFill {
+      transition: none;
+    }
   }
 }

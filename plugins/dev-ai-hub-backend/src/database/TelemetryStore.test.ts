@@ -25,6 +25,21 @@ beforeEach(async () => {
 
 const REF = 'airesource:default/example-skill';
 
+/**
+ * A view recorded on a given calendar day. `record` always stamps today, so
+ * spreading events across days — the axis `view` dedup turns on — needs a
+ * direct write.
+ */
+const recordViewOn = (day: string, actorHash: string | null, ref = REF) =>
+  knex('telemetry_events').insert({
+    entity_ref: ref,
+    action: 'view',
+    actor_hash: actorHash,
+    tool: null,
+    day,
+    occurred_at: `${day}T09:00:00.000Z`,
+  });
+
 describe('resolveSalt', () => {
   beforeEach(async () => {
     await knex('telemetry_settings').delete();
@@ -95,15 +110,44 @@ describe('getCounts', () => {
     });
   });
 
-  it('does not mix counts across different resources', async () => {
-    await store.record({ entityRef: REF, action: 'view', actorHash: 'h1' });
-    await store.record({
-      entityRef: 'airesource:default/other',
-      action: 'view',
-      actorHash: 'h1',
+  it('counts every view of a resource, including repeats by the same user on one day', async () => {
+    await recordViewOn('2026-07-01', 'h1');
+    await recordViewOn('2026-07-01', 'h1');
+    await recordViewOn('2026-07-01', 'h1');
+
+    await expect(store.getCounts(REF)).resolves.toMatchObject({ view: 3 });
+  });
+
+  it('is a lifetime total — old days keep counting and never roll off', async () => {
+    // Two users, one view each per day, spread across three months.
+    const days = ['2026-01-04', '2026-02-17', '2026-06-30', '2026-07-01'];
+    for (const day of days) {
+      await recordViewOn(day, 'h1');
+      await recordViewOn(day, 'h2');
+    }
+
+    await expect(store.getCounts(REF)).resolves.toMatchObject({
+      view: days.length * 2,
     });
+  });
+
+  it('counts views with and without an actor hash alike', async () => {
+    await recordViewOn('2026-07-01', null);
+    await recordViewOn('2026-07-01', null);
+    await recordViewOn('2026-07-01', 'h1');
+
+    await expect(store.getCounts(REF)).resolves.toMatchObject({ view: 3 });
+  });
+
+  it('does not mix counts across different resources', async () => {
+    await recordViewOn('2026-07-01', 'h1');
+    await recordViewOn('2026-07-01', 'h1', 'airesource:default/other');
+    await recordViewOn('2026-07-02', 'h1', 'airesource:default/other');
 
     await expect(store.getCounts(REF)).resolves.toMatchObject({ view: 1 });
+    await expect(
+      store.getCounts('airesource:default/other'),
+    ).resolves.toMatchObject({ view: 2 });
   });
 
   it('stores every write unconditionally — repeat events are never rejected or deduped at write time', async () => {

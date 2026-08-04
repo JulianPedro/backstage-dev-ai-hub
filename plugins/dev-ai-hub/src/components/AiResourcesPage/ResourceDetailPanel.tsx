@@ -61,6 +61,18 @@ export function ResourceDetailPanel({
   }, [resourceProp]);
 
   const api = useApi(devAiHubResourceApiRef);
+
+  // A `view` is a deliberate look at one resource, so it is recorded here —
+  // when the drawer opens — and not on card render, where merely loading the
+  // page counted a view for every card in the grid. Keyed on the *live* prop,
+  // not `displayResource`: that one stays set through the exit animation, and
+  // closing must not count a second view.
+  const openedRef = resourceProp?.entityRef;
+  useEffect(() => {
+    if (openedRef) api.track(openedRef, 'view');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openedRef]);
+
   const actionable = !!displayResource?.sourceLocation;
   const bodyState = useResourceBody(displayResource?.entityRef, actionable);
   const counts = useTelemetryCounts(displayResource?.entityRef);

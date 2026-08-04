@@ -185,3 +185,54 @@ describe('ResourceDetailPanel — body', () => {
     );
   });
 });
+
+describe('ResourceDetailPanel — view telemetry', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const viewCalls = () =>
+    api.track.mock.calls.filter(([, action]) => action === 'view');
+
+  it('records a view when the drawer opens for a resource', () => {
+    render(<ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />);
+
+    expect(api.track).toHaveBeenCalledWith(
+      'airesource:default/my-skill',
+      'view',
+    );
+  });
+
+  it('records nothing while the drawer is closed', () => {
+    render(<ResourceDetailPanel resource={undefined} onClose={jest.fn()} />);
+
+    expect(api.track).not.toHaveBeenCalled();
+  });
+
+  it('does not record a second view when the drawer closes', () => {
+    const { rerender } = render(
+      <ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />,
+    );
+    // Closing clears the prop but leaves the drawer rendered for its exit
+    // animation — that must not read as another view.
+    rerender(<ResourceDetailPanel resource={undefined} onClose={jest.fn()} />);
+
+    expect(viewCalls()).toHaveLength(1);
+  });
+
+  it('records one view per resource opened, not per re-render', () => {
+    const other = summary({
+      name: 'other',
+      entityRef: 'airesource:default/other',
+      sourceLocation: 'url:https://github.com/org/repo/tree/main-nos/other/',
+    });
+    const { rerender } = render(
+      <ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />,
+    );
+    rerender(<ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />);
+    rerender(<ResourceDetailPanel resource={other} onClose={jest.fn()} />);
+
+    expect(viewCalls()).toEqual([
+      ['airesource:default/my-skill', 'view'],
+      ['airesource:default/other', 'view'],
+    ]);
+  });
+});

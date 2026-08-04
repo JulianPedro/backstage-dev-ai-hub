@@ -26,8 +26,10 @@
        background. The drawer floats over the page, so it must bring its own. */
     background-color: var(--bui-bg-app);
     /* The accent mirrors the open resource's type colour (set inline by the
-       component); brand teal is only the no-type fallback. */
-    border-top: 3px solid var(--drawer-accent, var(--devaihub-brand-teal));
+       component). The fallback is BUI's own accent, which the host app points
+       at its brand colour — a plugin-owned brand hex here would be a second,
+       competing accent on the same screen (ADR-0008, 2026-08-03 amendment). */
+    border-top: 3px solid var(--drawer-accent, var(--bui-fg-info));
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
     z-index: 1300;
     display: flex;
@@ -196,7 +198,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--bui-space-1);
-    color: var(--devaihub-brand-teal);
+    color: var(--bui-fg-info);
     font-weight: 600;
   }
 }

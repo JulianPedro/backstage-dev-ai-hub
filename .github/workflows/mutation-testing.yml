@@ -1,0 +1,250 @@
+name: Mutation Testing
+
+# Informational only — never gates a PR or push. Mutation testing re-runs the
+# full Jest suite once per mutant (see stryker.*.config.json), so it's slow
+# relative to the normal test/lint/build gate and is scoped to the two
+# packages with real business logic (dev-ai-hub-backend, dev-ai-hub-common).
+on:
+  workflow_dispatch:
+  schedule:
+    # Monday 06:00 UTC — a weekly pulse on test-suite quality, not tied to PRs.
+    - cron: 0 6 * * 1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  mutation-testing:
+    name: Mutation Testing (Stryker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: "24"
+
+      - name: Enable Corepack & activate Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.13.0 --activate
+
+      - name: Locate Yarn cache
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run mutation testing (backend)
+        run: yarn test:mutation:backend
+
+      - name: Run mutation testing (common)
+        if: always()
+        run: yarn test:mutation:common
+
+      - name: Write step summary
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Stryker's own score formula: (killed + timeout) / (killed + timeout + survived).
+            // CompileError/RuntimeError/Ignored mutants are excluded — they were never a
+            // meaningful test of the suite (e.g. a mutant TypeScript itself rejects).
+            function summarize(reportPath) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              const counts = {};
+              for (const file of Object.values(report.files)) {
+                for (const mutant of file.mutants) {
+                  counts[mutant.status] = (counts[mutant.status] || 0) + 1;
+                }
+              }
+              const killed = counts.Killed || 0;
+              const timeout = counts.Timeout || 0;
+              const survived = counts.Survived || 0;
+              const noCoverage = counts.NoCoverage || 0;
+              const denominator = killed + timeout + survived + noCoverage;
+              const score = denominator > 0 ? (100 * (killed + timeout)) / denominator : 100;
+              return { score, killed, timeout, survived, noCoverage, counts };
+            }
+
+            const packages = [
+              { name: 'dev-ai-hub-backend', report: 'reports/mutation/backend/mutation.json' },
+              { name: 'dev-ai-hub-common', report: 'reports/mutation/common/mutation.json' },
+            ];
+
+            const rows = [];
+            for (const { name, report } of packages) {
+              try {
+                const { score, killed, timeout, survived, noCoverage } = summarize(report);
+                rows.push([
+                  name,
+                  `${score.toFixed(2)}%`,
+                  String(killed),
+                  String(timeout),
+                  String(survived),
+                  String(noCoverage),
+                ]);
+              } catch (err) {
+                rows.push([name, 'N/A (report missing — see job log)', '-', '-', '-', '-']);
+              }
+            }
+
+            await core.summary
+              .addHeading('🧬 Mutation Testing')
+              .addTable([
+                [
+                  { data: 'Package', header: true },
+                  { data: 'Score', header: true },
+                  { data: 'Killed', header: true },
+                  { data: 'Timeout', header: true },
+                  { data: 'Survived', header: true },
+                  { data: 'No coverage', header: true },
+                ],
+                ...rows,
+              ])
+              .addRaw(
+                '\nDownload the `mutation-report` artifact for the interactive HTML report (per-survivor diffs).',
+              )
+              .write();
+
+      # Alert-only: opens/updates a single tracking issue when a package's score
+      # drops below its configured `thresholds.low` (read from the same
+      # stryker.*.config.json used for the run, so there's one source of truth
+      # for the number). Auto-closes it once every package recovers. A missing
+      # report (the run itself crashed) is treated the same as a breach — it's
+      # worse than a bad score, not something to silently skip.
+      - name: Manage mutation-testing alert issue
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+
+            function summarize(reportPath) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              const counts = {};
+              for (const file of Object.values(report.files)) {
+                for (const mutant of file.mutants) {
+                  counts[mutant.status] = (counts[mutant.status] || 0) + 1;
+                }
+              }
+              const killed = counts.Killed || 0;
+              const timeout = counts.Timeout || 0;
+              const survived = counts.Survived || 0;
+              const noCoverage = counts.NoCoverage || 0;
+              const denominator = killed + timeout + survived + noCoverage;
+              const score = denominator > 0 ? (100 * (killed + timeout)) / denominator : 100;
+              return { score, killed, timeout, survived, noCoverage };
+            }
+
+            const packages = [
+              { name: 'dev-ai-hub-backend', report: 'reports/mutation/backend/mutation.json', configFile: 'stryker.backend.config.json' },
+              { name: 'dev-ai-hub-common', report: 'reports/mutation/common/mutation.json', configFile: 'stryker.common.config.json' },
+            ];
+
+            const breaches = [];
+            const healthy = [];
+            for (const pkg of packages) {
+              const threshold = JSON.parse(fs.readFileSync(pkg.configFile, 'utf8')).thresholds.low;
+              if (!fs.existsSync(pkg.report)) {
+                breaches.push({ name: pkg.name, threshold, failed: true });
+                continue;
+              }
+              const result = summarize(pkg.report);
+              if (result.score < threshold) {
+                breaches.push({ name: pkg.name, threshold, ...result });
+              } else {
+                healthy.push({ name: pkg.name, threshold, ...result });
+              }
+            }
+
+            const ISSUE_TITLE = '🧬 Mutation testing below threshold';
+            const LABEL = 'mutation-testing';
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const docsUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/blob/main-nos/docs/mutation-testing.md`;
+            const today = new Date().toISOString().slice(0, 10);
+
+            try {
+              await github.rest.issues.getLabel({ ...context.repo, name: LABEL });
+            } catch {
+              await github.rest.issues.createLabel({
+                ...context.repo,
+                name: LABEL,
+                color: 'B60205',
+                description: 'Weekly mutation-testing score dropped below its configured threshold',
+              });
+            }
+
+            const { data: openIssues } = await github.rest.issues.listForRepo({
+              ...context.repo,
+              state: 'open',
+              labels: LABEL,
+            });
+            const existing = openIssues.find(i => i.title === ISSUE_TITLE);
+
+            if (breaches.length > 0) {
+              const lines = breaches.map(b =>
+                b.failed
+                  ? `- ⚠️ **${b.name}**: mutation testing run failed — no report produced, see [this run](${runUrl}).`
+                  : `- **${b.name}**: ${b.score.toFixed(2)}% (threshold: ${b.threshold}%) — ${b.survived} survived, ${b.timeout} timed out.`,
+              );
+              const body = [
+                `Mutation score dropped below its configured threshold as of ${today}.`,
+                '',
+                ...lines,
+                healthy.length > 0
+                  ? `\nStill healthy: ${healthy.map(h => `${h.name} (${h.score.toFixed(2)}%)`).join(', ')}`
+                  : '',
+                '',
+                `Download the \`mutation-report\` artifact from [this run](${runUrl}) for per-survivor diffs — ` +
+                  `see [docs/mutation-testing.md](${docsUrl}) for how to read them.`,
+              ].join('\n');
+
+              if (existing) {
+                await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body });
+                await github.rest.issues.createComment({
+                  ...context.repo,
+                  issue_number: existing.number,
+                  body: `Still below threshold as of ${today} — see [this run](${runUrl}).`,
+                });
+              } else {
+                await github.rest.issues.create({ ...context.repo, title: ISSUE_TITLE, body, labels: [LABEL] });
+              }
+            } else if (existing) {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: existing.number,
+                body: `✅ Recovered — all packages back above threshold as of ${today}. See [this run](${runUrl}).`,
+              });
+              await github.rest.issues.update({ ...context.repo, issue_number: existing.number, state: 'closed' });
+            }
+
+      - name: Upload mutation reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 30
+          if-no-files-found: warn

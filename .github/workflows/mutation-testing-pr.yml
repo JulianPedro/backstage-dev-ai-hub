@@ -1,0 +1,169 @@
+name: Mutation Testing (PR)
+
+# Fast, PR-scoped mutation testing: mutates only the lines this PR actually
+# touched (within each package's already-curated "real logic" set — see
+# stryker.*.config.json), instead of the whole package. That keeps it cheap
+# enough to run on every push, unlike the full sweep in mutation-testing.yml.
+# Informational only — posts a sticky PR comment, never blocks the merge.
+on:
+  pull_request:
+    branches: [main, main-nos]
+    paths:
+      - plugins/dev-ai-hub-backend/src/database/TelemetryStore.ts
+      - plugins/dev-ai-hub-backend/src/service/**
+      - plugins/dev-ai-hub-backend/src/router.ts
+      - plugins/dev-ai-hub-common/src/resources.ts
+      - plugins/dev-ai-hub-common/src/telemetry.ts
+      - stryker.backend.config.json
+      - stryker.common.config.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  mutation-testing-pr:
+    name: Mutation Testing (changed files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          # Need the base ref's history to diff against — the PR head alone
+          # (actions/checkout's default shallow clone) isn't enough.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: "24"
+
+      - name: Enable Corepack & activate Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.13.0 --activate
+
+      - name: Locate Yarn cache
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # Intersect the PR diff with each package's mutate scope, so a change
+      # to e.g. plugin.ts (excluded from mutation testing entirely) never
+      # triggers a run, and a change to router.ts never pulls in unrelated
+      # files from the rest of the package.
+      - name: Determine changed files in mutation scope
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          backend_files=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" HEAD -- \
+              'plugins/dev-ai-hub-backend/src/database/TelemetryStore.ts' \
+              'plugins/dev-ai-hub-backend/src/service/*.ts' \
+              'plugins/dev-ai-hub-backend/src/router.ts' \
+            | grep -v '\.test\.ts$' | paste -sd, -)
+          common_files=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" HEAD -- \
+              'plugins/dev-ai-hub-common/src/resources.ts' \
+              'plugins/dev-ai-hub-common/src/telemetry.ts' \
+            | grep -v '\.test\.ts$' | paste -sd, -)
+          echo "backend=$backend_files" >> "$GITHUB_OUTPUT"
+          echo "common=$common_files" >> "$GITHUB_OUTPUT"
+          echo "Backend files in scope: ${backend_files:-none}"
+          echo "Common files in scope: ${common_files:-none}"
+
+      - name: Mutation test changed backend files
+        if: steps.changed.outputs.backend != ''
+        run: npx stryker run stryker.backend.config.json --mutate "${{ steps.changed.outputs.backend }}"
+
+      - name: Mutation test changed common files
+        if: steps.changed.outputs.common != ''
+        run: npx stryker run stryker.common.config.json --mutate "${{ steps.changed.outputs.common }}"
+
+      - name: Build PR comment
+        id: summary
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            function summarize(reportPath) {
+              if (!fs.existsSync(reportPath)) return null;
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              const counts = {};
+              const notable = []; // survived + timeout — the ones worth showing inline
+              for (const [file, result] of Object.entries(report.files)) {
+                for (const mutant of result.mutants) {
+                  counts[mutant.status] = (counts[mutant.status] || 0) + 1;
+                  if (mutant.status === 'Survived' || mutant.status === 'Timeout') {
+                    notable.push({ file, ...mutant });
+                  }
+                }
+              }
+              const killed = counts.Killed || 0;
+              const timeout = counts.Timeout || 0;
+              const survived = counts.Survived || 0;
+              const noCoverage = counts.NoCoverage || 0;
+              const denominator = killed + timeout + survived + noCoverage;
+              const score = denominator > 0 ? (100 * (killed + timeout)) / denominator : 100;
+              return { score, killed, timeout, survived, noCoverage, notable };
+            }
+
+            const packages = [
+              { name: 'dev-ai-hub-backend', changed: `${{ steps.changed.outputs.backend }}`, report: 'reports/mutation/backend/mutation.json' },
+              { name: 'dev-ai-hub-common', changed: `${{ steps.changed.outputs.common }}`, report: 'reports/mutation/common/mutation.json' },
+            ];
+
+            const sections = [];
+            let anyRan = false;
+            for (const { name, changed, report } of packages) {
+              if (!changed) continue;
+              anyRan = true;
+              const result = summarize(report);
+              if (!result) {
+                sections.push(`### ${name}\n_Report missing — see the job log._`);
+                continue;
+              }
+              const { score, killed, timeout, survived, noCoverage, notable } = result;
+              const icon = survived + timeout === 0 ? '✅' : '⚠️';
+              let section = `### ${icon} ${name} — ${score.toFixed(2)}%\n`;
+              section += `Killed ${killed} · Timeout ${timeout} · Survived ${survived} · No coverage ${noCoverage}\n`;
+              if (notable.length > 0) {
+                section += '\n<details><summary>Survived / timed-out mutants</summary>\n\n';
+                for (const m of notable) {
+                  section += `- \`${m.file}:${m.location.start.line}\` **${m.mutatorName}** (${m.status}) → \`${m.replacement}\`\n`;
+                }
+                section += '\n</details>\n';
+              }
+              sections.push(section);
+            }
+
+            const body = anyRan
+              ? ['## 🧬 Mutation testing (changed files)', '', ...sections].join('\n')
+              : ['## 🧬 Mutation testing (changed files)', '', '_No mutation-scoped files changed in this PR._'].join('\n');
+
+            core.setOutput('body', body);
+
+      - name: Sticky PR comment (mutation results)
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
+        if: always()
+        with:
+          header: mutation-testing-pr
+          message: ${{ steps.summary.outputs.body }}

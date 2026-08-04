@@ -1,9 +1,9 @@
 # Telemetry stores all events; popularity is deduplicated at read time
 
-> **Partially implemented.** The store-all write path, the salted actor hash, and raw counts shipped.
-> Read-time dedup of `view` per (hash, day) has not — every action is currently counted raw
-> ([#47](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/47)). The salt is also no
-> longer required from config; see the amended consequence below.
+> **Implemented, with the read-time dedup since removed** — the title now describes only the
+> store-all half. Three things changed since the original decision, all amended below: a `view` is
+> recorded when a user *opens* a resource rather than when a card renders, every action is counted
+> raw at read time (no per-(hash, day) dedup), and the salt is no longer required from config.
 
 Install telemetry records **every** event (`install`, `copy`, `download`, `view`) as its own row
 and never rejects a write for deduplication purposes. "Popularity" is computed at **read time**:
@@ -33,9 +33,12 @@ ref is validated to be a real `AiResource`, so garbage refs never land.
   from config was the original decision and it was reversed — a missing value failed plugin init and
   took the whole backend down with it
   ([#56](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/56)).
-- Popularity counts are intended to mean "distinct viewers per day + raw deliberate actions" rather
-  than raw event fires; until [#47](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/47)
-  lands they are raw event fires.
+- Popularity counts are raw lifetime event totals for all four actions — see the 2026-08-03
+  amendment, which dropped the read-time dedup this decision called for. **`install` is expected
+  to stop being raw**: ADR-0011 and [#53](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/53)
+  require it counted as distinct actor per resource, lifetime — one human, one install, forever.
+  That is deliberately unlike `view`, which recurs meaningfully where an install does not. "All
+  four raw" describes the state this amendment leaves behind, not a decision overriding ADR-0011.
 - Per-user attribution/audit is intentionally not possible from stored data (hash is one-way).
 
 ## Amendment (2026-07-29, #56): the salt is generated, not required from config
@@ -64,7 +67,52 @@ Changing the salt source makes existing hashes incomparable with new ones. That 
 dev data exists and stops being free the moment production records anything, which is the argument
 for landing it before the v2 release rather than after.
 
-## Amendment (2026-07-22, slice [2.3c] / #31)
+## Amendment (2026-08-03, #47): a `view` is an opened resource; read-time dedup is dropped
+
+This amendment reverses the read-time dedup for `view` that the decision above rests on, and fixes
+the write side instead. `#47` is therefore closed by the opposite change to the one it proposed.
+
+**Write side: `view` now fires when a user opens a resource, not when a card renders.** It was
+recorded on `ResourceCard` mount, so loading the browse page counted a view for every card in the
+grid — a resource accumulated views from users who never looked at it, and simply filtering or
+paginating (which remounts cards) added more. It now fires in `ResourceDetailPanel` when the drawer
+opens, whether by click or by `?resource=` deep link. That matches what the count is meant to
+answer, "how many people looked at this resource", and it removes render inflation at the source
+rather than subtracting it at read time.
+
+This is a semantic break in the series, not a bug fix on top of comparable data: `view` counts
+recorded before this change mean "times a card was rendered" and counts after mean "times a
+resource was opened". The two are not comparable, and the number will fall sharply — a card renders
+far more often than it is opened. History is kept rather than reset, because the store-all rule is
+the ADR's core decision and deleting rows to make a chart look continuous is exactly the write-side
+editing it rejects.
+
+**Read side: `view` is counted raw, like the other three.** The deferred [2.3c] dedup was built
+first — distinct per (`actor_hash`, `day`) via a subquery — and then removed once the write-side
+change landed. The card shows a resource's **total views**, not its distinct viewers per day, and
+that is the number the counter is meant to convey: "this resource has been opened 412 times", the
+same reading as a view count anywhere else.
+
+Dedup was never wanted for its own sake; it was compensation for a `view` that fired on render. Once
+a row means "someone opened this", collapsing rows discards real events — a person who returns to a
+skill four times in a day did look at it four times. Keeping both numbers was considered and
+rejected: nothing consumes a distinct-viewers figure, and an unread field on a shipped contract is
+a maintenance cost with no reader.
+
+The count is a **lifetime** total: nothing is windowed to a recent period and no row ever stops
+counting.
+
+What this gives up is the guard against a single user inflating one resource by re-opening it
+repeatedly. That is accepted — it takes deliberate effort rather than happening by accident as the
+render loop did, these counts inform browsing rather than anything consequential, and `actor_hash`
+and `day` remain on every row, so distinct-viewer counting can be reintroduced as a query whenever
+it is actually wanted. No migration was needed to drop it, and none would be needed to restore it.
+
+Both changes push the displayed number down for an existing 0.3.0 deployment: far fewer events are
+recorded from here on, and the pre-existing rows carry the old render-time meaning. That is the
+intended correction, not a regression, but it is visible to anyone who watched the old figure.
+
+## Amendment (2026-07-22, slice [2.3c] / #31) — superseded by #47 above
 
 `GET /telemetry/:ref` ships with **raw counts for all four actions**, including `view` —
 the per-(hash, day)-distinct dedup for `view` described above is deferred to a follow-up issue,

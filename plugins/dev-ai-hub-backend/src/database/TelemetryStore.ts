@@ -27,8 +27,8 @@ export interface TelemetryEventRecord {
 }
 
 /**
- * Telemetry event log (ADR-0007): store-all writes, raw counts on read for
- * this slice — per-(hash, day)-distinct dedup for `view` is a follow-up.
+ * Telemetry event log (ADR-0007): store-all writes, raw lifetime totals on
+ * read. Every action counts each occurrence, `view` included.
  */
 export class TelemetryStore {
   private constructor(private readonly db: Knex) {}
@@ -51,8 +51,10 @@ export class TelemetryStore {
    * The salt used to hash actor identity (ADR-0007). A configured value wins
    * and is never persisted, so a deployment can keep the salt outside the
    * database it protects. Otherwise the salt is generated once and stored,
-   * which is what makes it survive restarts — the property per-day dedup
-   * actually depends on. It is deliberately not required from config: a
+   * which is what makes it survive restarts. No current query groups by
+   * `actor_hash` — counts are raw — but stability is what keeps hashes
+   * comparable across restarts, and so keeps distinct-viewer counting possible
+   * later without a backfill. It is deliberately not required from config: a
    * missing value used to fail the plugin's init and take the whole backend
    * down with it.
    *
@@ -97,6 +99,14 @@ export class TelemetryStore {
     });
   }
 
+  /**
+   * Popularity for one resource (ADR-0007): every action counted raw, as a
+   * lifetime total. `view` included — it is recorded only when a user opens a
+   * resource, so each row is already one deliberate look and there is nothing
+   * to dedup away. The read-time per-(hash, day) dedup the ADR originally
+   * called for was dropped once the render-time trigger it existed to cancel
+   * was removed; see the 2026-08-03 amendment.
+   */
   async getCounts(entityRef: string): Promise<TelemetryCounts> {
     const rows = await this.db('telemetry_events')
       .where('entity_ref', entityRef)

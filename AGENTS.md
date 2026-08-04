@@ -27,6 +27,7 @@ yarn test                          # all workspaces
 yarn test:all                      # full suite with coverage
 yarn test:e2e                      # Playwright (auto-starts the frontend dev server)
 yarn workspace <workspace> test    # single package
+yarn test:mutation                 # Stryker mutation testing (backend + common; see docs/mutation-testing.md)
 
 yarn lint:all
 yarn prettier:check

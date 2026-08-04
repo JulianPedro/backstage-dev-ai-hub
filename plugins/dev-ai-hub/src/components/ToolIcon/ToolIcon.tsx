@@ -51,6 +51,11 @@ export function ToolIcon({
         className={className}
         style={{ color: 'var(--bui-fg-secondary)', ...style }}
         aria-label="Universal"
+        // Without an explicit role the label is not exposed as an image name,
+        // which the other two branches already set. It matters wherever the
+        // icon stands alone (resource cards), where it is the only thing
+        // naming the tool.
+        role="img"
       />
     );
   }
