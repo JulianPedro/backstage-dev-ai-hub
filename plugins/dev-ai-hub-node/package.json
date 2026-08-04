@@ -1,6 +1,6 @@
 {
   "name": "@nospt/plugin-dev-ai-hub-node",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Node.js extension points for Dev AI Hub",
   "license": "Apache-2.0",
   "main": "src/index.ts",
