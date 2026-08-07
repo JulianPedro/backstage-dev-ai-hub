@@ -16,6 +16,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.2 # v6.0.2
 
+      - name: Resolve release version and dist-tag
+        id: release
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./plugins/dev-ai-hub-common/package.json').version")"
+
+          # The publish steps below ship whatever is in package.json and never
+          # read the tag. When the two disagree, npm rejects the push with
+          # "cannot publish over the previously published versions" — after a
+          # full install, typecheck and build, in a message that never mentions
+          # the tag. Fail here instead, in seconds, saying the actual problem.
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag $tag does not match package version $pkg. Bump the packages, commit, then move the tag."
+            exit 1
+          fi
+
+          # A prerelease must not become the default install. `npm publish`
+          # writes the `latest` dist-tag regardless of the version being an rc,
+          # so anyone running `npm i @nospt/plugin-dev-ai-hub` would get it.
+          if [[ "$pkg" == *-* ]]; then
+            echo "npm_tag=rc" >> "$GITHUB_OUTPUT"
+          else
+            echo "npm_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Publishing $pkg to dist-tag $( [[ "$pkg" == *-* ]] && echo rc || echo latest )."
+
       - name: Setup Node.js
         uses: actions/setup-node@v6.3.0 # v6.3.0
         with:
@@ -43,16 +70,16 @@ jobs:
         working-directory: plugins/dev-ai-hub-common
         run: |
           yarn pack -o package.tgz
-          npm publish package.tgz --access public
+          npm publish package.tgz --access public --tag "${{ steps.release.outputs.npm_tag }}"
 
       - name: Publish dev-ai-hub
         working-directory: plugins/dev-ai-hub
         run: |
           yarn pack -o package.tgz
-          npm publish package.tgz --access public
+          npm publish package.tgz --access public --tag "${{ steps.release.outputs.npm_tag }}"
 
       - name: Publish dev-ai-hub-backend
         working-directory: plugins/dev-ai-hub-backend
         run: |
           yarn pack -o package.tgz
-          npm publish package.tgz --access public
+          npm publish package.tgz --access public --tag "${{ steps.release.outputs.npm_tag }}"
