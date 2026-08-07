@@ -89,5 +89,12 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0"
+  },
+  "jest": {
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "plugin\\.tsx$",
+      "routes\\.ts$"
+    ]
   }
 }

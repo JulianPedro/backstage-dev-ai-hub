@@ -14,7 +14,21 @@ jest.mock('@backstage/ui', () => ({
     <button aria-label={label} onClick={onClick} />
   ),
   Skeleton: () => <div data-testid="skeleton" />,
-  TablePagination: () => <div data-testid="pagination" />,
+  TablePagination: ({
+    hasNextPage,
+    hasPreviousPage,
+    onNextPage,
+    onPreviousPage,
+  }: any) => (
+    <div data-testid="pagination">
+      <button disabled={!hasPreviousPage} onClick={onPreviousPage}>
+        Previous
+      </button>
+      <button disabled={!hasNextPage} onClick={onNextPage}>
+        Next
+      </button>
+    </div>
+  ),
   SearchField: ({ 'aria-label': label, onChange, value, placeholder }: any) => (
     <input
       aria-label={label}
@@ -227,5 +241,42 @@ describe('AiResourcesPage', () => {
     mockUseResources.mockReturnValue({ items: undefined, loading: true });
     renderPage();
     expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
+  });
+
+  it('paginates when there are more resources than one page, and closes the drawer', () => {
+    const manyItems = Array.from({ length: 25 }, (_, i) =>
+      summary({
+        entityRef: `airesource:default/item-${i}`,
+        name: `item-${i}`,
+        title: `Item ${i}`,
+      }),
+    );
+    mockUseResources.mockReturnValue({ items: manyItems, loading: false });
+    renderPage();
+
+    expect(screen.getByText('Item 0')).toBeInTheDocument();
+    expect(screen.queryByText('Item 24')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByText('Item 24')).toBeInTheDocument();
+    expect(screen.queryByText('Item 0')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    expect(screen.getByText('Item 0')).toBeInTheDocument();
+  });
+
+  it('closes the detail drawer', () => {
+    mockUseResources.mockReturnValue({ items: ITEMS, loading: false });
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'View My Agent' }));
+    expect(
+      screen.getByRole('dialog', { name: 'My Agent' }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(
+      screen.queryByRole('dialog', { name: 'My Agent' }),
+    ).not.toBeInTheDocument();
   });
 });

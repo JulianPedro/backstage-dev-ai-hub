@@ -44,6 +44,9 @@ jest.mock('@backstage/core-plugin-api', () => ({
   useApi: () => api,
 }));
 
+const writeText = jest.fn().mockResolvedValue(undefined);
+Object.assign(navigator, { clipboard: { writeText } });
+
 function summary(overrides: Partial<ResourceSummary>): ResourceSummary {
   return {
     entityRef: 'airesource:default/x',
@@ -182,6 +185,24 @@ describe('ResourceDetailPanel — body', () => {
     fireEvent.click(screen.getByText('Download'));
     expect(api.downloadEntityBody).toHaveBeenCalledWith(
       'airesource:default/my-skill',
+    );
+  });
+
+  it('copies the body to the clipboard and tracks "copy" on Copy', async () => {
+    api.getEntityBody.mockResolvedValue({
+      content: '# Skill body',
+      contentType: 'text/markdown',
+    });
+    render(<ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />);
+    await waitFor(() => screen.getByTestId('markdown'));
+
+    fireEvent.click(screen.getByText('Copy'));
+
+    await screen.findByText('Copied!');
+    expect(writeText).toHaveBeenCalledWith('# Skill body');
+    expect(api.track).toHaveBeenCalledWith(
+      'airesource:default/my-skill',
+      'copy',
     );
   });
 });

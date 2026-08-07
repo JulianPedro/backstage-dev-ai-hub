@@ -77,5 +77,11 @@
     "jest-environment-jsdom": "^29.0.0",
     "knex": "^3.1.0",
     "supertest": "^7.0.0"
+  },
+  "jest": {
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "plugin\\.ts$"
+    ]
   }
 }

@@ -91,4 +91,16 @@ describe('ResourceCard — telemetry', () => {
     expect(onView).toHaveBeenCalledWith('airesource:default/x');
     expect(api.track).not.toHaveBeenCalled();
   });
+
+  it('opens the resource on Enter, but not on other keys', () => {
+    const onView = jest.fn();
+    render(<ResourceCard resource={summary({})} onView={onView} />);
+    const card = screen.getByRole('button', { name: /^View / });
+
+    fireEvent.keyDown(card, { key: 'Tab' });
+    expect(onView).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(card, { key: 'Enter' });
+    expect(onView).toHaveBeenCalledWith('airesource:default/x');
+  });
 });
