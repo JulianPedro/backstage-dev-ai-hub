@@ -32,7 +32,16 @@
        inline, which is what lets one DOM serve three treatments. */
     --devaihub-tile-fg: #ffffff;
     --devaihub-tile-fg-muted: rgba(255, 255, 255, 0.92);
-    background: var(--tile-fill);
+    /* Ink veil over the published hex — see --devaihub-tile-veil for why it is
+       a veil and not a darker set of fills. The gradient is a flat fill: two
+       identical stops is the shortest way to composite a colour over another
+       in one background shorthand. The shadows below stay keyed to the raw
+       --tile-fill, so the hue-tinted glow keeps its full-strength colour. */
+    background: linear-gradient(
+        var(--devaihub-tile-veil),
+        var(--devaihub-tile-veil)
+      ),
+      var(--tile-fill);
     border-radius: var(--bui-radius-3);
     padding: var(--bui-space-4);
     display: flex;

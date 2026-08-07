@@ -152,3 +152,59 @@ read.
 The contrast trade is unchanged and is recorded above: white measures 1.46:1 on yellow.
 It is confined to this row, and every type accent on the cards remains AA in both
 themes.
+
+## Amendment (2026-08-07): an 8% ink veil on the tiles, for appearance only
+
+The tiles now composite a uniform ink veil over the fill:
+
+```css
+--devaihub-tile-veil: rgba(0, 0, 0, 0.08);
+background: linear-gradient(var(--devaihub-tile-veil), var(--devaihub-tile-veil)),
+  var(--tile-fill);
+```
+
+Six blocks of full-strength brand colour read hardest against the light theme's
+off-white page.
+At 8% the row loses that glare while every hue is still plainly itself — yellow
+`#fcd200` renders as `#e8c100`.
+
+**This does not address the contrast trade, and is not claimed to.**
+White on yellow moves 1.46:1 → 1.74:1, against a 3:1 floor for the count and 4.5:1 for
+the label.
+Two more tiles cross 3:1, both of which were already close.
+The measurements recorded above stand.
+
+The veil is a separate token rather than darker hex values, so the fills stay the brand
+palette as published and the strength is one number to revisit.
+
+### What the ladder showed
+
+Ten strengths were rendered side by side in both themes with computed ratios before this
+was settled, along with the alternatives that do not veil at all.
+The thresholds are worth recording so the next person does not re-derive them:
+
+| Veil | Yellow becomes | Worst ratio | ≥3:1 | ≥4.5:1 |
+|---|---|---|---|---|
+| none | `#fcd200` | 1.46 | 4/12 | 2/12 |
+| 8% (shipped) | `#e8c100` | 1.74 | 6/12 | 2/12 |
+| 25% | `#bd9e00` | 2.61 | 10/12 | 6/12 |
+| 30% | `#af9200` | 3.03 | 12/12 | 8/12 |
+| 45% | `#8c7500` | 4.51 | 12/12 | 12/12 |
+
+30% is the least veil that gets the count legible everywhere; 45% is the least that gets
+the 12px label there too, and at `#8c7500` yellow has become a brown-olive.
+That is the same wall this ADR already describes, now with the hex attached.
+
+### Two alternatives that do clear AA, both rejected
+
+Recorded because they work, so that "nothing passes" is not inferred from silence.
+
+- **Ink text on the untouched fills.** Ink measures 5.90–12.01 on five of the six hues;
+  only NOS blue resists, at 3.29, being the one genuinely dark hue. Rejected: the owner
+  wants the row white, and blue would still miss AA.
+- **A scrim behind the count and label only.** Buys the most contrast of anything tried
+  — full AA at 55% — with the fill untouched everywhere else. Rejected on sight: the
+  plate reads as a chip stamped on the tile.
+
+The rule from the body of this ADR is what rules both the veil and these alternatives
+out of going further: the ceiling is the hue, not the contrast floor chosen.

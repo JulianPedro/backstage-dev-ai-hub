@@ -74,6 +74,25 @@
 :global(:root) {
   --devaihub-tile-fg: #ffffff;
 
+  /*
+   * A uniform ink veil composited over the fill — appearance, not contrast.
+   * At 8% the published hex is still plainly itself (yellow #fcd200 renders
+   * as #e8c100) while the row loses the glare it had as six blocks of
+   * full-strength brand colour, which read hardest against the light theme's
+   * off-white page.
+   *
+   * It buys almost no legibility and is not claimed to: white on yellow goes
+   * 1.46:1 -> 1.74:1, against a 3:1 floor. The trade recorded in ADR-0008 is
+   * unchanged. Reaching that floor everywhere needs ~30%, and AA ~45%, by
+   * which point yellow is #8c7500 and no longer a NOS colour — the outcome
+   * that ADR records as rejected twice on sight.
+   *
+   * The veil is a separate token rather than baked into the hexes below so
+   * the fills stay the brand values as published, and so the strength is one
+   * number to revisit.
+   */
+  --devaihub-tile-veil: rgba(0, 0, 0, 0.08);
+
   --devaihub-tile-skill: #6ea514;
   --devaihub-tile-agent: #eb84cd;
   --devaihub-tile-hook: #fcd200;
