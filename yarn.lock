@@ -7903,18 +7903,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nospt/plugin-dev-ai-hub-node@workspace:plugins/dev-ai-hub-node":
-  version: 0.0.0-use.local
-  resolution: "@nospt/plugin-dev-ai-hub-node@workspace:plugins/dev-ai-hub-node"
-  dependencies:
-    "@backstage/backend-plugin-api": "npm:^1.9.1"
-    "@backstage/cli": "npm:^0.36.2"
-    "@nospt/plugin-dev-ai-hub-common": "workspace:^"
-    jest: "npm:^29.0.0"
-    jest-environment-jsdom: "npm:^29.0.0"
-  languageName: unknown
-  linkType: soft
-
 "@nospt/plugin-dev-ai-hub@workspace:plugins/dev-ai-hub":
   version: 0.0.0-use.local
   resolution: "@nospt/plugin-dev-ai-hub@workspace:plugins/dev-ai-hub"

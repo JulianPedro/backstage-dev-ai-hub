@@ -45,12 +45,6 @@ jobs:
           yarn pack -o package.tgz
           npm publish package.tgz --access public
 
-      - name: Publish dev-ai-hub-node
-        working-directory: plugins/dev-ai-hub-node
-        run: |
-          yarn pack -o package.tgz
-          npm publish package.tgz --access public
-
       - name: Publish dev-ai-hub
         working-directory: plugins/dev-ai-hub
         run: |

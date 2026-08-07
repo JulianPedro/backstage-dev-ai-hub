@@ -1,7 +1,7 @@
 # AGENTS.md
 
 A workspace for developing the **Dev AI Hub** [Backstage](https://backstage.io) plugins, published as NPM packages.
-The deliverable is the four packages under `plugins/`; there is no app in this repo — the plugins' own `dev/` harnesses run them locally.
+The deliverable is the three packages under `plugins/`; there is no app in this repo — the plugins' own `dev/` harnesses run them locally.
 See [docs/CONTEXT.md](docs/CONTEXT.md) for vocabulary, [docs/architecture.md](docs/architecture.md) for the system view, and [docs/adr/](docs/adr/) for decisions.
 
 ## Branches
@@ -38,13 +38,12 @@ Local git hooks use [pre-commit](https://pre-commit.com) — one-time setup: `pi
 
 ## Architecture
 
-Four packages under `plugins/`, published in lockstep under the `@nospt` scope:
+Three packages under `plugins/`, published in lockstep under the `@nospt` scope:
 
 - **`dev-ai-hub`** — frontend plugin (New Frontend System only; the legacy shim was removed in the 2.6 slice).
 - **`dev-ai-hub-backend`** — backend plugin: routes, database migrations, catalog reads.
   It ships no ingestion path — no EntityProvider, no Git discovery, no scheduled sync (ADR-0004).
 - **`dev-ai-hub-common`** — isomorphic contracts (`ResourceSummary`, schemas, install paths) shared by frontend and backend.
-- **`dev-ai-hub-node`** — node-only extension points for backend integrators.
 
 The catalog is the sole source of truth for `AiResource` entities (ADR-0001); the backend resolves bodies on demand and never stores a second copy.
 

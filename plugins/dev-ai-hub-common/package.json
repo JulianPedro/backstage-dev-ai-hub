@@ -29,13 +29,13 @@
     "pluginPackages": [
       "@nospt/plugin-dev-ai-hub",
       "@nospt/plugin-dev-ai-hub-backend",
-      "@nospt/plugin-dev-ai-hub-common",
-      "@nospt/plugin-dev-ai-hub-node"
+      "@nospt/plugin-dev-ai-hub-common"
     ]
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "backstage-cli package build",

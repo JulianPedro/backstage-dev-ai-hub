@@ -22,7 +22,6 @@ yarn test
 yarn workspace @nospt/plugin-dev-ai-hub test
 yarn workspace @nospt/plugin-dev-ai-hub-backend test
 yarn workspace @nospt/plugin-dev-ai-hub-common test
-yarn workspace @nospt/plugin-dev-ai-hub-node test
 ```
 
 ### Run a specific test file

@@ -24,7 +24,6 @@ yarn --cwd packages/backend add @nospt/plugin-dev-ai-hub-backend
 ```
 
 `@nospt/plugin-dev-ai-hub-common` arrives as a dependency of both — you never install it directly.
-`@nospt/plugin-dev-ai-hub-node` is only needed if you build against its extension points.
 
 ### 2. Register the `AiResource` catalog kind
 
@@ -145,7 +144,6 @@ All routes require Backstage authentication; the frontend never talks to the cat
 | `@nospt/plugin-dev-ai-hub` | `frontend-plugin` | React UI (New Frontend System) — browse page, cards, filters, detail drawer, install dialog |
 | `@nospt/plugin-dev-ai-hub-backend` | `backend-plugin` | Reads the catalog on demand, resolves resource bodies, records telemetry |
 | `@nospt/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, the `ResourceSummary` contract, and telemetry schemas |
-| `@nospt/plugin-dev-ai-hub-node` | `node-library` | Reserved for future backend-integrator extension points (currently empty) |
 
 ---
 
