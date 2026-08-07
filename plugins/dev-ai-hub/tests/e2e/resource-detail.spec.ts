@@ -1,12 +1,17 @@
 import { test, expect } from './fixtures/base';
-import { MOCK_RESOURCES } from './fixtures/mock-api';
+import {
+  EXAMPLE_RESOURCES,
+  NO_SOURCE_LOCATION_RESOURCE,
+  PRIMARY,
+  UNRESOLVABLE_BODY_RESOURCE,
+} from './fixtures/mock-api';
 import { captureGalleryScreenshot } from './helpers';
 
 const PAGE_URL = '/dev-ai-hub';
 
-// Git Commit: skill, claude-code + github-copilot, has a source location,
-// tags, version, owner and non-zero telemetry — exercises every section.
-const RESOURCE = MOCK_RESOURCES[0];
+// azure-devops-cli: skill with a source location, owner, version, tags and
+// four frameworks — every drawer section populated.
+const RESOURCE = PRIMARY;
 
 test.describe('Resource detail panel', () => {
   test.beforeEach(async ({ page }) => {
@@ -21,8 +26,14 @@ test.describe('Resource detail panel', () => {
 
   test('panel header shows the resource title and type', async ({ page }) => {
     const panel = page.getByRole('dialog', { name: RESOURCE.title });
+    // Level-pinned: the resolved body opens with its own <h1> carrying the
+    // same title, so an unlevelled match races the body fetch.
     await expect(
-      panel.getByRole('heading', { name: RESOURCE.title, exact: true }),
+      panel.getByRole('heading', {
+        name: RESOURCE.title,
+        exact: true,
+        level: 2,
+      }),
     ).toBeVisible();
     await expect(
       panel.getByText('Skill', { exact: true }).first(),
@@ -59,7 +70,7 @@ test.describe('Resource detail panel', () => {
     page,
   }, testInfo) => {
     await expect(
-      page.getByRole('heading', { name: 'Git Commit Skill' }),
+      page.getByRole('heading', { name: 'Azure DevOps CLI', level: 1 }),
     ).toBeVisible();
     await captureGalleryScreenshot(page, testInfo, '03-resource-detail');
   });
@@ -73,19 +84,23 @@ test.describe('Resource detail panel', () => {
 
   test('Tags section shows the resource tags', async ({ page }) => {
     const panel = page.getByRole('dialog', { name: RESOURCE.title });
-    await expect(panel.getByText('#git')).toBeVisible();
-    await expect(panel.getByText('#commits')).toBeVisible();
+    await expect(panel.getByText('#azure-devops')).toBeVisible();
+    await expect(panel.getByText('#automation')).toBeVisible();
   });
 
   test('Metadata section shows type, owner, version and entity ref', async ({
     page,
   }) => {
     const panel = page.getByRole('dialog', { name: RESOURCE.title });
-    await expect(panel.getByText('Owner')).toBeVisible();
-    await expect(panel.getByText('group:platform-team')).toBeVisible();
-    await expect(panel.getByText('Version')).toBeVisible();
-    await expect(panel.getByText('1.0.0')).toBeVisible();
-    await expect(panel.getByText('Entity ref')).toBeVisible();
+    // Exact matches: the rendered body is real documentation and mentions
+    // "CLI Version:" in its own prose, which a substring match would collide
+    // with. The metadata rows are <dt> labels, so exact is also the truer
+    // assertion.
+    await expect(panel.getByText('Owner', { exact: true })).toBeVisible();
+    await expect(panel.getByText('group:ai-platform-team')).toBeVisible();
+    await expect(panel.getByText('Version', { exact: true })).toBeVisible();
+    await expect(panel.getByText(RESOURCE.version!)).toBeVisible();
+    await expect(panel.getByText('Entity ref', { exact: true })).toBeVisible();
     await expect(panel.getByText(RESOURCE.entityRef)).toBeVisible();
   });
 
@@ -110,21 +125,108 @@ test.describe('Resource detail panel', () => {
   });
 });
 
+/**
+ * Browsable but not actionable. Every seed entity in `examples/catalog`
+ * publishes a source-location — as a valid example should — so this case is
+ * opted in rather than drawn from the catalog.
+ */
 test.describe('Resource detail panel — non-actionable resource', () => {
+  test.use({
+    resources: { items: [...EXAMPLE_RESOURCES, NO_SOURCE_LOCATION_RESOURCE] },
+  });
+
   test('a resource with no source location shows no actions or content', async ({
     page,
   }) => {
+    const title = NO_SOURCE_LOCATION_RESOURCE.title!;
     await page.goto(PAGE_URL);
-    await expect(page.getByText('Pre-commit Lint Hook')).toBeVisible();
-    await page
-      .getByRole('button', { name: 'View Pre-commit Lint Hook' })
-      .click();
+    await expect(page.getByText(title)).toBeVisible();
+    await page.getByRole('button', { name: `View ${title}` }).click();
 
-    const panel = page.getByRole('dialog', { name: 'Pre-commit Lint Hook' });
+    const panel = page.getByRole('dialog', { name: title, exact: true });
     await expect(
       panel.getByText('No content location published for this resource.'),
     ).toBeVisible();
     await expect(panel.getByRole('button', { name: 'Install' })).toHaveCount(0);
     await expect(panel.getByText('View source')).toHaveCount(0);
+  });
+});
+
+/**
+ * A resource that promises a body and cannot deliver one. Distinct from the
+ * non-actionable case above: this resource *has* a source location, so the
+ * drawer commits to fetching before it can know the fetch will fail. The
+ * requirement is that it degrades — the rest of the drawer keeps working and
+ * the user is told what happened, rather than the page falling over.
+ */
+test.describe('Resource detail panel — body resolution fails', () => {
+  test.use({
+    resources: { items: [...EXAMPLE_RESOURCES, UNRESOLVABLE_BODY_RESOURCE] },
+  });
+
+  const openBroken = async (page: import('@playwright/test').Page) => {
+    await page.goto(PAGE_URL);
+    await expect(
+      page.getByText(UNRESOLVABLE_BODY_RESOURCE.title!),
+    ).toBeVisible();
+    await page
+      .getByRole('button', { name: `View ${UNRESOLVABLE_BODY_RESOURCE.title}` })
+      .click();
+    return page.getByRole('dialog', {
+      name: UNRESOLVABLE_BODY_RESOURCE.title,
+      exact: true,
+    });
+  };
+
+  test('a 404 from the resolver degrades to an explanatory message', async ({
+    page,
+  }) => {
+    const panel = await openBroken(page);
+
+    await expect(
+      panel.getByText(
+        'Content not available — it may have been removed, or you may not have access to it.',
+      ),
+    ).toBeVisible();
+    // The wording for a resource that never published a location would be
+    // wrong here — this one published one.
+    await expect(
+      panel.getByText('No content location published for this resource.'),
+    ).toHaveCount(0);
+  });
+
+  test('a 404 leaves the rest of the drawer intact', async ({ page }) => {
+    const panel = await openBroken(page);
+
+    await expect(
+      panel.getByText(UNRESOLVABLE_BODY_RESOURCE.entityRef),
+    ).toBeVisible();
+    await expect(panel.getByText('View source')).toBeVisible();
+    await expect(page.getByText('Could not load resources')).toHaveCount(0);
+  });
+
+  test('an upstream failure offers a retry, and the retry re-requests', async ({
+    page,
+  }) => {
+    // Registered inside the test so it takes precedence over the base
+    // fixture's handler, which would otherwise 404 this ref.
+    let attempts = 0;
+    await page.route('**/api/dev-ai-hub/entity/**/raw*', async route => {
+      attempts += 1;
+      await route.fulfill({ status: 502, json: { error: 'upstream boom' } });
+    });
+
+    const panel = await openBroken(page);
+
+    await expect(
+      panel.getByText('Couldn’t fetch the content from its source.'),
+    ).toBeVisible();
+
+    const retry = panel.getByRole('button', { name: 'Retry' });
+    await expect(retry).toBeVisible();
+
+    const before = attempts;
+    await retry.click();
+    await expect.poll(() => attempts).toBeGreaterThan(before);
   });
 });

@@ -182,7 +182,7 @@ jobs:
             const ISSUE_TITLE = '🧬 Mutation testing below threshold';
             const LABEL = 'mutation-testing';
             const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-            const docsUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/blob/main-nos/docs/mutation-testing.md`;
+            const docsUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/blob/main-nos/docs/testing/mutation/mutation-testing.md`;
             const today = new Date().toISOString().slice(0, 10);
 
             try {
@@ -218,7 +218,7 @@ jobs:
                   : '',
                 '',
                 `Download the \`mutation-report\` artifact from [this run](${runUrl}) for per-survivor diffs — ` +
-                  `see [docs/mutation-testing.md](${docsUrl}) for how to read them.`,
+                  `see [docs/testing/mutation/mutation-testing.md](${docsUrl}) for how to read them.`,
               ].join('\n');
 
               if (existing) {

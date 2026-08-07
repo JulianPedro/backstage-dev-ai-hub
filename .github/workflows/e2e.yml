@@ -382,14 +382,23 @@ jobs:
           shopt -s nullglob
           shots=(e2e-screenshots/*.png)
           base="https://github.com/${GITHUB_REPOSITORY}/blob/screenshots-pr-${PR_NUMBER}"
+          # Collapsed by default: the gallery is a review aid, not the point of
+          # the comment. Left expanded it pushes the test-results table off
+          # screen and makes every PR page load pull down a screen of PNGs.
+          # <details> keeps it one click away instead.
           {
             echo "gallery<<__GALLERY_EOF__"
             echo "---"
-            echo "### 📸 UI screenshots"
-            echo ""
             if [ ${#shots[@]} -eq 0 ]; then
+              echo "### 📸 UI screenshots"
+              echo ""
               echo "_No screenshots were captured for this run (see the e2e results above)._"
             else
+              echo "<details>"
+              echo "<summary><b>📸 UI screenshots (${#shots[@]})</b> — click to expand</summary>"
+              # Blank line after the opening tags, so GitHub parses the
+              # markdown inside the block rather than treating it as raw HTML.
+              echo ""
               echo "Captured from the Playwright e2e run — one per UI state. Visible to anyone with repo access."
               echo ""
               echo "<table>"
@@ -403,6 +412,8 @@ jobs:
               done
               if [ $((i % 2)) -ne 0 ]; then echo "</tr>"; fi
               echo "</table>"
+              echo ""
+              echo "</details>"
             fi
             echo "__GALLERY_EOF__"
           } >> "$GITHUB_OUTPUT"

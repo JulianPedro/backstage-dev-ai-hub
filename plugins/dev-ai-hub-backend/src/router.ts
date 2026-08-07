@@ -8,8 +8,10 @@ import type {
 import type { CatalogService } from '@backstage/plugin-catalog-node';
 import type { TelemetryStore } from './database/TelemetryStore';
 import type { ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
-import { TelemetryEventInputSchema } from '@nospt/plugin-dev-ai-hub-common';
-import { toResourceSummary } from './service/toResourceSummary';
+import {
+  TelemetryEventInputSchema,
+  toResourceSummary,
+} from '@nospt/plugin-dev-ai-hub-common';
 import { hashActor } from './service/telemetryHash';
 import {
   SOURCE_LOCATION_ANNOTATION,

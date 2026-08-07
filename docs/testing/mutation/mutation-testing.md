@@ -12,7 +12,7 @@ Mutation testing runs only against `dev-ai-hub-backend` and `dev-ai-hub-common`,
 - `dev-ai-hub-common`: `resources.ts`, `telemetry.ts`.
 
 Wiring/DI files (`plugin.ts`, `index.ts` barrels) and the frontend package are excluded.
-Frontend component tests are mostly render/interaction assertions where mutation testing yields low signal for the cost; see [ADR-index](adr/) for how other quality tooling was scoped in this repo.
+Frontend component tests are mostly render/interaction assertions where mutation testing yields low signal for the cost; see [ADR-index](../../adr/) for how other quality tooling was scoped in this repo.
 
 ## Running locally
 

@@ -1,11 +1,11 @@
 import { test, expect } from './fixtures/base';
-import { MOCK_RESOURCES } from './fixtures/mock-api';
+import { PRIMARY } from './fixtures/mock-api';
 import { captureGalleryScreenshot } from './helpers';
 
 const PAGE_URL = '/dev-ai-hub';
 
-// Git Commit: skill, claude-code + github-copilot, has telemetry counts.
-const RESOURCE = MOCK_RESOURCES[0];
+// azure-devops-cli: skill with four frameworks and telemetry counts.
+const RESOURCE = PRIMARY;
 
 function waitForTelemetry(
   page: import('@playwright/test').Page,
@@ -77,7 +77,7 @@ test.describe('Resource install dialog', () => {
       dialog.getByText('GitHub Copilot', { exact: true }),
     ).toBeVisible();
     await expect(
-      dialog.getByText('.claude/skills/git-commit/').first(),
+      dialog.getByText(`.claude/skills/${RESOURCE.name}/`).first(),
     ).toBeVisible();
   });
 

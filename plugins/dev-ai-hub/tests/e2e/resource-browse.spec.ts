@@ -1,24 +1,32 @@
 import { test, expect } from './fixtures/base';
-import { MOCK_RESOURCES } from './fixtures/mock-api';
+import {
+  EXAMPLE_RESOURCES,
+  PRIMARY,
+  UNINSTALLED,
+  exampleCountByType,
+} from './fixtures/mock-api';
 import { captureGalleryScreenshot } from './helpers';
 
 const PAGE_URL = '/dev-ai-hub';
 
+/** Tile label → the `spec.type` it counts. */
+const TILES: [string, string][] = [
+  ['Skills', 'skill'],
+  ['Agents', 'agent'],
+  ['Hooks', 'hook'],
+  ['MCP Configs', 'mcp-config'],
+  ['Plugins', 'plugin'],
+  ['Marketplaces', 'marketplace'],
+];
+
 test.describe('AI Resources — browse', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(PAGE_URL);
-    await expect(page.getByText(MOCK_RESOURCES[0].title!)).toBeVisible();
+    await expect(page.getByText(PRIMARY.title!)).toBeVisible();
   });
 
   test('renders the six stat tiles', async ({ page }, testInfo) => {
-    for (const label of [
-      'Skills',
-      'Agents',
-      'Hooks',
-      'MCP Configs',
-      'Plugins',
-      'Marketplaces',
-    ]) {
+    for (const [label] of TILES) {
       await expect(
         page.getByRole('button', { name: `Filter by ${label}` }),
       ).toBeVisible();
@@ -26,44 +34,55 @@ test.describe('AI Resources — browse', () => {
     await captureGalleryScreenshot(page, testInfo, '01-hub-overview');
   });
 
-  test('stat tiles display correct counts from mock data', async ({ page }) => {
-    // One resource per type in the mock
-    for (const label of [
-      'Skills',
-      'Agents',
-      'Hooks',
-      'MCP Configs',
-      'Plugins',
-      'Marketplaces',
-    ]) {
+  test('stat tiles display the seed catalog counts', async ({ page }) => {
+    // Derived from the seeds rather than hardcoded: the catalog holds two
+    // skills and two agents, so a tile stuck on "1" would be caught here.
+    for (const [label, type] of TILES) {
       await expect(
         page.getByRole('button', { name: `Filter by ${label}` }),
-      ).toHaveText(/1/);
+      ).toContainText(String(exampleCountByType(type)));
     }
   });
 
   test('clicking a stat tile filters resources by type', async ({ page }) => {
-    await page.getByRole('button', { name: 'Filter by Skills' }).click();
+    await page.getByRole('button', { name: 'Filter by Plugins' }).click();
+
     await expect(page.getByText('1 resource found')).toBeVisible();
-    await expect(page.getByText('Git Commit', { exact: true })).toBeVisible();
-    await expect(page.getByText('Code Review Agent')).not.toBeVisible();
+    await expect(
+      page.getByText('Secure Development Plugin Bundle'),
+    ).toBeVisible();
+    await expect(page.getByText(PRIMARY.title!)).not.toBeVisible();
+  });
+
+  test('a type with more than one resource shows them all', async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Filter by Skills' }).click();
+
+    await expect(page.getByText('2 resources found')).toBeVisible();
+    await expect(page.getByText(PRIMARY.title!)).toBeVisible();
+    await expect(
+      page.getByText('Approved GitHub Workflows Skill'),
+    ).toBeVisible();
   });
 
   test('clicking an active stat tile removes the type filter', async ({
     page,
   }) => {
-    await page.getByRole('button', { name: 'Filter by Skills' }).click();
+    await page.getByRole('button', { name: 'Filter by Plugins' }).click();
     await expect(page.getByText('1 resource found')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Filter by Skills' }).click();
+    await page.getByRole('button', { name: 'Filter by Plugins' }).click();
     await expect(
-      page.getByText(`${MOCK_RESOURCES.length} resources found`),
+      page.getByText(`${EXAMPLE_RESOURCES.length} resources found`),
     ).toBeVisible();
   });
 
-  test('renders all mock resources', async ({ page }) => {
-    for (const resource of MOCK_RESOURCES) {
-      await expect(page.getByText(resource.title!)).toBeVisible();
+  test('renders every seed resource', async ({ page }) => {
+    for (const resource of EXAMPLE_RESOURCES) {
+      await expect(
+        page.getByRole('button', { name: `View ${resource.title}` }),
+      ).toBeVisible();
     }
   });
 
@@ -83,17 +102,15 @@ test.describe('AI Resources — browse', () => {
   });
 
   test('popular resources (≥5 installs) show 🔥 icon', async ({ page }) => {
-    // Git Commit (22 installs) and Code Review Agent (8 installs) are popular
-    const fireEmojis = page.getByText('🔥');
-    await expect(fireEmojis.first()).toBeVisible();
+    // azure-devops-cli (22 installs) and api-architect (8) are over the line.
+    await expect(page.getByText('🔥').first()).toBeVisible();
   });
 
   test('resources with 0 installs do not show an install count', async ({
     page,
   }) => {
-    // Pre-commit Lint Hook has install: 0 — the install count is omitted
     const card = page.getByRole('button', {
-      name: 'View Pre-commit Lint Hook',
+      name: `View ${UNINSTALLED.title}`,
     });
     await expect(card).not.toContainText('🔥');
     await expect(card).not.toContainText('↓');
@@ -102,10 +119,10 @@ test.describe('AI Resources — browse', () => {
   test('clicking a card opens the detail drawer and updates the URL', async ({
     page,
   }) => {
-    await page.getByRole('button', { name: 'View Git Commit' }).click();
+    await page.getByRole('button', { name: `View ${PRIMARY.title}` }).click();
     await expect(page).toHaveURL(/resource=/);
     await expect(
-      page.getByRole('dialog', { name: 'Git Commit' }),
+      page.getByRole('dialog', { name: PRIMARY.title, exact: true }),
     ).toBeVisible();
   });
 
@@ -124,7 +141,6 @@ test.describe('AI Resources — browse', () => {
   test('pagination is hidden when all resources fit one page (PAGE_SIZE=24)', async ({
     page,
   }) => {
-    // 6 mock resources vs PAGE_SIZE=24 — TablePagination is not rendered
     await expect(page.getByRole('button', { name: /next/i })).not.toBeVisible();
   });
 });

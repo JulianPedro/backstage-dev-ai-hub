@@ -9,12 +9,19 @@ import {
   getFrameworks,
   isResourceType,
   type ResourceSummary,
-} from '@nospt/plugin-dev-ai-hub-common';
+} from './resources';
 
 /**
  * Map a catalog AiResource entity to the flat contract served to the
  * frontend. Returns undefined for entities with an unsupported `spec.type`,
  * which are silently dropped (ADR-0003).
+ *
+ * Lives in `common` rather than the backend because it is pure and
+ * isomorphic — `Entity` in, `ResourceSummary` out — and both the backend
+ * router and the frontend's e2e fixtures need it to agree. The e2e suite
+ * builds its mock `GET /resources` payload by running the real examples in
+ * `examples/catalog/` through this function, so a change to the mapping
+ * cannot silently diverge from what the tests assert against.
  */
 export function toResourceSummary(entity: Entity): ResourceSummary | undefined {
   const type = entity.spec?.type;

@@ -25,9 +25,9 @@ yarn tsc                  # typecheck (also emits dist-types)
 
 yarn test                          # all workspaces
 yarn test:all                      # full suite with coverage
-yarn test:e2e                      # Playwright (auto-starts the frontend dev server)
+yarn test:e2e                      # Playwright (auto-starts the frontend dev server; see docs/testing/playwright/playwright.md)
 yarn workspace <workspace> test    # single package
-yarn test:mutation                 # Stryker mutation testing (backend + common; see docs/mutation-testing.md)
+yarn test:mutation                 # Stryker mutation testing (backend + common; see docs/testing/mutation/mutation-testing.md)
 
 yarn lint:all
 yarn prettier:check
