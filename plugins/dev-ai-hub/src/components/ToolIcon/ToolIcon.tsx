@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { RiInfinityLine } from '@remixicon/react';
+import { RiInfinityLine, RiTerminalBoxLine } from '@remixicon/react';
 import { siAnthropic, siGithub, siGooglegemini } from 'simple-icons';
 import type { FrameworkToken } from '@nospt/plugin-dev-ai-hub-common';
 
@@ -8,7 +8,7 @@ import type { FrameworkToken } from '@nospt/plugin-dev-ai-hub-common';
 const CURSOR_PATH =
   'm20.42 6.73l-8-4.62a.82.82 0 0 0-.83 0L3.58 6.73c-.22.12-.35.36-.35.61v9.32c0 .25.13.48.35.61l8.01 4.62c.26.15.57.15.83 0l8.01-4.62c.22-.12.35-.36.35-.61V7.34c0-.25-.13-.48-.35-.61Zm-.5.98L12.19 21.1c-.05.09-.19.05-.19-.05v-8.77c0-.18-.09-.34-.25-.43L4.16 7.47c-.09-.05-.05-.19.05-.19h15.46c.22 0 .36.24.25.43';
 
-type SvgTool = Exclude<FrameworkToken, 'all' | 'cursor'>;
+type SvgTool = Exclude<FrameworkToken, 'all' | 'cursor' | 'opencode'>;
 
 /**
  * Anthropic's and GitHub's marks are monochrome brand assets (near-black,
@@ -55,6 +55,24 @@ export function ToolIcon({
         // which the other two branches already set. It matters wherever the
         // icon stands alone (resource cards), where it is the only thing
         // naming the tool.
+        role="img"
+      />
+    );
+  }
+
+  if (tool === 'opencode') {
+    // No verified brand mark is available to embed (unlike Cursor's, sourced
+    // from a known open-license icon set) — a neutral terminal icon avoids
+    // guessing at OpenCode's actual logomark geometry.
+    return (
+      <RiTerminalBoxLine
+        size={size}
+        className={className}
+        style={{
+          color: branded ? 'var(--bui-fg-primary)' : 'inherit',
+          ...style,
+        }}
+        aria-label="OpenCode"
         role="img"
       />
     );

@@ -24,6 +24,20 @@ describe('ToolIcon', () => {
     expect(icon).toHaveStyle({ color: 'inherit' });
   });
 
+  it('renders a neutral terminal glyph for OpenCode, labelled and exposed as an image', () => {
+    render(<ToolIcon tool="opencode" />);
+
+    const icon = screen.getByRole('img', { name: 'OpenCode' });
+    expect(icon).toHaveStyle({ color: 'var(--bui-fg-primary)' });
+  });
+
+  it('renders the OpenCode glyph unbranded (inherit) when branded=false', () => {
+    render(<ToolIcon tool="opencode" branded={false} />);
+
+    const icon = screen.getByRole('img', { name: 'OpenCode' });
+    expect(icon).toHaveStyle({ color: 'inherit' });
+  });
+
   it('renders a monochrome brand (Claude Code) using the theme-aware foreground colour', () => {
     render(<ToolIcon tool="claude-code" />);
 

@@ -87,7 +87,7 @@ describe('GET /resources', () => {
       title: 'Approved GitHub Workflows Skill',
       type: 'skill',
       lifecycle: 'production',
-      owner: 'group:ai-platform-team',
+      owner: 'group:default/ai-platform-team',
       frameworks: ['github-copilot', 'claude-code'],
       version: '1.0.0',
       kind: 'AiResource',

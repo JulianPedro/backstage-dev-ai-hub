@@ -183,6 +183,7 @@ describe('getResourceInstallTarget', () => {
       'github-copilot': ['.github/skills/x/', 'drop-in'],
       'google-gemini': ['.gemini/skills/x/', 'drop-in'],
       cursor: ['.cursor/skills/x/', 'drop-in'],
+      opencode: ['.opencode/skills/x/', 'drop-in'],
       default: ['.agents/skills/x/', 'drop-in'],
     },
     agent: {
@@ -190,6 +191,7 @@ describe('getResourceInstallTarget', () => {
       'github-copilot': ['.github/agents/x.agent.md', 'drop-in'],
       'google-gemini': ['.gemini/agents/x.md', 'drop-in'],
       cursor: ['.cursor/rules/x.mdc', 'drop-in'],
+      opencode: ['.opencode/agents/x.md', 'drop-in'],
       default: ['.ai/agents/x.md', 'drop-in'],
     },
     hook: {
@@ -197,6 +199,9 @@ describe('getResourceInstallTarget', () => {
       'github-copilot': ['.github/hooks/x.json', 'drop-in'],
       'google-gemini': ['.gemini/settings.json', 'merge'],
       cursor: ['.cursor/hooks.json', 'merge'],
+      // OpenCode has no declarative hook config — hooks are JS/TS plugin
+      // modules — so it gets no entry, same as the type's missing `default`.
+      opencode: null,
       default: null,
     },
     'mcp-config': {
@@ -204,6 +209,7 @@ describe('getResourceInstallTarget', () => {
       'github-copilot': ['.vscode/mcp.json', 'merge'],
       'google-gemini': ['.gemini/settings.json', 'merge'],
       cursor: ['.cursor/mcp.json', 'merge'],
+      opencode: ['opencode.json', 'merge'],
       default: null,
     },
     // Pointer-shaped bodies install through their framework (ADR-0009/0010).
@@ -212,6 +218,7 @@ describe('getResourceInstallTarget', () => {
       'github-copilot': null,
       'google-gemini': null,
       cursor: null,
+      opencode: null,
       default: null,
     },
     marketplace: {
@@ -219,6 +226,7 @@ describe('getResourceInstallTarget', () => {
       'github-copilot': null,
       'google-gemini': null,
       cursor: null,
+      opencode: null,
       default: null,
     },
   };
@@ -245,6 +253,7 @@ describe('getResourceInstallTarget', () => {
       'github-copilot': '.github/',
       'google-gemini': '.gemini/',
       cursor: '.cursor/',
+      opencode: '.opencode/',
     };
     for (const type of ['skill', 'agent'] as const) {
       for (const [framework, prefix] of Object.entries(OWN_PREFIX)) {
@@ -278,18 +287,24 @@ describe('expandInstallFrameworks', () => {
       'github-copilot',
       'google-gemini',
       'cursor',
+      'opencode',
     ]);
   });
 
-  it('gives `all` resources a path for types that have no default', () => {
+  it('gives `all` resources a path for hook, which has no default and no OpenCode convention', () => {
     // Regression: `all` previously resolved to a single lookup that missed,
-    // so hook/mcp-config resources rendered an empty install dialog.
-    for (const type of ['hook', 'mcp-config'] as const) {
-      const rows = expandInstallFrameworks(['all'])
-        .map(f => getResourceInstallTarget(type, f, 'x'))
-        .filter(Boolean);
-      expect(rows).toHaveLength(4);
-    }
+    // so hook resources rendered an empty install dialog.
+    const rows = expandInstallFrameworks(['all'])
+      .map(f => getResourceInstallTarget('hook', f, 'x'))
+      .filter(Boolean);
+    expect(rows).toHaveLength(4);
+  });
+
+  it('gives `all` resources a path for every installable framework on mcp-config', () => {
+    const rows = expandInstallFrameworks(['all'])
+      .map(f => getResourceInstallTarget('mcp-config', f, 'x'))
+      .filter(Boolean);
+    expect(rows).toHaveLength(5);
   });
 
   it('uses the neutral default when nothing is declared', () => {

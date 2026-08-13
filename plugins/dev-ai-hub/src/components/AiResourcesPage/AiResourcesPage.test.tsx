@@ -54,6 +54,14 @@ jest.mock('react-markdown', () => ({
   default: ({ children }: any) => <div>{children}</div>,
 }));
 
+jest.mock('@backstage/plugin-catalog-react', () => ({
+  // The real component calls useRouteRef, which needs Backstage's own route
+  // resolution context, not just react-router's <MemoryRouter>.
+  EntityRefLink: ({ entityRef, children }: any) => (
+    <a href={`/catalog/${entityRef}`}>{children}</a>
+  ),
+}));
+
 jest.mock('@backstage/core-plugin-api', () => ({
   ...jest.requireActual('@backstage/core-plugin-api'),
   useApi: () => ({

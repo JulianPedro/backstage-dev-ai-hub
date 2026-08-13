@@ -43,6 +43,7 @@ export const KNOWN_FRAMEWORKS = [
   'claude-code',
   'cursor',
   'google-gemini',
+  'opencode',
   'all',
 ] as const;
 
@@ -280,6 +281,7 @@ export const INSTALLABLE_FRAMEWORKS = [
   'github-copilot',
   'google-gemini',
   'cursor',
+  'opencode',
 ] as const;
 
 /**
@@ -307,6 +309,7 @@ const INSTALL_PATHS: Record<
       path: name => `.gemini/skills/${name}/`,
     },
     cursor: { mode: 'drop-in', path: name => `.cursor/skills/${name}/` },
+    opencode: { mode: 'drop-in', path: name => `.opencode/skills/${name}/` },
     default: { mode: 'drop-in', path: name => `.agents/skills/${name}/` },
   },
   agent: {
@@ -323,10 +326,14 @@ const INSTALL_PATHS: Record<
       path: name => `.gemini/agents/${name}.md`,
     },
     cursor: { mode: 'drop-in', path: name => `.cursor/rules/${name}.mdc` },
+    opencode: { mode: 'drop-in', path: name => `.opencode/agents/${name}.md` },
     default: { mode: 'drop-in', path: name => `.ai/agents/${name}.md` },
   },
   // All four hosts have a hook system, but only Copilot gives each hook its
   // own file; the rest register hooks inside a shared settings document.
+  // OpenCode has no declarative hook config at all — hooks are exclusively
+  // JS/TS plugin modules — so it deliberately carries no entry here, the same
+  // way it carries no `default`.
   hook: {
     'claude-code': { mode: 'merge', path: () => `.claude/settings.json` },
     'github-copilot': {
@@ -341,6 +348,7 @@ const INSTALL_PATHS: Record<
     'github-copilot': { mode: 'merge', path: () => `.vscode/mcp.json` },
     'google-gemini': { mode: 'merge', path: () => `.gemini/settings.json` },
     cursor: { mode: 'merge', path: () => `.cursor/mcp.json` },
+    opencode: { mode: 'merge', path: () => `opencode.json` },
   },
   plugin: {},
   marketplace: {},

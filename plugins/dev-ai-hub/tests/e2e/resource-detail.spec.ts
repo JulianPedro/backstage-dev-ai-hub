@@ -97,7 +97,9 @@ test.describe('Resource detail panel', () => {
     // with. The metadata rows are <dt> labels, so exact is also the truer
     // assertion.
     await expect(panel.getByText('Owner', { exact: true })).toBeVisible();
-    await expect(panel.getByText('group:ai-platform-team')).toBeVisible();
+    await expect(
+      panel.getByText('group:default/ai-platform-team'),
+    ).toBeVisible();
     await expect(panel.getByText('Version', { exact: true })).toBeVisible();
     await expect(panel.getByText(RESOURCE.version!)).toBeVisible();
     await expect(panel.getByText('Entity ref', { exact: true })).toBeVisible();

@@ -3,7 +3,7 @@
  * mapper shared by the backend router and the e2e fixtures.
  */
 import type { Entity } from '@backstage/catalog-model';
-import { toResourceSummary } from './toResourceSummary';
+import { isParseableEntityRef, toResourceSummary } from './toResourceSummary';
 
 function entity(overrides: Partial<Entity> = {}): Entity {
   return {
@@ -49,7 +49,7 @@ describe('toResourceSummary', () => {
       tags: ['security'],
       type: 'skill',
       lifecycle: 'production',
-      owner: 'group:ai-platform-team',
+      owner: 'group:default/ai-platform-team',
       sourceLocation: 'url:https://github.com/org/repo/blob/main/skill.yaml',
       frameworks: ['claude-code'],
       version: '1.0.0',
@@ -98,5 +98,51 @@ describe('toResourceSummary', () => {
     );
 
     expect(result?.owner).toBeUndefined();
+  });
+
+  it.each([
+    ['group:platforms-developer-experience'],
+    ['platforms-developer-experience'],
+    ['group:default/platforms-developer-experience'],
+  ])('normalises owner %s to a full entity ref', owner => {
+    const result = toResourceSummary(
+      entity({ spec: { type: 'skill', lifecycle: 'x', owner } }),
+    );
+
+    expect(result?.owner).toBe('group:default/platforms-developer-experience');
+  });
+
+  it('keeps a non-default kind and namespace when the owner spells them out', () => {
+    const result = toResourceSummary(
+      entity({
+        spec: { type: 'skill', lifecycle: 'x', owner: 'user:ops/ana' },
+      }),
+    );
+
+    expect(result?.owner).toBe('user:ops/ana');
+  });
+
+  it('passes an unparseable owner through rather than dropping the resource', () => {
+    const result = toResourceSummary(
+      entity({ spec: { type: 'skill', lifecycle: 'x', owner: 'a:b:c/d/e' } }),
+    );
+
+    expect(result?.owner).toBe('a:b:c/d/e');
+  });
+});
+
+describe('isParseableEntityRef', () => {
+  it.each([
+    ['group:default/platforms-developer-experience'],
+    ['group:platforms-developer-experience'],
+    ['platforms-developer-experience'],
+    ['user:ops/ana'],
+    ['airesource:default/approved-github-workflows'],
+  ])('accepts %s', ref => {
+    expect(isParseableEntityRef(ref)).toBe(true);
+  });
+
+  it('rejects a malformed ref', () => {
+    expect(isParseableEntityRef('group:')).toBe(false);
   });
 });

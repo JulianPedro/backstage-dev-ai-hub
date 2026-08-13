@@ -53,6 +53,7 @@ const FRAMEWORK_LABELS: Record<string, string> = {
   'github-copilot': 'GitHub Copilot',
   'google-gemini': 'Google Gemini',
   cursor: 'Cursor',
+  opencode: 'OpenCode',
   all: 'All tools',
 };
 

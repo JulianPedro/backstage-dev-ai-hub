@@ -13,3 +13,4 @@ spec:
     - ./mcp-grafana.yaml
     - ./plugin-secure-dev-bundle.yaml
     - ./marketplace-nos-plugin-marketplace.yaml
+    - ./group-ai-platform-team.yaml

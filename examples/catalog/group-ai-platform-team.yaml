@@ -1,0 +1,8 @@
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: ai-platform-team
+  description: Owns most of the seed AiResource fixtures (ADR-0004 — hand-authored only).
+spec:
+  type: team
+  children: []

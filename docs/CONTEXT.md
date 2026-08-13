@@ -114,7 +114,12 @@ An AI tool that a resource is compatible with. Tracked by the
 entities, read from the native `spec.agents` field when non-empty, falling back
 to the annotation otherwise. Resolved to a canonical token by
 `getFrameworks(entity)` in `-common`. Known tokens:
-`github-copilot`, `claude-code`, `cursor`, `google-gemini`, `all`.
+`github-copilot`, `claude-code`, `cursor`, `google-gemini`, `opencode`, `all`.
+A framework token is not just a badge: it drives per-type install-path
+conventions, and — where the host has one — one-click launchers. A framework
+with no native convention for a given type (e.g. `opencode` on `hook`, since
+OpenCode has no declarative hook config) is deliberately left out of that
+type's install rows rather than given a fabricated one.
 
 ### telemetry
 

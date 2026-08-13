@@ -26,13 +26,13 @@ auth:
 
 catalog:
   rules:
-    - allow: [Component, API, Resource, System, Domain, Location, AiResource]
+    - allow: [Component, API, Resource, System, Domain, Location, AiResource, Group]
   locations:
     # Local example AiResource entities — seeded for dev + test (ADR-0004: hand-authored only)
     - type: file
       target: ../../examples/catalog/all.yaml
       rules:
-        - allow: [AiResource, Location]
+        - allow: [AiResource, Location, Group]
   # Local files only, so there is no VCS rate limit to respect — edits to the
   # seed entities show up in seconds rather than after the 100–150s default.
   processingInterval:

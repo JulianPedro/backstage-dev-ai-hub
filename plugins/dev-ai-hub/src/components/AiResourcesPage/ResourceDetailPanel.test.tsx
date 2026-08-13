@@ -2,11 +2,20 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ResourceDetailPanel } from './ResourceDetailPanel';
 import { ResourceBodyError } from '../../api/DevAiHubResourceClient';
+import { clearResourceBodyCache } from '../../hooks/useResourceBody';
 import type { ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
 
 jest.mock('react-markdown', () => ({
   __esModule: true,
   default: ({ children }: any) => <div data-testid="markdown">{children}</div>,
+}));
+
+jest.mock('@backstage/plugin-catalog-react', () => ({
+  // The real component calls useRouteRef, which needs a <Router> ancestor
+  // this test tree doesn't have. A plain anchor is enough to assert on.
+  EntityRefLink: ({ entityRef, children }: any) => (
+    <a href={`/catalog/${entityRef}`}>{children}</a>
+  ),
 }));
 
 jest.mock('@backstage/ui', () => ({
@@ -70,7 +79,10 @@ const ACTIONABLE = summary({
 });
 
 describe('ResourceDetailPanel — body', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    clearResourceBodyCache();
+  });
 
   it('fetches the body lazily on open and renders markdown', async () => {
     api.getEntityBody.mockResolvedValue({
@@ -205,10 +217,32 @@ describe('ResourceDetailPanel — body', () => {
       'copy',
     );
   });
+
+  it('strips frontmatter from the rendered preview but copies the body verbatim', async () => {
+    const raw =
+      '---\nname: my-skill\ndescription: "does things"\n---\n\n# My Skill';
+    api.getEntityBody.mockResolvedValue({
+      content: raw,
+      contentType: 'text/markdown',
+    });
+    render(<ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId('markdown')).toHaveTextContent('# My Skill'),
+    );
+    expect(screen.getByTestId('markdown')).not.toHaveTextContent('name:');
+
+    fireEvent.click(screen.getByText('Copy'));
+    await screen.findByText('Copied!');
+    expect(writeText).toHaveBeenCalledWith(raw);
+  });
 });
 
 describe('ResourceDetailPanel — view telemetry', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    clearResourceBodyCache();
+  });
 
   const viewCalls = () =>
     api.track.mock.calls.filter(([, action]) => action === 'view');
@@ -255,5 +289,47 @@ describe('ResourceDetailPanel — view telemetry', () => {
       ['airesource:default/my-skill', 'view'],
       ['airesource:default/other', 'view'],
     ]);
+  });
+});
+
+describe('ResourceDetailPanel — metadata links', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    clearResourceBodyCache();
+  });
+
+  it('links Owner and Entity ref to their catalog pages', () => {
+    render(
+      <ResourceDetailPanel
+        resource={summary({
+          ...ACTIONABLE,
+          owner: 'group:default/platforms-developer-experience',
+        })}
+        onClose={jest.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText('group:default/platforms-developer-experience'),
+    ).toHaveAttribute(
+      'href',
+      '/catalog/group:default/platforms-developer-experience',
+    );
+    expect(screen.getByText('airesource:default/my-skill')).toHaveAttribute(
+      'href',
+      '/catalog/airesource:default/my-skill',
+    );
+  });
+
+  it('falls back to plain text for an unparseable owner rather than crashing', () => {
+    render(
+      <ResourceDetailPanel
+        resource={summary({ ...ACTIONABLE, owner: 'group:' })}
+        onClose={jest.fn()}
+      />,
+    );
+
+    const ownerValue = screen.getByText('group:');
+    expect(ownerValue.tagName).not.toBe('A');
   });
 });

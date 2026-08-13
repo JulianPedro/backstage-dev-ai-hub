@@ -36,6 +36,7 @@ describe('frameworkLabel', () => {
     ['github-copilot', 'GitHub Copilot'],
     ['google-gemini', 'Google Gemini'],
     ['cursor', 'Cursor'],
+    ['opencode', 'OpenCode'],
     ['all', 'All tools'],
   ])('maps the known token %s to %s', (token, label) => {
     expect(frameworkLabel(token)).toBe(label);

@@ -18,10 +18,12 @@ import {
   RiInstallLine,
 } from '@remixicon/react';
 import { useApi } from '@backstage/core-plugin-api';
+import { EntityRefLink } from '@backstage/plugin-catalog-react';
 import {
   getBodyShape,
   hasCopyableBody,
   hasDownloadableArtifact,
+  isParseableEntityRef,
   type FrameworkToken,
   type ResourceSummary,
 } from '@nospt/plugin-dev-ai-hub-common';
@@ -30,6 +32,7 @@ import { useResourceBody } from '../../hooks/useResourceBody';
 import { useTelemetryCounts } from '../../hooks/useTelemetryCounts';
 import { ToolIcon } from '../ToolIcon';
 import { ResourceInstallDialog } from './ResourceInstallDialog';
+import { stripFrontmatter } from './stripFrontmatter';
 import { frameworkLabel, getTypeMeta } from './typeMeta';
 import styles from './ResourceDetailPanel.module.css';
 
@@ -37,6 +40,17 @@ interface ResourceDetailPanelProps {
   resource: ResourceSummary | undefined;
   onClose: () => void;
 }
+
+/**
+ * Metadata rows that name a catalog entity and should link there. Rendering
+ * still falls back to plain text per-row when the value isn't a parseable
+ * ref (`isParseableEntityRef`) — Owner isn't guaranteed parseable, since
+ * `toResourceSummary` deliberately passes a malformed one through rather
+ * than dropping the resource, and `EntityRefLink` throws on a ref it can't
+ * parse. Entity ref is always valid (built with `stringifyEntityRef`), so it
+ * always renders as a link.
+ */
+const ENTITY_REF_ROWS = new Set(['Owner', 'Entity ref']);
 
 /**
  * The detail drawer (legacy pattern, URL-param driven). Metadata renders from
@@ -258,7 +272,9 @@ export function ResourceDetailPanel({
             )}
             {bodyState.body && bodyShape === 'markdown' && (
               <div className={styles.markdown}>
-                <ReactMarkdown>{bodyState.body.content}</ReactMarkdown>
+                <ReactMarkdown>
+                  {stripFrontmatter(bodyState.body.content)}
+                </ReactMarkdown>
               </div>
             )}
           </div>
@@ -304,7 +320,13 @@ export function ResourceDetailPanel({
                 .map(([k, v]) => (
                   <div key={k} className={styles.metaRow}>
                     <dt>{k}</dt>
-                    <dd>{v}</dd>
+                    <dd>
+                      {ENTITY_REF_ROWS.has(k) && isParseableEntityRef(v!) ? (
+                        <EntityRefLink entityRef={v!}>{v}</EntityRefLink>
+                      ) : (
+                        v
+                      )}
+                    </dd>
                   </div>
                 ))}
             </dl>
