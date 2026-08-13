@@ -25,7 +25,7 @@ spec:
 
 A skill body is usually a directory: end `source-location` with `/` and put a `SKILL.md` at the tree root. This is the one type multi-file suits — every host installs a skill as a directory, so the tree lands intact.
 
-Installs drop-in, one directory per host: `.claude/skills/<name>/`, `.github/skills/<name>/`, `.gemini/skills/<name>/`, `.cursor/skills/<name>/`, `.opencode/skills/<name>/`, and `.agents/skills/<name>/` when no framework is declared. Claude and Cursor also get one-click prompt launchers; OpenCode has no equivalent launcher (no registered URI scheme), so it gets the path only.
+Installs drop-in, one directory per host: `.claude/skills/<name>/`, `.github/skills/<name>/`, `.gemini/skills/<name>/`, `.cursor/skills/<name>/`, `.opencode/skills/<name>/`, and `.agents/skills/<name>/` when no framework is declared. Claude and Cursor also get one-click prompt launchers. OpenCode's Desktop app *does* register an `opencode://` handler (`open-project`, `new-session?prompt=`), but every route requires a `directory` param — an absolute local path we have no way to supply from a web page — so it gets the path only, same as a CLI-only host.
 
 ## agent
 
@@ -57,7 +57,7 @@ The body **is** the install artifact: the JSON snippet merged into the user's MC
 
 Installs merge at `.mcp.json`, `.vscode/mcp.json`, `.gemini/settings.json`, `.cursor/mcp.json`, `opencode.json`.
 
-**OpenCode's own JSON shape differs** from the `mcpServers`/bare `command`/`url` convention this body follows — OpenCode expects `{ "mcp": { "<name>": { "type": "local"|"remote", ... } } }`. There's no transform: the generated install prompt asks the target agent to merge and adapt the body into its own config, the same as every other merge-mode row. OpenCode gets no one-click link either way (no link handler is wired for it, and it has no URI scheme regardless).
+**OpenCode's own JSON shape differs** from the `mcpServers`/bare `command`/`url` convention this body follows — OpenCode expects `{ "mcp": { "<name>": { "type": "local"|"remote", ... } } }`. There's no transform: the generated install prompt asks the target agent to merge and adapt the body into its own config, the same as every other merge-mode row. OpenCode gets no one-click link either way: no link handler is wired for it, and even the Desktop app's real `opencode://` scheme couldn't help here — it launches sessions, not MCP config merges, and every one of its routes needs an absolute local `directory` a web page can't supply.
 
 **Keep the body a single `.json` file.** A tree fails twice over: entry-file resolution considers only `.md`, so viewing returns `404 Resource body has no entry file`, and with no body content to parse there are no one-click links on any host.
 

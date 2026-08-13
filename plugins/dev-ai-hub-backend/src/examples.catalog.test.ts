@@ -76,10 +76,17 @@ describe('examples/catalog — AiResource fixture validation (#27)', () => {
   });
 
   describe.each(
-    // populated after beforeAll — use a lazy approach
+    // populated after beforeAll — use a lazy approach. Filtered to
+    // AiResource-kind files: examples/catalog also carries owner-group
+    // entities (e.g. group-ai-platform-team.yaml) that spec.owner refs
+    // resolve against, which are real catalog fixtures but not part of
+    // the AiResource contract this describe block checks. They're still
+    // covered by the "all.yaml Location targets" assertion below.
     (() => {
       const items = loadEntityFiles();
-      return items.map(({ file, entity }) => ({ file, entity }));
+      return items
+        .filter(({ entity }) => entity.kind === 'AiResource')
+        .map(({ file, entity }) => ({ file, entity }));
     })(),
   )('$file', ({ entity }) => {
     it('has kind AiResource', () => {

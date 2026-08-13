@@ -1,6 +1,6 @@
 {
   "name": "@nospt/plugin-dev-ai-hub-backend",
-  "version": "1.0.0-rc1",
+  "version": "1.0.0",
   "description": "Backend plugin for Dev AI Hub",
   "license": "Apache-2.0",
   "main": "src/index.ts",

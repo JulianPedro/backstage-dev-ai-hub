@@ -1,6 +1,6 @@
 {
   "name": "@nospt/plugin-dev-ai-hub-common",
-  "version": "1.0.0-rc1",
+  "version": "1.0.0",
   "description": "Common types and schemas for Dev AI Hub",
   "license": "Apache-2.0",
   "main": "src/index.ts",

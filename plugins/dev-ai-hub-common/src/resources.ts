@@ -586,7 +586,12 @@ function cursorPromptLink(prompt: string): ResourceDeepLink {
   };
 }
 
-/** Frameworks with a one-click agent-install handler (Gemini has none). */
+/**
+ * Frameworks with a one-click agent-install handler (Gemini has none).
+ * OpenCode's Desktop app does register a real `opencode://` scheme, but every
+ * route (`open-project`, `new-session`) requires an absolute local
+ * `directory` param a web page cannot supply, so it's excluded here too.
+ */
 export const AGENT_LINK_CAPABLE_FRAMEWORKS = [
   'claude-code',
   'github-copilot',
