@@ -5,7 +5,7 @@ description: Writes AiResource catalog YAML that Dev AI Hub renders. Use when th
 
 # AiResource YAML
 
-Dev AI Hub reads exactly one thing: `AiResource` entities in the Backstage catalog. It never scans Git and has no ingestion path (ADR-0004) — a resource appears in the hub because someone hand-wrote its entity.
+Dev AI Hub reads exactly one thing: `AiResource` entities in the Backstage catalog. It never scans Git and has no ingestion path (ADR-0004) — a resource appears in the hub because someone hand-wrote its entity and pointed a `Location` at it.
 
 Every mistake here is a **drop**: the entity is discarded with no error in any log, response, or UI. The producer sees an empty grid and no explanation. So the job is not to write plausible YAML — it is to clear each drop gate deliberately.
 
@@ -15,7 +15,7 @@ Two facts decide everything downstream.
 
 **Type** — exactly one of `skill`, `agent`, `hook`, `mcp-config`, `plugin`, `marketplace`. Any other value is a drop. Note `mcp-config`, not `mcp`.
 
-**Body** — the content a user installs. It lives in Git; the entity only points at it. The body is type-shaped: markdown for every type except `mcp-config`, whose body is JSON.
+**Body** — the content a user installs. It lives in Git; the entity only points at it. The body is type-shaped: markdown for `skill` and `agent`; JSON for `hook`, `mcp-config`, `plugin`, and `marketplace` — `hook` and `mcp-config` are settings fragments merged into a host config file, while `plugin` and `marketplace` point at the manifest itself (`plugin.json`, `marketplace.json`), not a doc about it.
 
 Ask the user for the body's URL if you don't have it. Do not invent one — a `source-location` that 404s produces a resource that browses but cannot be installed, which is worse than an absent one.
 
@@ -34,16 +34,16 @@ metadata:
   description: One line; shown on the card and matched by search.
   tags: [security, github]
   annotations:
+    github.com/project-slug: org/repo
     backstage.io/source-location: url:https://github.com/org/repo/blob/main/skills/body.md
-    devaihub.io/compatible-frameworks: claude-code,github-copilot
-    devaihub.io/version: 1.0.0
 spec:
   type: skill
   lifecycle: production
   owner: group:ai-platform-team
+  agents: [claude-code, github-copilot]
 ```
 
-`kind`, `apiVersion` and `spec.type` are the drop gates. The rest degrades rather than drops:
+`kind`, `apiVersion`, `spec.type` and `metadata.name` are the drop gates. The rest degrades rather than drops:
 
 | Field | Omitted → |
 |---|---|
@@ -53,17 +53,11 @@ spec:
 | `backstage.io/source-location` | No body, no install, no download. Browsable only. |
 | `metadata.title` | `name` is displayed instead. |
 | `metadata.description` | No description, and search cannot match it. |
-| `devaihub.io/compatible-frameworks` | No framework badges; install falls back to neutral `.agents/` paths. |
+| `devaihub.io/compatible-frameworks` (and no `spec.agents` either) | No framework badges. `skill` falls back to `.agents/skills/<name>/`; `agent` falls back to `.ai/agents/<name>.md`; `hook` and `mcp-config` produce no install rows at all; `plugin` and `marketplace` are unaffected — they never had a filesystem install path. |
 
-`spec.owner` accepts either the short `group:ai-platform-team` or the full `group:default/ai-platform-team` — both are normalised to the canonical ref, which is what the detail panel displays.
+### project-slug
 
-### description and tags carry discovery
-
-Search matches `name`, `title`, `description` and `tags` — and nothing else. Owner, type and framework are invisible to it, so the description is where a resource earns its way into results: write the words a colleague would actually type, not a restatement of the title.
-
-Tags do three jobs at once, which makes over-tagging costly. They populate the filter list, they are combined with **AND** (selecting two tags shows only resources carrying both), and the card renders **only the first three** before collapsing the rest into a `+N`. Lead with the tags that discriminate, and keep the list short.
-
-`lifecycle` renders on the card but cannot be filtered on — it informs a reader who already found the resource, it does not help them find it.
+Set `github.com/project-slug` to the `owner/repo` the body lives in — it's what turns on the GitHub features (commit history, issues, PRs) on the entity page. It's a separate annotation from `source-location`, not derived from it, so write both. When every resource in the repo points at bodies inside that same repo, it's the same value on every entity.
 
 ### source-location
 
@@ -82,27 +76,34 @@ A tree is served two ways, and each fails on its own terms.
 
 **Downloading** zips the whole tree — except a tree holding exactly one file, which downloads as that bare file.
 
-A tree only truly fits `skill`, the one type whose install target is a directory on every host. Every other type installs to a single file or merges into a settings file, so a directory body produces install instructions that save a whole tree into one `.md`. Check the type's section in `TYPES.md` before reaching for a tree.
+A tree only truly fits `skill`, the one type whose install target is a directory on every host. Every other type installs to a single file or merges into a settings file, so a directory body produces install instructions that collapse a whole tree into one file. Check the type's section in `TYPES.md` before reaching for a tree.
 
 ### compatible-frameworks
 
-Comma-separated. `claude` → `claude-code`, `copilot` → `github-copilot`, `gemini` → `google-gemini`; `cursor` and `opencode` are themselves. `all` is a wildcard over every host. Unknown tokens pass through literally and simply match nothing.
+Comma-separated. `claude` → `claude-code`, `copilot` → `github-copilot`, `gemini` → `google-gemini`; `cursor` is itself. `all` is a wildcard over every host. Unknown tokens pass through literally and simply match nothing.
 
 The list is a compatibility claim, and the UI believes it: install paths and one-click launchers are generated only for the frameworks named here. Declaring a host the body does not support tells the user something untrue.
 
+**A `spec.agents` array is read before the annotation, on any type — not just `skill`:**
+
+```yaml
+spec:
+  type: agent   # or any of the six
+  agents: [claude-code, github-copilot]
+```
+
+When present and non-empty, `spec.agents` wins and `devaihub.io/compatible-frameworks` is ignored entirely; an empty or absent `spec.agents` falls back to the annotation. Prefer `spec.agents` when the producer would rather not depend on the `devaihub.io/*` annotation namespace, since it lives on the entity itself rather than in a namespace the hub could retire. See `TYPES.md` for the per-type detail.
+
 Done when the entity carries all three gates, a `url:`-prefixed `source-location` whose trailing slash matches the body's shape, and a framework list you can defend.
 
-## 3. Apply the type's own rules
+## 3. Register the location
 
-Each type adds its own fields, install mechanics, and ways to silently lose functionality. Read `TYPES.md` in this skill folder and apply the section for this resource's type.
+Writing the file is not enough — the catalog only reads entities that a `Location` targets. This repo's entry point is `.backstage.yaml` at the repo root: a `Location` whose `spec.targets` lists every `AiResource` file. Not there, or not on that list, and the entity is dropped before the catalog ever sees it — same failure as a missing `url:` prefix, just one level up.
 
-Done when every rule in that type's section is either satisfied or explicitly reported to the user as knowingly skipped.
+Check the repo root for `.backstage.yaml`.
 
-## 4. Land it in the catalog
-
-A valid entity in a Git repo is still invisible. Three things have to be true of the surrounding Backstage app, and none of them are inspectable from the YAML.
-
-**Registered.** Something must point the catalog at the file. The convention in this repo is a `Location` entity listing one file per resource:
+- **Missing** → create it. Target every `AiResource` file already in the repo, not just the one you just wrote — a second author's `.backstage.yaml` must not orphan the first author's entities.
+- **Present** → add this entity's path to `spec.targets` if it's absent. Leave every other target as-is.
 
 ```yaml
 apiVersion: backstage.io/v1alpha1
@@ -111,22 +112,19 @@ metadata:
   name: ai-resources
 spec:
   targets:
-    - ./skill-approved-github-workflows.yaml
-    - ./mcp-grafana.yaml
+    - ./.backstage/approved-github-workflows.yaml
+    - ./.backstage/incident-response-agent.yaml
 ```
 
-The alternative is a `catalog.locations` entry in the app's `app-config.yaml`. Either way the kind must be allow-listed twice: in `catalog.rules`, and in the `allow` list of the location carrying the entity. Miss the allow-list and the entity never enters the catalog at all — the hub cannot drop what it never receives.
+Do not add a `spec.rules` block here — nothing confirms this org resolves the "allow list of the location" gate 9 mentions that way. In standard Backstage that allow list is set where the host app registers this repo as a location (its own `catalog.locations[].rules`), not inside the Location entity committed here. That config lives outside this repo and outside this skill's reach.
 
-**Reachable by the backend, not by you.** Bodies are fetched server-side through the configured integration, which is commonly scoped to one org (`allowedInstallationOwners`). A `source-location` in a personal repo, or in an org the Backstage GitHub app cannot read, gives a perfect entity whose body fails at request time. Confirm the body's repo sits inside the integration's reach.
+Done when `.backstage.yaml` exists at the repo root and its `targets` list names every `AiResource` file the repo carries, this one included.
 
-**Given time.** The catalog re-processes on an interval that defaults to a random 100–150s per entity, so a new or edited entity is not visible immediately.
+## 4. Apply the type's own rules
 
-That interval governs metadata only. Bodies are read live on every request, which produces an asymmetry worth knowing:
+Each type adds its own fields, install mechanics, and ways to silently lose functionality. Read `TYPES.md` in this skill folder and apply the section for this resource's type.
 
-- editing the **body** in Git → visible on the next view, immediately;
-- editing the **entity** YAML → waits for the next processing cycle.
-
-Done when the entity is registered by a location the app loads, its body repo is inside the integration's reach, and the user knows how long to wait before looking.
+Done when every rule in that type's section is either satisfied or explicitly reported to the user as knowingly skipped.
 
 ## 5. Verify
 
@@ -136,16 +134,14 @@ Walk the entity against each gate and name a verdict for every line — a gate y
 2. `apiVersion: backstage.io/v1alpha1`.
 3. `spec.type` is one of the six tokens, spelled exactly.
 4. `metadata.name` is kebab-case and unique in its namespace.
-5. `source-location` starts with `url:`, and its trailing slash matches the body's shape.
-6. If it is a tree, the type is `skill` and an entry file resolves — a root-level `SKILL.md`, the tree's only `.md`, or `<dirname>.md`.
+5. `github.com/project-slug` is set to the `owner/repo` the body lives in.
+6. `source-location` starts with `url:`, and its trailing slash matches the body's shape.
 7. The URL resolves, and the thing behind it is the body — not a repo root, not a README about the body.
-8. Framework tokens are spelled per the alias table.
+8. Framework tokens are spelled per the alias table — in `spec.agents` if you wrote one (it wins over the annotation on every type), otherwise in `devaihub.io/compatible-frameworks`.
 9. Every rule from the type's `TYPES.md` section is satisfied.
-10. All three landing conditions from step 4 hold: registered, allow-listed, and inside the integration's reach.
+10. `.backstage.yaml` targets this file — step 3 fixes that half. The host Backstage app must separately allow-list `AiResource`, both in its global `catalog.rules` and in the `rules` it applies to this repo's location; that config lives outside this repo and outside what this skill can fix, so if the resource is still missing after step 3, tell the user to check it there. Missing either half is the single most common cause of "I wrote the YAML and nothing appeared" — the entity never enters the catalog, so the hub cannot drop it, it never sees it.
 
-Then state to the user which of the six types you wrote, where the body lives, which frameworks will show install instructions, and how long the catalog will take to pick it up.
-
-If a resource still does not appear, work `TROUBLESHOOTING.md` in order rather than guessing — every stage of this pipeline fails silently, so the symptom is identical whichever one broke.
+Then state to the user which of the six types you wrote, where the body lives, and which frameworks will show install instructions.
 
 ## Containment is inert
 

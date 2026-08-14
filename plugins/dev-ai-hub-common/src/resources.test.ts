@@ -50,7 +50,13 @@ describe('getFrameworks', () => {
     ).toEqual(['github-copilot', 'claude-code']);
   });
 
-  it('prefers spec.agents over the annotation for a skill', () => {
+  it('reads native spec.agents for a non-skill type', () => {
+    expect(
+      getFrameworks(entity({ type: 'agent', agents: ['claude', 'opencode'] })),
+    ).toEqual(['claude-code', 'opencode']);
+  });
+
+  it('prefers spec.agents over the annotation', () => {
     expect(
       getFrameworks(
         entity({
@@ -62,7 +68,7 @@ describe('getFrameworks', () => {
     ).toEqual(['cursor']);
   });
 
-  it('falls back to the annotation for a skill with empty spec.agents', () => {
+  it('falls back to the annotation when spec.agents is empty', () => {
     expect(
       getFrameworks(
         entity({ type: 'skill', agents: [], annotation: 'claude-code' }),
@@ -70,7 +76,7 @@ describe('getFrameworks', () => {
     ).toEqual(['claude-code']);
   });
 
-  it('reads the annotation for non-skill types', () => {
+  it('reads the annotation when spec.agents is absent', () => {
     expect(
       getFrameworks(
         entity({ type: 'agent', annotation: 'claude-code, cursor' }),

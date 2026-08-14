@@ -42,7 +42,6 @@ metadata:
     backstage.io/managed-by-origin-location: url:https://github.com/org/ai-assets
 
     # DevAI Hub custom annotations (namespace = devaihub; §4).
-    devaihub.io/compatible-frameworks: "github-copilot,cursor,claude"
     devaihub.io/version: "1.2.0"
 
 spec:
@@ -57,6 +56,11 @@ spec:
 
   # Optional — the System this resource belongs to.
   system: ai-toolkit
+
+  # Recommended — compatibility claim, native field, honoured for any spec.type
+  # (not just skill) and preferred over devaihub.io/compatible-frameworks (§2.2)
+  # since it lives on the entity itself rather than a namespace we may retire.
+  agents: [github-copilot, cursor, claude-code]
 
   # Type-specific fields live below spec (§3).
 ```
@@ -73,7 +77,7 @@ spec:
 | `metadata.title` | Recommended | `metadata.name` is displayed instead. |
 | `metadata.description` | Recommended | Card shows no description; search excludes it. |
 | `metadata.tags` | Recommended | No tags rendered; works fine. |
-| `devaihub.io/compatible-frameworks` | Recommended | No framework badges shown; filters exclude it. |
+| `spec.agents` (preferred) or `devaihub.io/compatible-frameworks` | Recommended | No framework badges shown; filters exclude it. `spec.agents`, when present and non-empty, takes priority over the annotation. |
 
 ---
 
@@ -93,6 +97,10 @@ spec:
 Unsupported types are silently dropped by the consumer.
 
 ### 2.2 `devaihub.io/compatible-frameworks` (annotation)
+
+Fallback path only — prefer the native `spec.agents` array (§1, §3.1) instead, since it lives
+on the entity itself rather than an annotation namespace that may be retired. This annotation
+is read only when `spec.agents` is empty or absent.
 
 Comma-separated list. Tokens are normalised by `normalizeFramework()` in `@nospt/plugin-dev-ai-hub-common`:
 
@@ -131,7 +139,7 @@ spec:
   allowedTools: ["read_file", "run_shell"]        # tool permissions
 ```
 
-**Compatibility framework for skills:** read from `spec.agents` (native). If `spec.agents` is empty, fall back to the `devaihub.io/compatible-frameworks` annotation.
+**Compatibility framework:** read from `spec.agents` (native) when non-empty — honoured for any `spec.type`, not just `skill` (§3.2–3.5 can carry it too, though it isn't part of their upstream shape). If `spec.agents` is empty or absent, falls back to the `devaihub.io/compatible-frameworks` annotation.
 
 ### 3.2 `agent` — default shape + annotations
 
@@ -140,14 +148,14 @@ spec:
   type: agent
   lifecycle: experimental
   owner: group:security-team
+  agents: [claude-code]
 
 metadata:
   annotations:
-    devaihub.io/compatible-frameworks: "claude-code"
     devaihub.io/role: "security-threat-modeller"
 ```
 
-**No native spec fields.** The `devaihub.io/role` annotation is a display hint (optional, rendered as a subtitle on the card). The compatibility framework **must** come from `devaihub.io/compatible-frameworks`.
+**No formal native spec fields.** The `devaihub.io/role` annotation is a display hint (optional, rendered as a subtitle on the card). The compatibility framework should come from `spec.agents` (preferred — see §3.1) or, failing that, `devaihub.io/compatible-frameworks`.
 
 ### 3.3 `hook` — default shape + annotations
 
@@ -156,10 +164,10 @@ spec:
   type: hook
   lifecycle: production
   owner: group:ai-platform-team
+  agents: [claude-code]
 
 metadata:
   annotations:
-    devaihub.io/compatible-frameworks: "claude-code"
     devaihub.io/hook-event: "PostToolUse"
     devaihub.io/hook-matcher: ".*"
 ```
@@ -173,10 +181,7 @@ spec:
   type: mcp-config
   lifecycle: production
   owner: group:observability
-
-metadata:
-  annotations:
-    devaihub.io/compatible-frameworks: "claude-code,cursor"
+  agents: [claude-code, cursor]
 ```
 
 **No native spec fields.** The body of an `mcp-config` resource **is** the JSON snippet the
@@ -198,11 +203,11 @@ spec:
   type: plugin
   lifecycle: production
   owner: group:ai-platform-team
+  agents: [github-copilot, claude-code]
 
 metadata:
   annotations:
     devaihub.io/parent: nos-plugin-marketplace   # its marketplace(s), if any
-    devaihub.io/compatible-frameworks: "github-copilot,claude-code"
     devaihub.io/version: "2.0.0"
     devaihub.io/plugin-manifest: "true"
 ```
@@ -230,10 +235,10 @@ spec:
   type: marketplace
   lifecycle: production
   owner: group:ai-platform-team
+  agents: [claude-code, github-copilot]
 
 metadata:
   annotations:
-    devaihub.io/compatible-frameworks: "claude-code,github-copilot"
     devaihub.io/version: "1.0.0"
 ```
 
@@ -299,7 +304,6 @@ metadata:
   tags: [security, github, review]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/tree/main-nos/examples/skills/approved-github-workflows/
-    devaihub.io/compatible-frameworks: "github-copilot,cursor,claude"
     devaihub.io/version: "1.0.0"
 spec:
   type: skill
@@ -323,12 +327,12 @@ metadata:
   tags: [security, architecture]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/agents/security-threat-modeller.md
-    devaihub.io/compatible-frameworks: "claude-code"
     devaihub.io/role: "security architect"
 spec:
   type: agent
   lifecycle: experimental
   owner: group:security-team
+  agents: [claude-code]
 ```
 
 ### hook
@@ -343,12 +347,12 @@ metadata:
   tags: [lint, quality]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/hooks/post-edit-lint.md
-    devaihub.io/compatible-frameworks: "claude-code"
     devaihub.io/hook-event: "PostToolUse"
 spec:
   type: hook
   lifecycle: production
   owner: group:ai-platform-team
+  agents: [claude-code]
 ```
 
 ### mcp-config
@@ -363,11 +367,11 @@ metadata:
   tags: [observability, grafana]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/mcp/grafana-mcp.json
-    devaihub.io/compatible-frameworks: "claude-code,cursor"
 spec:
   type: mcp-config
   lifecycle: production
   owner: group:observability
+  agents: [claude-code, cursor]
 ```
 
 ### plugin
@@ -382,13 +386,13 @@ metadata:
   tags: [security, bundle]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/plugins/secure-dev-bundle.md
-    devaihub.io/compatible-frameworks: "github-copilot,claude-code"
     devaihub.io/version: "2.1.0"
     devaihub.io/plugin-manifest: "true"
 spec:
   type: plugin
   lifecycle: production
   owner: group:security-team
+  agents: [github-copilot, claude-code]
   dependsOn:
     - airesource:default/approved-github-workflows
     - airesource:default/security-threat-modeller
@@ -408,12 +412,12 @@ metadata:
   tags: [marketplace, curated]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.md
-    devaihub.io/compatible-frameworks: "claude-code,github-copilot"
     devaihub.io/version: "1.0.0"
 spec:
   type: marketplace
   lifecycle: production
   owner: group:ai-platform-team
+  agents: [claude-code, github-copilot]
   dependsOn:
     - airesource:default/security-toolkit
 ```
@@ -427,11 +431,10 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 - [ ] `kind: AiResource` is used (not `Component`, not a custom kind).
 - [ ] `spec.type` is one of the six supported tokens.
 - [ ] `backstage.io/source-location` points at the body: a raw file URL for a single-file body, or a `/`-terminated directory URL for a resource-bearing body (viewed via its entry file, downloaded as one zip).
-- [ ] `devaihub.io/compatible-frameworks` lists at least one framework token (or `all`).
+- [ ] `spec.agents` (any type) or `devaihub.io/compatible-frameworks` lists at least one framework token (or `all`) — `spec.agents`, when present, is preferred over the annotation.
 - [ ] For `plugin` types, `spec.dependsOn` references child `AiResource` entity refs correctly.
 - [ ] For `marketplace` types, `spec.dependsOn` references `plugin`-type children only, and the body is a markdown doc with the marketplace-add command (not the `marketplace.json`).
 - [ ] For `marketplace` types, the body doc lives **inside the marketplace repo** and `metadata.name` equals the `name` in `marketplace.json` (the consumer derives add commands from `source-location`).
-- [ ] For `skill` types, `spec.agents` is preferred over the annotation for frameworks.
 - [ ] `metadata.name` is kebab-case and unique within the namespace.
 
 ---

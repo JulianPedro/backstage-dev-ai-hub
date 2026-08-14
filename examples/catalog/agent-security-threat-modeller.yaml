@@ -7,9 +7,15 @@ metadata:
   tags: [security, threat-modelling, stride]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/agents/security-threat-modeller.md
-    devaihub.io/compatible-frameworks: claude-code,github-copilot,google-gemini,cursor
     devaihub.io/role: security-threat-modeller
 spec:
   type: agent
   lifecycle: experimental
   owner: group:security-team
+  # Compatible frameworks (native field — honoured for any spec.type, not just
+  # `skill`; takes priority over devaihub.io/compatible-frameworks when present).
+  agents:
+    - claude-code
+    - github-copilot
+    - google-gemini
+    - cursor

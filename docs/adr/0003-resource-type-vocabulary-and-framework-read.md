@@ -4,6 +4,13 @@
 > "MCP Config"). Mentions of `spec.type: mcp` below are the original text; read them as
 > `mcp-config`. Catalog entities still using `spec.type: mcp` are dropped by the consumer and
 > must be updated.
+>
+> **Amendment (2026-08):** `spec.agents` is now read natively for **any** `spec.type`, not just
+> `skill`. Mentions of the `skill`-only native read below are the original text; the native field
+> takes priority over the annotation regardless of resource type. Rationale: `spec.agents` lives
+> on the entity itself, while the `devaihub.io/compatible-frameworks` annotation is a namespace we
+> may retire — producers who can author a structured `spec.agents` should not be forced through an
+> annotation that is documentation-only and not guaranteed to persist.
 
 The kind is always `AiResource`. DevAI Hub recognises five `spec.type` values —
 `skill`, `agent`, `hook`, `mcp`, `plugin` — each rendered by its own card. Only `skill` has a
@@ -14,9 +21,9 @@ Because the plugin is a pure consumer, it cannot guarantee that non-skill entiti
 framework metadata. "Compatible frameworks" is therefore read **best-effort**, via a single
 `getFrameworks(entity)` resolver shared by the cards and the MCP server:
 
-1. `spec.type === 'skill'` **and** `spec.agents` is non-empty → read native `spec.agents`;
+1. `spec.agents` is non-empty, for any `spec.type` → read native `spec.agents`;
 2. otherwise → parse the `devaihub.io/compatible-frameworks` annotation (comma-separated) —
-   this is also the fallback for a `skill` whose `spec.agents` is empty or absent;
+   this is also the fallback when `spec.agents` is empty or absent;
 3. otherwise → empty (render no badges, but still show the entity).
 
 Unknown framework tokens pass through and display as-is rather than being dropped, since

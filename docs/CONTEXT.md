@@ -109,10 +109,10 @@ creates, edits, or ingests entities.
 
 ### framework
 
-An AI tool that a resource is compatible with. Tracked by the
-`devaihub.io/compatible-frameworks` annotation (comma-separated). For `skill`
-entities, read from the native `spec.agents` field when non-empty, falling back
-to the annotation otherwise. Resolved to a canonical token by
+An AI tool that a resource is compatible with. Read from the native
+`spec.agents` field when non-empty, for any resource type; falling back to the
+`devaihub.io/compatible-frameworks` annotation (comma-separated) otherwise.
+Resolved to a canonical token by
 `getFrameworks(entity)` in `-common`. Known tokens:
 `github-copilot`, `claude-code`, `cursor`, `google-gemini`, `opencode`, `all`.
 A framework token is not just a badge: it drives per-type install-path

@@ -7,8 +7,14 @@ metadata:
   tags: [observability, grafana, metrics, mcp]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/mcp/grafana-mcp.json
-    devaihub.io/compatible-frameworks: claude-code,github-copilot,cursor,google-gemini
 spec:
   type: mcp-config
   lifecycle: production
   owner: group:observability
+  # Compatible frameworks (native field — honoured for any spec.type, not just
+  # `skill`; takes priority over devaihub.io/compatible-frameworks when present).
+  agents:
+    - claude-code
+    - github-copilot
+    - cursor
+    - google-gemini

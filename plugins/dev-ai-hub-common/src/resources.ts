@@ -76,7 +76,7 @@ export interface AiResourceEntityLike {
   };
   spec?: {
     type?: unknown;
-    /** Native skill subtype field: compatible frameworks. */
+    /** Native compatible-frameworks field, honoured regardless of `spec.type`. */
     agents?: unknown;
     [key: string]: unknown;
   };
@@ -84,14 +84,16 @@ export interface AiResourceEntityLike {
 
 /**
  * Resolve the compatible frameworks of an AiResource (ADR-0003):
- * 1. `skill` with a non-empty `spec.agents` → the native field;
+ * 1. a non-empty `spec.agents` → the native field, for any `spec.type`;
  * 2. otherwise → the `devaihub.io/compatible-frameworks` annotation
- *    (also the fallback for a skill whose `spec.agents` is empty/absent);
+ *    (also the fallback when `spec.agents` is empty/absent);
  * 3. otherwise → `[]`.
- * Tokens are normalised; unknown tokens pass through.
+ * Tokens are normalised; unknown tokens pass through. `spec.agents` is
+ * preferred over the annotation because it lives on the entity itself
+ * rather than in an annotation namespace we may retire.
  */
 export function getFrameworks(entity: AiResourceEntityLike): string[] {
-  if (entity.spec?.type === 'skill' && Array.isArray(entity.spec.agents)) {
+  if (Array.isArray(entity.spec?.agents)) {
     const agents = entity.spec.agents
       .filter((a): a is string => typeof a === 'string')
       .map(normalizeFramework)

@@ -104,12 +104,14 @@ metadata:
   tags: [security, github, ci-cd]
   annotations:
     backstage.io/source-location: url:https://github.com/your-org/ai-assets/tree/main/skills/approved-github-workflows/
-    devaihub.io/compatible-frameworks: github-copilot,claude-code
     devaihub.io/version: 1.0.0
 spec:
   type: skill # skill | agent | hook | mcp-config | plugin | marketplace
   lifecycle: production
   owner: group:ai-platform-team
+  # Compatible frameworks (native field — honoured for any spec.type, not just
+  # `skill`; takes priority over the devaihub.io/compatible-frameworks annotation).
+  agents: [github-copilot, claude-code]
 ```
 
 `plugin` and `marketplace` resources additionally declare `spec.dependsOn` to relate to their child resources. The relation is stored in the catalog and readable there; the cards do not render containment yet ([issue #32](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/32)).
