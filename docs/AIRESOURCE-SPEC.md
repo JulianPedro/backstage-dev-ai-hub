@@ -226,6 +226,10 @@ spec:
 The `PluginCard` lists its children, linking to each child's detail panel; the child card shows "part of: secure-dev-bundle" straight from its own `parents`.
 Children of the wrong type (a plugin claiming a skill as parent) and parents the caller cannot see are silently not rendered.
 
+**The body is the plugin's `.claude-plugin/plugin.json` manifest itself** (ADR-0014), rendered as
+pretty-printed, syntax-highlighted JSON — not a hand-authored pointer doc. `source-location`
+points straight at that file.
+
 ### 3.6 `marketplace` — plugin distribution point (ADR-0010)
 
 ```yaml
@@ -249,10 +253,11 @@ carrying `.claude-plugin/marketplace.json`): the user installs the marketplace i
 - **Children are `plugin` resources only** — mirroring the real `marketplace.json`, which lists
   plugins. This is a rendering convention, not hard validation: non-plugin children are silently
   not rendered as children. Wrap a loose skill in a plugin if you want it in a marketplace.
-- **The body is a markdown doc** carrying the marketplace-add command, the repo link, and usage
-  notes — never the `marketplace.json` manifest itself (users register the repo; they don't copy
-  the manifest). `source-location` points at that markdown file.
-- **The body doc MUST live inside the marketplace repo itself**, and **`metadata.name` MUST
+- **The body is the `marketplace.json` manifest itself** (ADR-0014), rendered as pretty-printed,
+  syntax-highlighted JSON — not a hand-authored pointer doc. `source-location` points straight at
+  that file. It renders alongside the guided journey below when both are available, not instead
+  of it.
+- **The body MUST live inside the marketplace repo itself**, and **`metadata.name` MUST
   equal the `name` field in `marketplace.json`**. The consumer derives the repo slug from
   `source-location` to generate copyable add commands (Claude Code + Copilot CLI — both read
   the same `.claude-plugin/marketplace.json` format), the
@@ -385,7 +390,7 @@ metadata:
   description: Bundled security skills, agents, hooks and MCP servers
   tags: [security, bundle]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/plugins/secure-dev-bundle.md
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/plugins/secure-dev-bundle.json
     devaihub.io/version: "2.1.0"
     devaihub.io/plugin-manifest: "true"
 spec:
@@ -411,7 +416,7 @@ metadata:
   description: Curated marketplace of approved NOS plugins for AI coding tools
   tags: [marketplace, curated]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.md
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.json
     devaihub.io/version: "1.0.0"
 spec:
   type: marketplace
@@ -432,9 +437,9 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 - [ ] `spec.type` is one of the six supported tokens.
 - [ ] `backstage.io/source-location` points at the body: a raw file URL for a single-file body, or a `/`-terminated directory URL for a resource-bearing body (viewed via its entry file, downloaded as one zip).
 - [ ] `spec.agents` (any type) or `devaihub.io/compatible-frameworks` lists at least one framework token (or `all`) — `spec.agents`, when present, is preferred over the annotation.
-- [ ] For `plugin` types, `spec.dependsOn` references child `AiResource` entity refs correctly.
-- [ ] For `marketplace` types, `spec.dependsOn` references `plugin`-type children only, and the body is a markdown doc with the marketplace-add command (not the `marketplace.json`).
-- [ ] For `marketplace` types, the body doc lives **inside the marketplace repo** and `metadata.name` equals the `name` in `marketplace.json` (the consumer derives add commands from `source-location`).
+- [ ] For `plugin`/`marketplace` children, the child declares `devaihub.io/parent` naming its container (ADR-0013) — containers list no children of their own.
+- [ ] For `plugin`/`marketplace` types, `source-location` points at the real `plugin.json`/`marketplace.json` manifest — the body **is** that file, rendered as JSON (ADR-0014).
+- [ ] For `marketplace` types, the manifest lives **inside the marketplace repo** and `metadata.name` equals the `name` in `marketplace.json` (the consumer derives add commands from `source-location`).
 - [ ] `metadata.name` is kebab-case and unique within the namespace.
 
 ---

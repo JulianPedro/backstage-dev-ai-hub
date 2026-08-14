@@ -159,15 +159,11 @@ describe('isResourceType', () => {
 });
 
 describe('getBodyShape', () => {
-  it('is json only for mcp-config', () => {
-    expect(getBodyShape('mcp-config')).toBe('json');
-    for (const t of [
-      'skill',
-      'agent',
-      'hook',
-      'plugin',
-      'marketplace',
-    ] as const) {
+  it('is json for mcp-config, plugin and marketplace', () => {
+    for (const t of ['mcp-config', 'plugin', 'marketplace'] as const) {
+      expect(getBodyShape(t)).toBe('json');
+    }
+    for (const t of ['skill', 'agent', 'hook'] as const) {
       expect(getBodyShape(t)).toBe('markdown');
     }
   });
@@ -325,30 +321,18 @@ describe('expandInstallFrameworks', () => {
 });
 
 describe('hasDownloadableArtifact', () => {
-  it('is true only where the body is the artifact itself', () => {
-    for (const t of ['skill', 'agent', 'hook', 'mcp-config'] as const) {
+  it('is true for every type — plugin/marketplace bodies are the manifest itself (ADR-0014)', () => {
+    for (const t of RESOURCE_TYPES) {
       expect(hasDownloadableArtifact(t)).toBe(true);
     }
-  });
-
-  it('is false for the pointer-shaped bodies (plugin, marketplace)', () => {
-    expect(hasDownloadableArtifact('plugin')).toBe(false);
-    expect(hasDownloadableArtifact('marketplace')).toBe(false);
   });
 });
 
 describe('hasCopyableBody', () => {
-  it('is false only for marketplace — its actionable copies are the journey commands', () => {
-    for (const t of [
-      'skill',
-      'agent',
-      'hook',
-      'mcp-config',
-      'plugin',
-    ] as const) {
+  it('is true for every type — marketplace body is the manifest, not an instructions doc (ADR-0014)', () => {
+    for (const t of RESOURCE_TYPES) {
       expect(hasCopyableBody(t)).toBe(true);
     }
-    expect(hasCopyableBody('marketplace')).toBe(false);
   });
 });
 

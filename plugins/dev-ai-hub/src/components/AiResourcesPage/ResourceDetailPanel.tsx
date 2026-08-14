@@ -30,6 +30,7 @@ import {
 import { devAiHubResourceApiRef } from '../../api/DevAiHubResourceClient';
 import { useResourceBody } from '../../hooks/useResourceBody';
 import { useTelemetryCounts } from '../../hooks/useTelemetryCounts';
+import { JsonBody } from './JsonBody';
 import { ToolIcon } from '../ToolIcon';
 import { ResourceInstallDialog } from './ResourceInstallDialog';
 import { stripFrontmatter } from './stripFrontmatter';
@@ -266,9 +267,10 @@ export function ResourceDetailPanel({
               </Flex>
             )}
             {bodyState.body && bodyShape === 'json' && (
-              <pre className={styles.codeBlock}>
-                <code>{bodyState.body.content}</code>
-              </pre>
+              <JsonBody
+                content={bodyState.body.content}
+                className={styles.codeBlock}
+              />
             )}
             {bodyState.body && bodyShape === 'markdown' && (
               <div className={styles.markdown}>

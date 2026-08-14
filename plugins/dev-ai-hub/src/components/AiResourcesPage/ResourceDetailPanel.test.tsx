@@ -10,6 +10,14 @@ jest.mock('react-markdown', () => ({
   default: ({ children }: any) => <div data-testid="markdown">{children}</div>,
 }));
 
+jest.mock('react-syntax-highlighter', () => {
+  const PrismLight = ({ children }: any) => (
+    <pre data-testid="json-body">{children}</pre>
+  );
+  PrismLight.registerLanguage = jest.fn();
+  return { PrismLight };
+});
+
 jest.mock('@backstage/plugin-catalog-react', () => ({
   // The real component calls useRouteRef, which needs a <Router> ancestor
   // this test tree doesn't have. A plain anchor is enough to assert on.
@@ -99,7 +107,7 @@ describe('ResourceDetailPanel — body', () => {
     );
   });
 
-  it('renders an mcp-config body as a code block, not markdown', async () => {
+  it('renders an mcp-config body as a pretty-printed code block, not markdown', async () => {
     api.getEntityBody.mockResolvedValue({
       content: '{"mcpServers":{}}',
       contentType: 'application/json',
@@ -112,8 +120,28 @@ describe('ResourceDetailPanel — body', () => {
     );
 
     await waitFor(() =>
-      expect(screen.getAllByText('{"mcpServers":{}}').length).toBeGreaterThan(
-        0,
+      expect(screen.getByTestId('json-body')).toHaveTextContent(
+        '"mcpServers": {}',
+      ),
+    );
+    expect(screen.queryByTestId('markdown')).not.toBeInTheDocument();
+  });
+
+  it('renders a plugin body as a pretty-printed code block, not markdown (ADR-0014)', async () => {
+    api.getEntityBody.mockResolvedValue({
+      content: '{"name":"my-plugin","version":"1.0.0"}',
+      contentType: 'application/json',
+    });
+    render(
+      <ResourceDetailPanel
+        resource={summary({ ...ACTIONABLE, type: 'plugin' })}
+        onClose={jest.fn()}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('json-body')).toHaveTextContent(
+        '"name": "my-plugin"',
       ),
     );
     expect(screen.queryByTestId('markdown')).not.toBeInTheDocument();

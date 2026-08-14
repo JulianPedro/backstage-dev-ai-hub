@@ -222,37 +222,38 @@ export interface ResourceListResponse {
 /**
  * The shape of a resource's body (CONTEXT.md: bodies are type-shaped, not
  * uniformly markdown). Drives detail-panel rendering: markdown is rendered,
- * json is shown as a copyable code block.
+ * json is pretty-printed and syntax-highlighted (ADR-0014). `plugin` and
+ * `marketplace` bodies are the real Claude Code `plugin.json` /
+ * `marketplace.json` manifest — not a hand-authored pointer doc, superseding
+ * ADR-0010's markdown-only body for `marketplace`.
  */
 export type BodyShape = 'markdown' | 'json';
 
 export function getBodyShape(type: ResourceType): BodyShape {
-  return type === 'mcp-config' ? 'json' : 'markdown';
+  return type === 'mcp-config' || type === 'plugin' || type === 'marketplace'
+    ? 'json'
+    : 'markdown';
 }
 
 /**
- * Whether downloading the body delivers the artifact itself. True for the
- * types whose body IS the installable content (skill files, agent
- * definition, hook/mcp-config config to merge). False for the pointer-shaped
- * bodies: a `plugin` installs through its framework
- * (`/plugin install name@marketplace`) and a `marketplace` is *registered*,
- * not fetched — for both, a download could only deliver the instructions
- * doc, misrepresenting itself as the thing (ADR-0009 amendment, ADR-0010).
+ * Whether downloading the body delivers the artifact itself. True for every
+ * type: `plugin`/`marketplace` bodies are now the real manifest JSON, so a
+ * download delivers that file itself rather than a non-actionable pointer
+ * doc (ADR-0014, superseding ADR-0009's amendment and ADR-0010 on this
+ * point).
  */
-export function hasDownloadableArtifact(type: ResourceType): boolean {
-  return type !== 'marketplace' && type !== 'plugin';
+export function hasDownloadableArtifact(_type: ResourceType): boolean {
+  return true;
 }
 
 /**
  * Whether copying the body to the clipboard is a meaningful install action.
- * False only for `marketplace`: its body is an instructions doc, and the
- * actionable copies (add command, team snippet) each carry their own copy
- * button — a "Copy content" that delivers the doc misrepresents itself as
- * the marketplace, mirroring the Download reasoning (ADR-0010). A `plugin`
- * body keeps copy: it is the canonical per-framework install guidance.
+ * True for every type: `marketplace`'s body is now the real manifest JSON,
+ * not an instructions doc, so copying it is no longer a misrepresentation
+ * (ADR-0014, superseding ADR-0010 on this point).
  */
-export function hasCopyableBody(type: ResourceType): boolean {
-  return type !== 'marketplace';
+export function hasCopyableBody(_type: ResourceType): boolean {
+  return true;
 }
 
 /**

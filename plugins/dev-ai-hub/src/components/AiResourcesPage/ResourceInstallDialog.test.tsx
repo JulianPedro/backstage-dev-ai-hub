@@ -15,6 +15,14 @@ jest.mock('react-markdown', () => ({
   default: ({ children }: any) => <div data-testid="markdown">{children}</div>,
 }));
 
+jest.mock('react-syntax-highlighter', () => {
+  const PrismLight = ({ children }: any) => (
+    <pre data-testid="json-body">{children}</pre>
+  );
+  PrismLight.registerLanguage = jest.fn();
+  return { PrismLight };
+});
+
 jest.mock('@backstage/ui', () => ({
   Text: ({ children }: any) => <span>{children}</span>,
   Button: ({ children, onPress, isDisabled }: any) => (
@@ -207,13 +215,19 @@ describe('ResourceInstallDialog — agent frame (launcher gating)', () => {
 });
 
 describe('ResourceInstallDialog — plugin frame', () => {
-  it('renders the body doc as markdown and no install paths', () => {
+  it('renders the body as a pretty-printed JSON manifest, not markdown (ADR-0014)', () => {
     renderDialog(
       { type: 'plugin' },
-      { content: '# Plugin readme', contentType: 'text/markdown' },
+      {
+        content: '{"name":"my-plugin","version":"1.0.0"}',
+        contentType: 'application/json',
+      },
     );
 
-    expect(screen.getByTestId('markdown')).toHaveTextContent('# Plugin readme');
+    expect(screen.getByTestId('json-body')).toHaveTextContent(
+      '"name": "my-plugin"',
+    );
+    expect(screen.queryByTestId('markdown')).not.toBeInTheDocument();
   });
 });
 
@@ -233,22 +247,26 @@ describe('ResourceInstallDialog — marketplace frame', () => {
     expect(screen.getByText('2. Install plugins from it')).toBeInTheDocument();
   });
 
-  it('falls back to the body doc when no repo slug can be derived', () => {
+  it('falls back to the JSON manifest body when no repo slug can be derived (ADR-0014)', () => {
     renderDialog(
       {
         type: 'marketplace',
         name: 'my-marketplace',
         sourceLocation: undefined,
       },
-      { content: '# Marketplace readme', contentType: 'text/markdown' },
+      {
+        content: '{"name":"my-marketplace","plugins":[]}',
+        contentType: 'application/json',
+      },
     );
 
     expect(
       screen.queryByText('1. Add the marketplace to your AI tool'),
     ).not.toBeInTheDocument();
-    expect(screen.getByTestId('markdown')).toHaveTextContent(
-      '# Marketplace readme',
+    expect(screen.getByTestId('json-body')).toHaveTextContent(
+      '"name": "my-marketplace"',
     );
+    expect(screen.queryByTestId('markdown')).not.toBeInTheDocument();
   });
 });
 

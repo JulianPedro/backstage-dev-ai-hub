@@ -40,6 +40,7 @@ import {
   type ResourceBody,
 } from '../../api/DevAiHubResourceClient';
 import { ToolIcon } from '../ToolIcon';
+import { JsonBody } from './JsonBody';
 import { frameworkLabel } from './typeMeta';
 import styles from './ResourceInstallDialog.module.css';
 
@@ -299,9 +300,13 @@ export function ResourceInstallDialog({
     ? getMarketplaceAddCommands(resource.frameworks, marketplaceRepoSlug)
     : [];
   const hasMarketplaceJourney = marketplaceAddCommands.length > 0;
+  // plugin/marketplace bodies are the real manifest JSON (ADR-0014), so this
+  // markdown fallback can only fire if shape is still 'markdown' — kept for
+  // the (currently unreachable) case bodyShape ever becomes content-driven.
   const showBodyDoc =
-    resource.type === 'plugin' ||
-    (resource.type === 'marketplace' && !hasMarketplaceJourney);
+    shape === 'markdown' &&
+    (resource.type === 'plugin' ||
+      (resource.type === 'marketplace' && !hasMarketplaceJourney));
 
   // skill/hook install by instructing the agent, so each host gets a row that
   // is actionable on its own: a launcher where the host has a prompt URI, a
@@ -373,9 +378,7 @@ export function ResourceInstallDialog({
           </Text>
 
           {body && shape === 'json' && (
-            <pre className={styles.codeBlock}>
-              <code>{body.content}</code>
-            </pre>
+            <JsonBody content={body.content} className={styles.codeBlock} />
           )}
 
           {hasMarketplaceJourney && marketplaceRepoSlug && (

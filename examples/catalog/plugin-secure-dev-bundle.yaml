@@ -9,7 +9,7 @@ metadata:
     into a single installable package for secure development workflows.
   tags: [security, bundle, plugin, workflow]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/plugins/secure-dev-bundle.md
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/plugins/secure-dev-bundle.json
 spec:
   type: plugin
   lifecycle: production

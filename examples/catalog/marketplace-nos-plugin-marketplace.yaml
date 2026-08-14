@@ -6,7 +6,7 @@ metadata:
   description: Curated marketplace of approved NOS plugins for AI coding tools. Add it once to your tool, then install its plugins from it.
   tags: [marketplace, curated]
   annotations:
-    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.md
+    backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.json
     devaihub.io/version: 1.0.0
 spec:
   type: marketplace

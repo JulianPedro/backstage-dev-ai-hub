@@ -1,0 +1,12 @@
+{
+  "name": "secure-dev-bundle",
+  "description": "Bundles the approved-github-workflows skill, security-threat-modeller agent, post-edit-lint hook, and grafana-mcp config into a single installable package for secure development workflows.",
+  "version": "1.0.0",
+  "author": {
+    "name": "NOS Portugal — AI Platform Team",
+    "url": "https://github.com/nosportugal"
+  },
+  "homepage": "https://github.com/nosportugal/backstage-plugin-dev-ai-hub",
+  "repository": "https://github.com/nosportugal/backstage-plugin-dev-ai-hub",
+  "keywords": ["security", "bundle", "workflow"]
+}
