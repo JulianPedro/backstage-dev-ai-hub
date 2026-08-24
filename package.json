@@ -62,7 +62,7 @@
     "express/path-to-regexp": "0.1.13",
     "protobufjs": ">=7.5.5",
     "undici": ">=6.24.0",
-    "vm2": ">=3.11.1",
+    "vm2": ">=3.11.6",
     "@backstage/backend-defaults": ">=0.12.2"
   },
   "packageManager": "yarn@4.13.0"
