@@ -51,7 +51,7 @@
   },
   "resolutions": {
     "axios": ">=1.15.2",
-    "fast-uri": ">=3.1.2",
+    "fast-uri": ">=4.1.2",
     "fast-xml-builder": ">=1.1.7",
     "fast-xml-parser": ">=5.5.6",
     "flatted": ">=3.4.2",
