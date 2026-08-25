@@ -43,10 +43,10 @@ jobs:
       summary: ${{ steps.summary.outputs.summary }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6.3.0
+        uses: actions/setup-node@v7.0.0
         with:
           node-version: "24"
 
@@ -60,7 +60,7 @@ jobs:
         run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Yarn downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
@@ -73,7 +73,7 @@ jobs:
       # Cache the Playwright browser binary keyed on the lockfile so a
       # cache hit skips the multi-hundred-MB download entirely.
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -98,7 +98,7 @@ jobs:
         continue-on-error: true
 
       - name: Write step summary
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         if: always()
         with:
           script: |
@@ -181,7 +181,7 @@ jobs:
             }
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
@@ -191,7 +191,7 @@ jobs:
       # Hand the per-state screenshots to the gallery job (also a downloadable
       # fallback when the inline gallery can't be published, e.g. fork PRs).
       - name: Upload screenshots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() && env.SCREENSHOT_GALLERY == 'true' }}
         with:
           name: e2e-screenshots
@@ -202,7 +202,7 @@ jobs:
       # Build the markdown results summary and expose it as a job output —
       # the gallery job owns posting the single sticky PR comment.
       - name: Build results summary
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         if: always()
         id: summary
         with:
@@ -299,7 +299,7 @@ jobs:
       - name: Download screenshots
         if: ${{ env.SCREENSHOT_GALLERY == 'true' && github.event.pull_request.head.repo.full_name == github.repository }}
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: e2e-screenshots
           path: e2e-screenshots
@@ -423,7 +423,7 @@ jobs:
       # gallery is disabled, skipped, or fails, the gallery output is empty and
       # only the summary shows.
       - name: Sticky PR comment (results + screenshots)
-        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         if: ${{ always() && github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           # Update the same comment in place on every run (identified by header),

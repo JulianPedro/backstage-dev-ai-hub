@@ -22,10 +22,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2 # v6.0.2
+        uses: actions/checkout@v7.0.1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6.3.0 # v6.3.0
+        uses: actions/setup-node@v7.0.0 # v7.0.0
         with:
           node-version: "24"
 
@@ -39,7 +39,7 @@ jobs:
         run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Yarn downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
@@ -71,7 +71,7 @@ jobs:
       # so a red run still reports; Build stays gated on success and is skipped.
       - name: Report tests & coverage
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
-        uses: MishaKav/jest-coverage-comment@40d7aed38d0fbaea266c34c12ab06356eec894eb # v1.0.33
+        uses: MishaKav/jest-coverage-comment@642ef024cc554a34b7082cea12c7bf63575ae151 # v1.0.36
         with:
           title: Test & Coverage Report
           coverage-summary-path: ./coverage/coverage-summary.json
@@ -92,13 +92,13 @@ jobs:
       checks: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2 # v6.0.2
+        uses: actions/checkout@v7.0.1 # v6.0.2
         with:
           # Full history so pre-commit can diff the changeset (base..head).
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6.3.0 # v6.3.0
+        uses: actions/setup-node@v7.0.0 # v6.3.0
         with:
           node-version: "24"
 
@@ -112,7 +112,7 @@ jobs:
         run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Yarn downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
@@ -123,7 +123,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -133,7 +133,7 @@ jobs:
       # 1) Informational inline comments on the PRISTINE tree (accurate line numbers,
       #    before the pre-commit gate mutates files via --fix).
       - name: reviewdog yamllint
-        uses: reviewdog/action-yamllint@f01d8a48fd8d89f89895499fca2cff09f9e9e8c0 # v1.21.0
+        uses: reviewdog/action-yamllint@de68272fdca5f2a961fb309e0d2e13c2eb186d9e # v1.23.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
@@ -142,7 +142,7 @@ jobs:
           yamllint_flags: -c .yamllint.yml .
 
       - name: reviewdog markdownlint
-        uses: reviewdog/action-markdownlint@3667398db9118d7e78f7a63d10e26ce454ba5f58 # v0.26.2
+        uses: reviewdog/action-markdownlint@6f0e0e8703a9e840ffefa37a2775832c51c1c640 # v0.28.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
@@ -179,7 +179,7 @@ jobs:
       # 3) Turn pre-commit's auto-fixes (prettier/markdownlint --fix) into committable
       #    inline PR suggestions.
       - name: Suggest fixes
-        uses: reviewdog/action-suggester@aa38384ceb608d00f84b4690cacc83a5aba307ff # v1.24.0
+        uses: reviewdog/action-suggester@2558ba17e65a9039e73764a73009fc05fef28a46 # v1.24.3
         with:
           tool_name: pre-commit
           filter_mode: diff_context
