@@ -1,6 +1,6 @@
 # Example Backstage app-config.yaml additions for the Dev AI Hub plugin.
-# Requires Backstage 1.51 or later — the AiResource kind comes from Backstage's
-# own alpha catalog module.
+# Requires Backstage 1.54 or later — the AiResource kind comes from Backstage's
+# own alpha catalog module, and the plugin/marketplace subtypes arrived in 1.54.0.
 #
 # 1. Register the AiResource kind and the backend plugin in
 #    packages/backend/src/index.ts:

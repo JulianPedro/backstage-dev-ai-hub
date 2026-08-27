@@ -61,11 +61,9 @@ interface ResourceSummary {
   owner?: string;
   sourceLocation?: string;
   frameworks: string[];
-  version?: string;
+  version?: string;            // native spec.version
   kind: string;
-  parents: string[];           // entityRefs, from devaihub.io/parent (ADR-0013)
-  children: string[];          // entityRefs, inverted backend-side
-  childCount?: number;         // children.length
+  childCount?: number;         // plugin/marketplace child count (spec.skills/spec.plugins); unpopulated until containment lands (#32)
   helpText?: string;           // parsed from devaihub.io/help annotation
   annotations: Record<string, string>;
 }
@@ -119,13 +117,14 @@ GET /api/dev-ai-hub/entity/:ref/raw
 | `agent` | pink `#EB84CD` | 🤖 | Default shape + annotations |
 | `hook` | yellow `#FCD200` | 🪝 | Default shape + annotations |
 | `mcp-config` | turquoise `#4BDBC5` | 🔌 | Default shape + annotations |
-| `plugin` | blue `#4F60D2` | 🧩 | Default shape + `devaihub.io/parent` containment (children: skill/agent/hook/mcp-config, ADR-0013) |
-| `marketplace` | coral `#F26B43` | 🏪 | Default shape + `devaihub.io/parent` containment (children: plugin only, ADR-0010) |
+| `plugin` | blue `#4F60D2` | 🧩 | Structured (`spec.skills` **required**, `spec.version`; children: skill/agent/hook/mcp-config) |
+| `marketplace` | coral `#F26B43` | 🏪 | Structured (`spec.plugins` **required**, `spec.version`; children: plugin only, ADR-0010) |
 
-> Upstream emits `dependsOn` relations for `spec.type: skill` only — never for the two container
-> types — so containment is declared by the child in a comma-separated `devaihub.io/parent`
-> annotation and inverted backend-side over the same catalog read `/resources` already makes
-> (ADR-0013).
+> Backstage 1.54.0 gave both container types a structured subtype: `spec.skills` (plugin) and
+> `spec.plugins` (marketplace) are **required**, and upstream generates `hasPart`/`partOf`
+> relations from them. That falsified the premise ADR-0013 was built on — it chose child-side
+> `devaihub.io/parent` precisely because no native mechanism existed — so the containment
+> direction the plugin reads is reopened in ADR-0015. Neither read path is implemented yet.
 
 ## Trust model (ADR-0005)
 

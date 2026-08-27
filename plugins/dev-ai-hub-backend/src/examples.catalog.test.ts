@@ -21,11 +21,30 @@ import {
   RESOURCE_TYPES,
   type ResourceType,
 } from '@nospt/plugin-dev-ai-hub-common';
+import type { Entity, KindValidator } from '@backstage/catalog-model';
+import {
+  aiResourceEntityV1alpha1Validator,
+  skillAiResourceEntityV1alpha1Validator,
+  pluginAiResourceEntityV1alpha1Validator,
+  marketplaceAiResourceEntityV1alpha1Validator,
+} from '@backstage/catalog-model/alpha';
 
 // Path relative to this file: ../../../examples/catalog/
 const CATALOG_DIR = path.resolve(__dirname, '../../../examples/catalog');
 
 const VALID_TYPES = RESOURCE_TYPES;
+
+// The upstream schema (Backstage 1.54) enforces subtype-specific required
+// fields — `spec.skills` on `plugin`, `spec.plugins` on `marketplace`. Types
+// without a dedicated subtype validate against the base AiResource schema.
+const VALIDATOR_BY_TYPE: Record<ResourceType, KindValidator> = {
+  skill: skillAiResourceEntityV1alpha1Validator,
+  plugin: pluginAiResourceEntityV1alpha1Validator,
+  marketplace: marketplaceAiResourceEntityV1alpha1Validator,
+  agent: aiResourceEntityV1alpha1Validator,
+  hook: aiResourceEntityV1alpha1Validator,
+  'mcp-config': aiResourceEntityV1alpha1Validator,
+};
 
 interface ParsedEntity {
   apiVersion: string;
@@ -112,6 +131,15 @@ describe('examples/catalog — AiResource fixture validation (#27)', () => {
     it('has backstage.io/source-location annotation', () => {
       const loc = entity.metadata.annotations?.['backstage.io/source-location'];
       expect(loc).toBeTruthy();
+    });
+
+    it('validates against the upstream 1.54 schema for its spec.type', async () => {
+      const validator = VALIDATOR_BY_TYPE[entity.spec.type as ResourceType];
+      // check() throws with the schema error on a known-but-invalid entity
+      // (e.g. a `plugin` missing spec.skills) and resolves true when valid.
+      await expect(validator.check(entity as unknown as Entity)).resolves.toBe(
+        true,
+      );
     });
   });
 

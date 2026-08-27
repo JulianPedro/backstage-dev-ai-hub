@@ -1,6 +1,6 @@
 # AiResource Catalog Entity Specification
 
-> Version: `v1.0` (aligned with Backstage `v1.51.0+` and `@backstage/plugin-catalog-backend-module-ai-model` alpha)
+> Version: `v1.1` (aligned with Backstage `v1.54.5` and `@backstage/plugin-catalog-backend-module-ai-model@0.1.3` alpha)
 >
 > **Scope:** This document defines the canonical shape of `AiResource` entities that DevAI Hub consumes.
 > It is the contract between **producers** (authors of `catalog-info.yaml`, EntityProviders) and
@@ -41,9 +41,6 @@ metadata:
     backstage.io/managed-by-location: file:./catalog-info.yaml
     backstage.io/managed-by-origin-location: url:https://github.com/org/ai-assets
 
-    # DevAI Hub custom annotations (namespace = devaihub; §4).
-    devaihub.io/version: "1.2.0"
-
 spec:
   # Required — one of: skill, agent, hook, mcp, plugin, marketplace
   type: skill
@@ -53,6 +50,14 @@ spec:
 
   # Required — entity ref (group: or user:) responsible for this asset.
   owner: group:ai-platform-team
+
+  # Optional — native semantic version string, displayed on cards. Declared
+  # upstream for `plugin`/`marketplace` and accepted on every type (the kind
+  # schemas set no `additionalProperties: false`), so DevAI Hub reads it for
+  # all six. Replaces the retired `devaihub.io/version` annotation.
+  # Must be a string. A three-part `1.2.0` needs no quotes, but a two-part
+  # `1.0` parses as a YAML float and is silently dropped — quote those.
+  version: 1.2.0
 
   # Optional — the System this resource belongs to.
   system: ai-toolkit
@@ -194,23 +199,36 @@ config in annotations invited drift with the body (issue #30 decision record).
 
 ### 3.5 `plugin` — composite container (ADR-0013)
 
-A plugin does not list its children.
-**Each child names the plugin**, in a `devaihub.io/parent` annotation on the child entity — upstream emits `dependsOn` relations for `spec.type: skill` only, so a container cannot express containment natively (ADR-0013).
+**`spec.skills` is REQUIRED** as of Backstage 1.54.0: `plugin` gained a structured
+subtype whose schema rejects an entity without it. Upstream generates `hasPart`
+relations from it (reverse: `partOf`). Despite the field name, its `allowedKinds`
+is `[AiResource]` — `agent`, `hook` and `mcp-config` members are legal.
 
 ```yaml
-# The plugin itself declares no children.
 spec:
   type: plugin
   lifecycle: production
   owner: group:ai-platform-team
   agents: [github-copilot, claude-code]
+  version: "2.0.0"
+  # REQUIRED (Backstage 1.54.0+) — entity refs of the contained resources.
+  skills:
+    - airesource:default/approved-github-workflows
+    - airesource:default/post-edit-lint
 
 metadata:
   annotations:
     devaihub.io/parent: nos-plugin-marketplace   # its marketplace(s), if any
-    devaihub.io/version: "2.0.0"
     devaihub.io/plugin-manifest: "true"
 ```
+
+> **Open decision (ADR-0015).** ADR-0013 chose child-side containment via
+> `devaihub.io/parent` on the premise that containers *could not* express
+> containment natively. Backstage 1.54.0 falsified that premise, and ADR-0013's
+> own closing consequence names this as its revisit trigger. The native field is
+> now mandatory, so it must be authored regardless; whether `devaihub.io/parent`
+> stays as a second path, and which direction the backend reads, is undecided.
+> The rendering behaviour below is still a design record — no code implements it.
 
 ```yaml
 # Each child claims membership, e.g. examples/catalog/skill-approved-github-workflows.yaml
@@ -222,7 +240,7 @@ spec:
   type: skill
 ```
 
-**Rendering behaviour:** the backend inverts every `devaihub.io/parent` declaration over its catalog read and serves `parents`, `children`, and `childCount` on `ResourceSummary`.
+**Rendering behaviour (design record — not yet implemented):** the backend inverts every `devaihub.io/parent` declaration over its catalog read and serves `parents`, `children`, and `childCount` on `ResourceSummary`.
 The `PluginCard` lists its children, linking to each child's detail panel; the child card shows "part of: secure-dev-bundle" straight from its own `parents`.
 Children of the wrong type (a plugin claiming a skill as parent) and parents the caller cannot see are silently not rendered.
 
@@ -232,21 +250,23 @@ points straight at that file.
 
 ### 3.6 `marketplace` — plugin distribution point (ADR-0010)
 
+**`spec.plugins` is REQUIRED** as of Backstage 1.54.0, on the same footing as
+`spec.skills` for `plugin` (§3.5): the marketplace subtype's schema rejects an
+entity without it, and upstream generates `hasPart`/`partOf` relations from it.
+
 ```yaml
-# The marketplace declares no plugins; each plugin claims membership
-# with devaihub.io/parent: <this marketplace's metadata.name> (ADR-0013).
 spec:
   type: marketplace
   lifecycle: production
   owner: group:ai-platform-team
   agents: [claude-code, github-copilot]
-
-metadata:
-  annotations:
-    devaihub.io/version: "1.0.0"
+  version: "1.0.0"
+  # REQUIRED (Backstage 1.54.0+) — entity refs of the contained plugins.
+  plugins:
+    - airesource:default/secure-dev-bundle
 ```
 
-**No native spec fields.** A marketplace mirrors an AI-tool plugin marketplace (e.g. a Git repo
+**Otherwise no native spec fields.** A marketplace mirrors an AI-tool plugin marketplace (e.g. a Git repo
 carrying `.claude-plugin/marketplace.json`): the user installs the marketplace into their tool
 (`/plugin marketplace add org/repo`) and can then install its plugins.
 
@@ -268,7 +288,7 @@ carrying `.claude-plugin/marketplace.json`): the user installs the marketplace i
   `devaihub.io/marketplace-url` annotation — the repo reference lives only in the body and
   `source-location` (issue #30 precedent: annotations duplicating install config invite drift).
 - Child plugins appear in DevAI Hub only if the producer also authors their entities and links
-  them via `dependsOn` (the plugin remains a pure consumer, ADR-0004).
+  them via `spec.plugins` (the plugin remains a pure consumer, ADR-0004).
 
 ---
 
@@ -280,7 +300,6 @@ All custom annotations use the `devaihub.io/` prefix. These are namespaced to av
 |---|---|---|
 | `devaihub.io/compatible-frameworks` | all types | Comma-separated framework tokens (§2.2). |
 | `devaihub.io/parent` | all types | Comma-separated container(s) this resource belongs to — bare `metadata.name` (own namespace) or full `airesource:ns/name`. Containment is declared child-side (ADR-0013). |
-| `devaihub.io/version` | all types | Semantic version string; displayed on cards. |
 | `devaihub.io/role` | agent | Display subtitle (e.g. "security reviewer"). |
 | `devaihub.io/hook-event` | hook | Event name that triggers this hook. |
 | `devaihub.io/hook-matcher` | hook | Regex or glob for scope matching. |
@@ -309,11 +328,11 @@ metadata:
   tags: [security, github, review]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/tree/main-nos/examples/skills/approved-github-workflows/
-    devaihub.io/version: "1.0.0"
 spec:
   type: skill
   lifecycle: production
   owner: group:ai-platform-team
+  version: "1.0.0"
   agents: [github-copilot, cursor, claude-code]
   disciplines: [security, devops]
   categories: [review, compliance]
@@ -391,14 +410,15 @@ metadata:
   tags: [security, bundle]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/plugins/secure-dev-bundle.json
-    devaihub.io/version: "2.1.0"
     devaihub.io/plugin-manifest: "true"
 spec:
   type: plugin
   lifecycle: production
+  version: "2.1.0"
   owner: group:security-team
   agents: [github-copilot, claude-code]
-  dependsOn:
+  # REQUIRED (Backstage 1.54.0+) — entity refs of the contained resources.
+  skills:
     - airesource:default/approved-github-workflows
     - airesource:default/security-threat-modeller
     - airesource:default/post-edit-lint
@@ -417,13 +437,14 @@ metadata:
   tags: [marketplace, curated]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.json
-    devaihub.io/version: "1.0.0"
 spec:
   type: marketplace
   lifecycle: production
   owner: group:ai-platform-team
+  version: "1.0.0"
   agents: [claude-code, github-copilot]
-  dependsOn:
+  # REQUIRED (Backstage 1.54.0+) — entity refs of the contained plugins.
+  plugins:
     - airesource:default/security-toolkit
 ```
 
@@ -437,7 +458,8 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 - [ ] `spec.type` is one of the six supported tokens.
 - [ ] `backstage.io/source-location` points at the body: a raw file URL for a single-file body, or a `/`-terminated directory URL for a resource-bearing body (viewed via its entry file, downloaded as one zip).
 - [ ] `spec.agents` (any type) or `devaihub.io/compatible-frameworks` lists at least one framework token (or `all`) — `spec.agents`, when present, is preferred over the annotation.
-- [ ] For `plugin`/`marketplace` children, the child declares `devaihub.io/parent` naming its container (ADR-0013) — containers list no children of their own.
+- [ ] For `plugin`, `spec.skills` lists the contained resources; for `marketplace`, `spec.plugins` lists the contained plugins. **Required** since Backstage 1.54.0 — the catalog rejects the entity otherwise (§3.5, §3.6).
+- [ ] Child-side `devaihub.io/parent` is unchanged pending ADR-0015, and is not a substitute for the required native field above.
 - [ ] For `plugin`/`marketplace` types, `source-location` points at the real `plugin.json`/`marketplace.json` manifest — the body **is** that file, rendered as JSON (ADR-0014).
 - [ ] For `marketplace` types, the manifest lives **inside the marketplace repo** and `metadata.name` equals the `name` in `marketplace.json` (the consumer derives add commands from `source-location`).
 - [ ] `metadata.name` is kebab-case and unique within the namespace.
@@ -448,6 +470,7 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 
 | If upstream ships… | Then DevAI Hub should… |
 |---|---|
-| Structured subtype for `agent` / `hook` / `mcp-config` / `plugin` / `marketplace` | Migrate annotation fields into native spec fields; drop annotations. |
+| Structured subtype for `agent` / `hook` / `mcp-config` | Migrate annotation fields into native spec fields; drop annotations. |
+| ~~Structured subtype for `plugin` / `marketplace`~~ — **shipped in Backstage 1.54.0** | **Fired.** `spec.version` adopted (annotation `devaihub.io/version` retired); `spec.skills` / `spec.plugins` now required (§3.5, §3.6). Containment direction pending ADR-0015. |
 | Content-in-catalog reference (backstage/backstage#34318) | Drop the bespoke body resolver; serve body from catalog directly. |
 | AiResource graduates from alpha | Remove `/alpha` imports; drop type-guard adapters. |

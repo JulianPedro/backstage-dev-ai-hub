@@ -2,7 +2,7 @@
 
 Isomorphic contracts shared by the **Dev AI Hub** frontend and backend plugins.
 
-> **Requires Backstage 1.51 or later.** The `AiResource` kind comes from Backstage's own alpha catalog module, which is not available before that.
+> **Requires Backstage 1.54 or later.** The `AiResource` kind comes from Backstage's own alpha catalog module, and these packages depend on `@backstage/catalog-model@^1.10.0` — first shipped in 1.54.0, along with the `plugin` and `marketplace` subtypes.
 
 **You do not install this package directly.** It arrives as a dependency of [`@nospt/plugin-dev-ai-hub`](https://www.npmjs.com/package/@nospt/plugin-dev-ai-hub) and [`@nospt/plugin-dev-ai-hub-backend`](https://www.npmjs.com/package/@nospt/plugin-dev-ai-hub-backend), and the three publish in lockstep at the same version.
 

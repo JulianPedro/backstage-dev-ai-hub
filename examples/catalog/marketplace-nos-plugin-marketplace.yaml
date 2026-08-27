@@ -7,15 +7,17 @@ metadata:
   tags: [marketplace, curated]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/marketplaces/nos-plugin-marketplace.json
-    devaihub.io/version: 1.0.0
 spec:
   type: marketplace
   lifecycle: production
   owner: group:ai-platform-team
+  version: 1.0.0
   # Compatible frameworks (native field — honoured for any spec.type, not just
   # `skill`; takes priority over devaihub.io/compatible-frameworks when present).
   agents:
     - claude-code
     - github-copilot
-  dependsOn:
+  # Contained plugins. Upstream requires this field on `spec.type: marketplace`
+  # (Backstage 1.54.0) and generates hasPart/partOf relations from it.
+  plugins:
     - airesource:default/secure-dev-bundle

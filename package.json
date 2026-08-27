@@ -27,8 +27,8 @@
     "prepare": "pre-commit install || true"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.36.2",
-    "@backstage/cli-defaults": "^0.1.2",
+    "@backstage/cli": "^0.36.5",
+    "@backstage/cli-defaults": "^0.1.5",
     "@playwright/test": "^1.48.0",
     "@stryker-mutator/core": "9.6.1",
     "@stryker-mutator/typescript-checker": "9.6.1",

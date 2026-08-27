@@ -14,7 +14,7 @@ spec:
 
 ## skill
 
-The only type with a formal native spec shape — `agents` is one of several fields it defines:
+The type with the richest formal native spec shape — `agents` is one of several fields it defines (`plugin` and `marketplace` also carry required native fields, `spec.skills` / `spec.plugins`; see their sections):
 
 ```yaml
 spec:
@@ -27,7 +27,7 @@ spec:
   usecases: ['CI/CD hardening']
 ```
 
-`disciplines`, `categories`, `usecases` and `allowedTools` reach the catalog but not the hub — nothing renders them.
+`disciplines`, `categories`, `usecases` and `allowedTools` reach the catalog but not the hub — nothing renders them. `allowedTools` is a **space-separated string** (`'Read Edit WebSearch'`), not an array; an array is a drop.
 
 A skill body is usually a directory: end `source-location` with `/` and put a `SKILL.md` at the tree root. This is the one type multi-file suits — every host installs a skill as a directory, so the tree lands intact.
 
@@ -77,13 +77,25 @@ A pointer, not content: a plugin installs through its host's own plugin system, 
 
 Point `source-location` at `plugin.json`, wherever the plugin actually lives (`plugins/<name>/.claude-plugin/plugin.json`) — not at a README or other doc written about the plugin.
 
-`devaihub.io/plugin-manifest` is not rendered. A plugin lists no children — see the containment note in `SKILL.md`.
+**`spec.skills` is required — omit it and the entity drops.** It lists entity refs of the resources the plugin bundles, and the catalog builds `hasPart` relations from them. The field name misleads: any `AiResource` is a legal member, so agents, hooks and mcp-configs belong in the same list.
+
+```yaml
+spec:
+  type: plugin
+  skills:
+    - airesource:default/approved-github-workflows
+    - airesource:default/post-edit-lint
+```
+
+`devaihub.io/plugin-manifest` is not rendered, and the hub lists no children — see the containment note in `SKILL.md`.
 
 ## marketplace
 
 A distribution point, registered rather than fetched: **no download and no copy**. The actionable snippets each carry their own copy button, generated from the entity.
 
-Three rules, and breaking any one degrades the dialog to the rendered body alone:
+**`spec.plugins` is required — omit it and the entity drops.** It lists entity refs of the plugins the marketplace carries; the catalog builds `hasPart` relations from them.
+
+Three further rules, and breaking any one degrades the dialog to the rendered body alone:
 
 1. `source-location` must be a `github.com` URL — the `owner/repo` slug is derived from it to build `/plugin marketplace add owner/repo`.
 2. `marketplace.json` must live **inside the marketplace repo itself**, since that same URL supplies the slug.

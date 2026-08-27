@@ -2,7 +2,7 @@
 
 The frontend half of **Dev AI Hub** — a catalog-backed browser for AI assets usable by GitHub Copilot, Claude Code, Google Gemini, Cursor and other AI coding tools.
 
-> **Requires Backstage 1.51 or later.** The `AiResource` kind comes from Backstage's own alpha catalog module, which is not available before that.
+> **Requires Backstage 1.54 or later.** The `AiResource` kind comes from Backstage's own alpha catalog module, and these packages depend on `@backstage/catalog-model@^1.10.0` — first shipped in 1.54.0, along with the `plugin` and `marketplace` subtypes.
 
 ![The Dev AI Hub browse page](https://raw.githubusercontent.com/nosportugal/backstage-plugin-dev-ai-hub/main-nos/docs/screenshot.png)
 

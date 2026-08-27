@@ -19,7 +19,11 @@ spec:
   agents:
     - claude-code
     - github-copilot
-  dependsOn:
+  # Contained resources. Upstream requires this field on `spec.type: plugin`
+  # (Backstage 1.54.0) and generates hasPart/partOf relations from it. Despite
+  # the name, `allowedKinds` is `[AiResource]`, so agents/hooks/mcp-configs are
+  # legal members too.
+  skills:
     - airesource:default/approved-github-workflows
     - airesource:default/security-threat-modeller
     - airesource:default/post-edit-lint

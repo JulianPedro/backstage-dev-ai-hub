@@ -7,11 +7,11 @@ metadata:
   tags: [api, architect, codegen]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/agents/api-architect.md
-    devaihub.io/version: 1.0.0
 spec:
   type: agent
   lifecycle: production
   owner: group:ai-platform-team
+  version: 1.0.0
   # Compatible frameworks (native field — honoured for any spec.type, not just
   # `skill`; takes priority over devaihub.io/compatible-frameworks when present).
   agents:

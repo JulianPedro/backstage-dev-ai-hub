@@ -43,7 +43,7 @@ spec:
   agents: [claude-code, github-copilot]
 ```
 
-`kind`, `apiVersion`, `spec.type` and `metadata.name` are the drop gates. The rest degrades rather than drops:
+`kind`, `apiVersion`, `spec.type` and `metadata.name` are the drop gates on every type. `plugin` and `marketplace` each carry one more — a required list of what they contain (`TYPES.md`). The rest degrades rather than drops:
 
 | Field | Omitted → |
 |---|---|
@@ -53,6 +53,7 @@ spec:
 | `backstage.io/source-location` | No body, no install, no download. Browsable only. |
 | `metadata.title` | `name` is displayed instead. |
 | `metadata.description` | No description, and search cannot match it. |
+| `spec.version` | No version chip on the card. Native field on every type — the `devaihub.io/version` annotation it replaced is no longer read, so YAML copied from an older example loses its chip. |
 | `devaihub.io/compatible-frameworks` (and no `spec.agents` either) | No framework badges. `skill` falls back to `.agents/skills/<name>/`; `agent` falls back to `.ai/agents/<name>.md`; `hook` and `mcp-config` produce no install rows at all; `plugin` and `marketplace` are unaffected — they never had a filesystem install path. |
 
 ### project-slug
@@ -143,8 +144,8 @@ Walk the entity against each gate and name a verdict for every line — a gate y
 
 Then state to the user which of the six types you wrote, where the body lives, and which frameworks will show install instructions.
 
-## Containment is inert
+## Containment renders nowhere
 
-`spec.dependsOn` and `devaihub.io/parent` are read by nothing today. The backend never resolves either, and `childCount` is never populated, so a `plugin` renders no child list and a child shows no parent — regardless of what you write.
+`plugin` and `marketplace` must declare what they contain or the catalog rejects them (`TYPES.md`) — but the hub renders none of it. `childCount` is never populated and `devaihub.io/parent` is read by nothing, so a `plugin` shows no child list and a child shows no parent.
 
-Author them if you want the YAML ready for when containment ships, but never tell a user their plugin will list its children.
+Write the required field because omitting it is a drop, never because it will list children in the UI.

@@ -3,6 +3,7 @@ dist-types
 coverage
 e2e-test-report
 e2e-screenshots
+reports
 playwright-report
 test-results
 .claude

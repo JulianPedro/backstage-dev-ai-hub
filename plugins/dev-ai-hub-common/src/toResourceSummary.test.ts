@@ -28,7 +28,6 @@ describe('toResourceSummary', () => {
           annotations: {
             'backstage.io/source-location':
               'url:https://github.com/org/repo/blob/main/skill.yaml',
-            'devaihub.io/version': '1.0.0',
             'devaihub.io/help': 'Some help text',
           },
         },
@@ -37,6 +36,7 @@ describe('toResourceSummary', () => {
           lifecycle: 'production',
           owner: 'group:ai-platform-team',
           agents: ['claude-code'],
+          version: '1.0.0',
         },
       }),
     );
@@ -58,7 +58,6 @@ describe('toResourceSummary', () => {
       annotations: {
         'backstage.io/source-location':
           'url:https://github.com/org/repo/blob/main/skill.yaml',
-        'devaihub.io/version': '1.0.0',
         'devaihub.io/help': 'Some help text',
       },
     });

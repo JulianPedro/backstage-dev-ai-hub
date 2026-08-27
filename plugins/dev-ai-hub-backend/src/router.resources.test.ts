@@ -22,7 +22,6 @@ const SKILL_ENTITY: Entity = {
       'backstage.io/source-location':
         'url:https://github.com/org/repo/blob/main/skill.yaml',
       'devaihub.io/compatible-frameworks': 'cursor',
-      'devaihub.io/version': '1.0.0',
     },
   },
   spec: {
@@ -30,6 +29,7 @@ const SKILL_ENTITY: Entity = {
     lifecycle: 'production',
     owner: 'group:ai-platform-team',
     agents: ['github-copilot', 'claude-code'],
+    version: '1.0.0',
   },
 };
 

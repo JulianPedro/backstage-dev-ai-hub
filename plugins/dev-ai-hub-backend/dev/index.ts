@@ -4,7 +4,7 @@ const backend = createBackend();
 
 // Catalog — sole source of truth for AiResource entities (ADR-0001)
 backend.add(import('@backstage/plugin-catalog-backend'));
-// Registers the AiResource kind (Backstage >= 1.51, alpha)
+// Registers the AiResource kind (Backstage >= 1.54, alpha)
 backend.add(import('@backstage/plugin-catalog-backend-module-ai-model'));
 
 // Guest auth — the v2 routes require real Backstage credentials (ADR-0005),

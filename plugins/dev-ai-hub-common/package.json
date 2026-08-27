@@ -47,11 +47,11 @@
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
-    "@backstage/catalog-model": "^1.9.0",
+    "@backstage/catalog-model": "^1.10.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.36.2",
+    "@backstage/cli": "^0.36.5",
     "@types/jest": "^29.0.0",
     "jest": "^29.0.0",
     "jest-environment-jsdom": "^29.0.0"

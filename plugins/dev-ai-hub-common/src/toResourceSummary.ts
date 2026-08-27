@@ -6,7 +6,6 @@ import {
 } from '@backstage/catalog-model';
 import {
   ANNOTATION_HELP,
-  ANNOTATION_VERSION,
   getFrameworks,
   isResourceType,
   type ResourceSummary,
@@ -85,7 +84,10 @@ export function toResourceSummary(entity: Entity): ResourceSummary | undefined {
         : undefined,
     sourceLocation: annotations[ANNOTATION_SOURCE_LOCATION],
     frameworks: getFrameworks(entity),
-    version: annotations[ANNOTATION_VERSION],
+    version:
+      typeof entity.spec?.version === 'string'
+        ? entity.spec.version
+        : undefined,
     kind: entity.kind,
     helpText: annotations[ANNOTATION_HELP],
     annotations,

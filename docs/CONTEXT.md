@@ -18,17 +18,22 @@
 ### AiResource
 
 The Backstage catalog entity kind that represents a single AI asset. Registered by
-`@backstage/plugin-catalog-backend-module-ai-model` (v1.51+, alpha). Has exactly
-five subtypes distinguished by `spec.type`. The catalog is the **only** place
+`@backstage/plugin-catalog-backend-module-ai-model` (v1.54+, alpha). Upstream
+defines dedicated subtypes for `skill`, `rule`, `plugin` and `marketplace`, and a
+base schema whose `spec.type` is an open string — any other value validates. The
+six `spec.type` values below are **DevAI Hub's own consumer vocabulary**, not the
+complete upstream model (which has no `agent`/`hook`/`mcp-config` subtype and does
+carry `rule`, which the hub does not render). The catalog is the **only** place
 `AiResource` entities live — DevAI Hub never stores a second copy (ADR-0001).
 
 ### ResourceType
 
-The `spec.type` of an `AiResource`. Exactly six canonical values:
+The six `spec.type` values DevAI Hub renders — its local filter, not the upstream
+set (which accepts other strings, e.g. the `rule` subtype the hub drops):
 
 | Token    | Meaning                                                       |
 |----------|---------------------------------------------------------------|
-| `skill`  | Reusable contextual knowledge; the only type with a native upstream spec (`spec.agents`, `disciplines`, `categories`). |
+| `skill`  | Reusable contextual knowledge; the richest native upstream spec (`spec.agents`, `disciplines`, `categories`). `plugin`, `marketplace` and the unrendered `rule` also have native specs. |
 | `agent`  | An AI agent or subagent definition.                           |
 | `hook`   | An event handler (e.g. `PostToolUse`).                        |
 | `mcp-config` | An MCP server configuration.                              |
@@ -42,7 +47,7 @@ Entities with an unsupported `spec.type` are silently dropped by the consumer.
 The flat JSON contract the backend returns to the frontend. Contains only the
 fields the UI actually needs (`entityRef`, `name`, `title`, `description`, `tags`,
 `type`, `lifecycle`, `owner`, `sourceLocation`, `frameworks`, `version`, `kind`,
-`parents`, `children`, `childCount`, `helpText`, `annotations`). The frontend
+`childCount`, `helpText`, `annotations`). The frontend
 never sees a raw Backstage `Entity` — it only knows `ResourceSummary`
 (architecture.md).
 
@@ -50,13 +55,18 @@ never sees a raw Backstage `Entity` — it only knows `ResourceSummary`
 
 The relationship between a container and the resources it bundles: a `plugin`
 contains skills/agents/hooks/mcp-configs, a `marketplace` contains plugins only.
-Declared **by the child**, in a comma-separated `devaihub.io/parent` annotation
-naming its container(s) — upstream emits `dependsOn` relations for
-`spec.type: skill` only, so the containers cannot express containment natively
-(ADR-0013). The backend inverts the declarations over its own catalog read and
-serves both directions (`parents`, `children`, `childCount`). A resource may
-name several parents. Links to a parent of the wrong type, or to one the caller
-cannot see, are silently not rendered.
+Since Backstage 1.54.0 the containers express containment natively and
+**must**: `spec.skills` is required on `plugin`, `spec.plugins` on `marketplace`,
+and upstream generates `hasPart`/`partOf` relations from both.
+ADR-0013 additionally declares containment **by the child**, in a
+comma-separated `devaihub.io/parent` annotation naming its container(s) — chosen
+when no native mechanism existed. Which of the two the plugin reads is the open
+question in ADR-0015; the ADR-0013 read path below is a design record, not yet
+implemented. Once built, the backend would invert the declarations over its own
+catalog read and serve both directions (`parents`, `children`, `childCount`) —
+none of which exist on `ResourceSummary` today. A resource may name several
+parents. Links to a parent of the wrong type, or to one the caller cannot see,
+would be silently not rendered.
 
 ### body
 

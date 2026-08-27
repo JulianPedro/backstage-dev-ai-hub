@@ -31,9 +31,6 @@ export const DEVAIHUB_ANNOTATION_PREFIX = 'devaihub.io';
 /** Comma-separated compatible-framework tokens (non-skill read path, ADR-0003). */
 export const ANNOTATION_COMPATIBLE_FRAMEWORKS = `${DEVAIHUB_ANNOTATION_PREFIX}/compatible-frameworks`;
 
-/** Optional semantic version string, displayed on cards. */
-export const ANNOTATION_VERSION = `${DEVAIHUB_ANNOTATION_PREFIX}/version`;
-
 /** Optional free-form help text shown on the detail panel. */
 export const ANNOTATION_HELP = `${DEVAIHUB_ANNOTATION_PREFIX}/help`;
 
@@ -209,7 +206,7 @@ export interface ResourceSummary {
   frameworks: string[];
   version?: string;
   kind: string;
-  /** `plugin` dependsOn count; unpopulated until containment lands (issue #32). */
+  /** `plugin`/`marketplace` child count from spec.skills/spec.plugins; unpopulated until containment lands (issue #32). */
   childCount?: number;
   helpText?: string;
   annotations: Record<string, string>;

@@ -7,11 +7,11 @@ metadata:
   tags: [azure-devops, ci-cd, automation]
   annotations:
     backstage.io/source-location: url:https://github.com/nosportugal/backstage-plugin-dev-ai-hub/blob/main-nos/examples/skills/azure-devops-cli/azure-devops-cli.md
-    devaihub.io/version: 1.0.0
 spec:
   type: skill
   lifecycle: production
   owner: group:ai-platform-team
+  version: 1.0.0
   # Native skill subtype fields (alpha — @backstage/plugin-catalog-backend-module-ai-model)
   agents:
     - github-copilot

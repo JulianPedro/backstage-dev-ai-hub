@@ -2,7 +2,7 @@
 
 The backend half of **Dev AI Hub**. It reads `AiResource` entities from the Backstage catalog on demand, resolves each resource's body from its `backstage.io/source-location`, and records lightweight install/view telemetry.
 
-> **Requires Backstage 1.51 or later.** The `AiResource` kind comes from Backstage's own alpha catalog module, which is not available before that.
+> **Requires Backstage 1.54 or later.** The `AiResource` kind comes from Backstage's own alpha catalog module, and these packages depend on `@backstage/catalog-model@^1.10.0` — first shipped in 1.54.0, along with the `plugin` and `marketplace` subtypes.
 
 ## How it works
 

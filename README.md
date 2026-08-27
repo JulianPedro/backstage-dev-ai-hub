@@ -4,14 +4,15 @@ A catalog-backed browser for AI assets — **Skills**, **Agents**, **Hooks**, **
 
 The Backstage **catalog** is the sole source of truth: entities are hand-authored `AiResource` catalog-info entries (or emitted by your own EntityProviders) pointing at content that lives in Git. The plugin never stores a second copy — the backend reads the catalog on demand, resolves each resource's body from its `source-location`, and records lightweight install/view telemetry. There's no sync service and no embedded MCP server.
 
-![Project Screenshot](docs/screenshot.png)
+![The Dev AI Hub browse page, showing resource counts by type and the resource grid](docs/screenshot.png)
 
 ---
 
 ## Installation
 
-**Requires Backstage 1.51 or later** — the `AiResource` kind comes from Backstage's own alpha
-catalog module, which is not available before that.
+**Requires Backstage 1.54 or later** — the `AiResource` kind comes from Backstage's own alpha
+catalog module, and these packages depend on `@backstage/catalog-model@^1.10.0`, first shipped in
+1.54.0 along with the `plugin` and `marketplace` subtypes.
 
 ### 1. Install the packages
 
@@ -92,7 +93,7 @@ All backend routes require standard Backstage authentication (ADR-0005) — ther
 
 ## Authoring `AiResource` entities
 
-Each entity is a normal Backstage catalog entry with `kind: AiResource`. The body (markdown, or JSON for `mcp-config`) stays in Git — the entity only carries metadata plus a `backstage.io/source-location` pointer to it:
+Each entity is a normal Backstage catalog entry with `kind: AiResource`. The body stays in Git — the entity only carries metadata plus a `backstage.io/source-location` pointer to it. Bodies are type-shaped: markdown for `skill` and `agent`, JSON for `hook`, `mcp-config`, `plugin` and `marketplace` (the last two point at the real `plugin.json` / `marketplace.json` manifest, not a doc about it):
 
 ```yaml
 apiVersion: backstage.io/v1alpha1
@@ -104,21 +105,48 @@ metadata:
   tags: [security, github, ci-cd]
   annotations:
     backstage.io/source-location: url:https://github.com/your-org/ai-assets/tree/main/skills/approved-github-workflows/
-    devaihub.io/version: 1.0.0
 spec:
   type: skill # skill | agent | hook | mcp-config | plugin | marketplace
   lifecycle: production
   owner: group:ai-platform-team
+  version: 1.0.0
   # Compatible frameworks (native field — honoured for any spec.type, not just
   # `skill`; takes priority over the devaihub.io/compatible-frameworks annotation).
   agents: [github-copilot, claude-code]
 ```
 
-`plugin` and `marketplace` resources additionally declare `spec.dependsOn` to relate to their child resources. The relation is stored in the catalog and readable there; the cards do not render containment yet ([issue #32](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/32)).
+`plugin` and `marketplace` are container types, and since Backstage 1.54.0 each **must** declare what it contains — `spec.skills` on a `plugin`, `spec.plugins` on a `marketplace`. Omit it and the catalog rejects the entity outright:
+
+```yaml
+spec:
+  type: plugin
+  lifecycle: production
+  owner: group:ai-platform-team
+  # Required. Despite the name, any AiResource is a legal member — agents,
+  # hooks and mcp-configs go in the same list.
+  skills:
+    - airesource:default/approved-github-workflows
+    - airesource:default/post-edit-lint
+```
+
+Backstage generates `hasPart`/`partOf` relations from those refs, so containment is queryable in the catalog. The hub's own cards do not render it yet ([issue #32](https://github.com/nosportugal/backstage-plugin-dev-ai-hub/issues/32)).
 
 Registered entities show up in the Backstage catalog like any other kind, filterable by `AiResource`:
 
 ![AiResource entities in the Backstage catalog](docs/screenshot-catalog-airesources.png)
+
+### Browsing and installing
+
+Opening a resource shows its resolved body alongside view/install counts, with **Copy**, **Download**
+and **Install** actions:
+
+![The resource detail drawer](docs/screenshot-resource-detail.png)
+
+**Install** resolves the convention path for every framework the resource declares, and offers a
+one-click launcher where the host exposes one — the rest get a copyable prompt. A `merge` target
+(a settings file the user already owns) is never presented as a `drop-in` overwrite:
+
+![The install dialog, showing per-framework install paths](docs/screenshot-install-dialog.png)
 
 See [`docs/AIRESOURCE-SPEC.md`](docs/AIRESOURCE-SPEC.md) for the full per-type spec (required vs. recommended fields, the `devaihub.io/*` annotation namespace, and one worked example per type), and [`examples/catalog/`](examples/catalog/) for entities you can register as-is to try the plugin locally.
 
