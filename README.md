@@ -179,7 +179,7 @@ All routes require Backstage authentication; the frontend never talks to the cat
 
 ## Further reading
 
-- [`docs/1.0.3/CHANGELOG.md`](docs/1.0.3/CHANGELOG.md) — relationship visualization, Backstage 1.54 alignment, and two producer-facing contract changes
+- [`docs/1.1.0/CHANGELOG.md`](docs/1.1.0/CHANGELOG.md) — relationship visualization, Backstage 1.54 alignment, and two producer-facing contract changes
 - [`docs/0.3.0/CHANGELOG.md`](docs/0.3.0/CHANGELOG.md) — **upgrading from 0.2.x**: breaking changes, route mapping, and known gaps
 - [`docs/architecture.md`](docs/architecture.md) — system view and the catalog read flow
 - [`docs/CONTEXT.md`](docs/CONTEXT.md) — vocabulary and glossary

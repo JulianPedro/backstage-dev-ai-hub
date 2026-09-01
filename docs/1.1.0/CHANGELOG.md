@@ -1,9 +1,13 @@
-# 1.0.3
+# 1.1.0
 
 Marketplace and plugin containment is now visualized, and the packages are aligned with Backstage 1.54.
 
+This release was first published as `1.0.3`.
+That number was wrong — the changes below are new features, not a patch — so `1.0.3` is superseded by `1.1.0`, which carries identical code.
+Do not use `1.0.3`.
+
 There are no database migrations and no plugin configuration changes.
-Two producer-facing contract changes ship in this release despite the patch version — read "Before you upgrade" if you author `AiResource` entities.
+Two producer-facing contract changes ship in this release — read "Before you upgrade" if you author `AiResource` entities.
 
 ## Before you upgrade
 
