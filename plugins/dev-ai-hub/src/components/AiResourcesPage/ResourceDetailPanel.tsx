@@ -30,7 +30,9 @@ import {
 import { devAiHubResourceApiRef } from '../../api/DevAiHubResourceClient';
 import { useResourceBody } from '../../hooks/useResourceBody';
 import { useTelemetryCounts } from '../../hooks/useTelemetryCounts';
+import { CollapsibleSection } from './CollapsibleSection';
 import { JsonBody } from './JsonBody';
+import { ResourceRelationships } from './ResourceRelationships';
 import { ToolIcon } from '../ToolIcon';
 import { ResourceInstallDialog } from './ResourceInstallDialog';
 import { stripFrontmatter } from './stripFrontmatter';
@@ -40,6 +42,10 @@ import styles from './ResourceDetailPanel.module.css';
 interface ResourceDetailPanelProps {
   resource: ResourceSummary | undefined;
   onClose: () => void;
+  /** Every caller-visible resource, so relationship refs can be resolved. */
+  items?: ResourceSummary[];
+  /** Opens another resource's detail (the existing `?resource=` swap). */
+  onOpen?: (entityRef: string) => void;
 }
 
 /**
@@ -62,6 +68,8 @@ const ENTITY_REF_ROWS = new Set(['Owner', 'Entity ref']);
 export function ResourceDetailPanel({
   resource: resourceProp,
   onClose,
+  items = [],
+  onOpen,
 }: ResourceDetailPanelProps) {
   const isOpen = !!resourceProp;
   // The drawer slides out on close (issue: "add some flowers"), which needs
@@ -125,6 +133,56 @@ export function ResourceDetailPanel({
     ['Version', resource.version],
     ['Entity ref', resource.entityRef],
   ];
+
+  // `plugin`/`marketplace` bodies are the full manifest JSON (ADR-0014) —
+  // long enough to bury everything below them, so their Content collapses.
+  const collapsibleContent = bodyShape === 'json';
+
+  const contentInner = (
+    <>
+      {!actionable && (
+        <Text variant="body-small" as="p" color="secondary">
+          No content location published for this resource.
+        </Text>
+      )}
+      {actionable && bodyState.loading && (
+        <div className={styles.bodyLoading}>
+          <Skeleton width="100%" height={14} />
+          <Skeleton width="85%" height={14} />
+          <Skeleton width="60%" height={14} />
+        </div>
+      )}
+      {actionable && bodyState.error === 'not-found' && (
+        <Text variant="body-small" as="p" color="secondary">
+          Content not available — it may have been removed, or you may not have
+          access to it.
+        </Text>
+      )}
+      {actionable && bodyState.error === 'upstream' && (
+        <Flex align="center" gap="2">
+          <Text variant="body-small" as="p" color="secondary">
+            Couldn’t fetch the content from its source.
+          </Text>
+          <Button size="small" variant="tertiary" onPress={bodyState.retry}>
+            Retry
+          </Button>
+        </Flex>
+      )}
+      {bodyState.body && bodyShape === 'json' && (
+        <JsonBody
+          content={bodyState.body.content}
+          className={styles.codeBlock}
+        />
+      )}
+      {bodyState.body && bodyShape === 'markdown' && (
+        <div className={styles.markdown}>
+          <ReactMarkdown>
+            {stripFrontmatter(bodyState.body.content)}
+          </ReactMarkdown>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <>
@@ -230,54 +288,35 @@ export function ResourceDetailPanel({
             </div>
           )}
 
+          {onOpen && (
+            <ResourceRelationships
+              resource={resource}
+              items={items}
+              onOpen={onOpen}
+            />
+          )}
+
           <div className={styles.section}>
-            <Text variant="body-x-small" color="secondary" weight="bold">
-              Content
-            </Text>
-            {!actionable && (
-              <Text variant="body-small" as="p" color="secondary">
-                No content location published for this resource.
-              </Text>
-            )}
-            {actionable && bodyState.loading && (
-              <div className={styles.bodyLoading}>
-                <Skeleton width="100%" height={14} />
-                <Skeleton width="85%" height={14} />
-                <Skeleton width="60%" height={14} />
-              </div>
-            )}
-            {actionable && bodyState.error === 'not-found' && (
-              <Text variant="body-small" as="p" color="secondary">
-                Content not available — it may have been removed, or you may not
-                have access to it.
-              </Text>
-            )}
-            {actionable && bodyState.error === 'upstream' && (
-              <Flex align="center" gap="2">
-                <Text variant="body-small" as="p" color="secondary">
-                  Couldn’t fetch the content from its source.
+            {collapsibleContent ? (
+              // Keyed on entityRef: the drawer stays mounted across a
+              // relationship navigation (only `displayResource` swaps), so
+              // without a key React reuses this instance and carries a
+              // collapsed choice from the previous resource onto the next
+              // one, silently defeating "expanded by default".
+              <CollapsibleSection
+                key={resource.entityRef}
+                label="Content"
+                defaultOpen
+              >
+                {contentInner}
+              </CollapsibleSection>
+            ) : (
+              <>
+                <Text variant="body-x-small" color="secondary" weight="bold">
+                  Content
                 </Text>
-                <Button
-                  size="small"
-                  variant="tertiary"
-                  onPress={bodyState.retry}
-                >
-                  Retry
-                </Button>
-              </Flex>
-            )}
-            {bodyState.body && bodyShape === 'json' && (
-              <JsonBody
-                content={bodyState.body.content}
-                className={styles.codeBlock}
-              />
-            )}
-            {bodyState.body && bodyShape === 'markdown' && (
-              <div className={styles.markdown}>
-                <ReactMarkdown>
-                  {stripFrontmatter(bodyState.body.content)}
-                </ReactMarkdown>
-              </div>
+                {contentInner}
+              </>
             )}
           </div>
 

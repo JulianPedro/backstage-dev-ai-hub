@@ -197,7 +197,7 @@ config in annotations invited drift with the body (issue #30 decision record).
 
 > **Design fork (§8.4 of the main spec):** an MCP server could alternatively be modelled as an `API` entity (`spec.type: mcp-server`). This spec follows the direct `AiResource:mcp-config` directive. If you need runtime endpoint semantics, emit an additional `API:mcp-server` and relate them.
 
-### 3.5 `plugin` — composite container (ADR-0013)
+### 3.5 `plugin` — composite container (ADR-0013, ADR-0015)
 
 **`spec.skills` is REQUIRED** as of Backstage 1.54.0: `plugin` gained a structured
 subtype whose schema rejects an entity without it. Upstream generates `hasPart`
@@ -218,31 +218,31 @@ spec:
 
 metadata:
   annotations:
-    devaihub.io/parent: nos-plugin-marketplace   # its marketplace(s), if any
     devaihub.io/plugin-manifest: "true"
 ```
 
-> **Open decision (ADR-0015).** ADR-0013 chose child-side containment via
-> `devaihub.io/parent` on the premise that containers *could not* express
-> containment natively. Backstage 1.54.0 falsified that premise, and ADR-0013's
-> own closing consequence names this as its revisit trigger. The native field is
-> now mandatory, so it must be authored regardless; whether `devaihub.io/parent`
-> stays as a second path, and which direction the backend reads, is undecided.
-> The rendering behaviour below is still a design record — no code implements it.
+> **Resolved by ADR-0015.** ADR-0013 chose child-side containment via a
+> `devaihub.io/parent` annotation on the premise that containers *could not*
+> express containment natively. Backstage 1.54.0 falsified that premise, and
+> ADR-0015 resolves the read: the backend reads the **native parent-side**
+> `spec.skills`/`spec.plugins` as the sole source, and `devaihub.io/parent` is
+> retired. Reading the container's own field keeps its owner the gatekeeper of
+> its membership — a plugin cannot list itself into a marketplace it doesn't own.
 
-```yaml
-# Each child claims membership, e.g. examples/catalog/skill-approved-github-workflows.yaml
-metadata:
-  name: approved-github-workflows
-  annotations:
-    devaihub.io/parent: secure-dev-bundle
-spec:
-  type: skill
-```
-
-**Rendering behaviour (design record — not yet implemented):** the backend inverts every `devaihub.io/parent` declaration over its catalog read and serves `parents`, `children`, and `childCount` on `ResourceSummary`.
-The `PluginCard` lists its children, linking to each child's detail panel; the child card shows "part of: secure-dev-bundle" straight from its own `parents`.
-Children of the wrong type (a plugin claiming a skill as parent) and parents the caller cannot see are silently not rendered.
+**Containment rendering:** the backend serves `children` (this plugin's
+`spec.skills`, filtered to the caller's visible set) and `parents` (the
+marketplaces whose `spec.plugins` name it, inverted in memory) on
+`ResourceSummary`.
+The detail panel lists a plugin's members under "Includes" and its marketplaces
+under "Part of", each a navigable link; the card shows a member count and a
+"part of" chip.
+Members of the wrong type (a marketplace claiming a skill directly) and refs the
+caller cannot see are silently not rendered (ADR-0015).
+A plugin's rendered members are the Claude/Copilot plugin-manifest component
+kinds DevAI Hub models — `skill`, `agent`, `hook`, `mcp-config`
+(`PLUGIN_MEMBER_TYPES` in `-common`); `commands`, `lspServers`, `themes`,
+`outputStyles`, `channels` and `monitors` have no AiResource type and never
+render, and another plugin is a `dependency`, not a member.
 
 **The body is the plugin's `.claude-plugin/plugin.json` manifest itself** (ADR-0014), rendered as
 pretty-printed, syntax-highlighted JSON — not a hand-authored pointer doc. `source-location`
@@ -299,7 +299,6 @@ All custom annotations use the `devaihub.io/` prefix. These are namespaced to av
 | Annotation | Applies to | Meaning |
 |---|---|---|
 | `devaihub.io/compatible-frameworks` | all types | Comma-separated framework tokens (§2.2). |
-| `devaihub.io/parent` | all types | Comma-separated container(s) this resource belongs to — bare `metadata.name` (own namespace) or full `airesource:ns/name`. Containment is declared child-side (ADR-0013). |
 | `devaihub.io/role` | agent | Display subtitle (e.g. "security reviewer"). |
 | `devaihub.io/hook-event` | hook | Event name that triggers this hook. |
 | `devaihub.io/hook-matcher` | hook | Regex or glob for scope matching. |
@@ -307,6 +306,8 @@ All custom annotations use the `devaihub.io/` prefix. These are namespaced to av
 
 > Retired: `devaihub.io/mcp-type` and `devaihub.io/mcp-uri` — mcp config lives only
 > in the body, which is canonical for install (issue #30 decision record).
+> Also retired: `devaihub.io/parent` — containment is read from the native
+> parent-side `spec.skills`/`spec.plugins`, not a child annotation (ADR-0015).
 
 **Future:** if upstream structures a subtype for any of these, the annotation migrates into native spec and is deprecated (exit condition per ADR).
 
@@ -458,8 +459,8 @@ Before submitting a new `AiResource` catalog-info.yaml, verify:
 - [ ] `spec.type` is one of the six supported tokens.
 - [ ] `backstage.io/source-location` points at the body: a raw file URL for a single-file body, or a `/`-terminated directory URL for a resource-bearing body (viewed via its entry file, downloaded as one zip).
 - [ ] `spec.agents` (any type) or `devaihub.io/compatible-frameworks` lists at least one framework token (or `all`) — `spec.agents`, when present, is preferred over the annotation.
-- [ ] For `plugin`, `spec.skills` lists the contained resources; for `marketplace`, `spec.plugins` lists the contained plugins. **Required** since Backstage 1.54.0 — the catalog rejects the entity otherwise (§3.5, §3.6).
-- [ ] Child-side `devaihub.io/parent` is unchanged pending ADR-0015, and is not a substitute for the required native field above.
+- [ ] For `plugin`, `spec.skills` lists the contained resources; for `marketplace`, `spec.plugins` lists the contained plugins. **Required** since Backstage 1.54.0 — the catalog rejects the entity otherwise (§3.5, §3.6). This is the sole containment source the backend reads (ADR-0015).
+- [ ] `devaihub.io/parent` is **not** used — it is retired; containment is declared container-side in the native field above (ADR-0015).
 - [ ] For `plugin`/`marketplace` types, `source-location` points at the real `plugin.json`/`marketplace.json` manifest — the body **is** that file, rendered as JSON (ADR-0014).
 - [ ] For `marketplace` types, the manifest lives **inside the marketplace repo** and `metadata.name` equals the `name` in `marketplace.json` (the consumer derives add commands from `source-location`).
 - [ ] `metadata.name` is kebab-case and unique within the namespace.

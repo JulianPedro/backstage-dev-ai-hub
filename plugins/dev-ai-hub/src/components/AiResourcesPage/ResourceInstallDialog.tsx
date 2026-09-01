@@ -40,6 +40,7 @@ import {
   type ResourceBody,
 } from '../../api/DevAiHubResourceClient';
 import { ToolIcon } from '../ToolIcon';
+import { CollapsibleSection } from './CollapsibleSection';
 import { JsonBody } from './JsonBody';
 import { frameworkLabel } from './typeMeta';
 import styles from './ResourceInstallDialog.module.css';
@@ -378,7 +379,9 @@ export function ResourceInstallDialog({
           </Text>
 
           {body && shape === 'json' && (
-            <JsonBody content={body.content} className={styles.codeBlock} />
+            <CollapsibleSection label="Content">
+              <JsonBody content={body.content} className={styles.codeBlock} />
+            </CollapsibleSection>
           )}
 
           {hasMarketplaceJourney && marketplaceRepoSlug && (

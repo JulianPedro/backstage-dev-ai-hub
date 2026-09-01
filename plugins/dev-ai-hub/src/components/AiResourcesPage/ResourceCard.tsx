@@ -32,6 +32,20 @@ interface ResourceCardProps {
 const MAX_VISIBLE_TAGS = 3;
 const POPULAR_THRESHOLD = 5;
 
+/**
+ * The count chip a container card shows for its members (ADR-0015). Reads the
+ * caller-visible `childCount`; leaf types and empty containers show nothing.
+ */
+function containsLabel(resource: ResourceSummary): string | undefined {
+  const count = resource.childCount ?? 0;
+  if (count <= 0) return undefined;
+  if (resource.type === 'marketplace')
+    return `${count} ${count === 1 ? 'plugin' : 'plugins'}`;
+  if (resource.type === 'plugin')
+    return `${count} ${count === 1 ? 'item' : 'items'}`;
+  return undefined;
+}
+
 export function ResourceCard({
   resource,
   onView,
@@ -44,6 +58,7 @@ export function ResourceCard({
   const visibleTags = resource.tags.slice(0, MAX_VISIBLE_TAGS);
   const hiddenTagCount = resource.tags.length - visibleTags.length;
   const ownerLabel = resource.owner?.replace(/^(group|user):(default\/)?/, '');
+  const parentCount = resource.parents?.length ?? 0;
 
   return (
     <div
@@ -120,6 +135,21 @@ export function ResourceCard({
                 title={resource.tags.slice(MAX_VISIBLE_TAGS).join(', ')}
               >
                 +{hiddenTagCount}
+              </span>
+            )}
+          </div>
+        )}
+
+        {(containsLabel(resource) || parentCount > 0) && (
+          <div className={styles.relRow}>
+            {containsLabel(resource) && (
+              <span className={styles.relChip} title="Contains">
+                {containsLabel(resource)}
+              </span>
+            )}
+            {parentCount > 0 && (
+              <span className={styles.relChip} title="Belongs to a container">
+                part of {parentCount}
               </span>
             )}
           </div>

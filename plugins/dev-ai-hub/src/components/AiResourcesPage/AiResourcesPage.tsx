@@ -207,7 +207,12 @@ export function AiResourcesPage() {
         </div>
       )}
 
-      <ResourceDetailPanel resource={selectedResource} onClose={closeDetail} />
+      <ResourceDetailPanel
+        resource={selectedResource}
+        onClose={closeDetail}
+        items={items ?? []}
+        onOpen={openDetail}
+      />
     </div>
   );
 }

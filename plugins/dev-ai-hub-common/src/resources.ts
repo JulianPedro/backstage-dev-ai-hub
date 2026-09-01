@@ -25,6 +25,46 @@ export function isResourceType(value: unknown): value is ResourceType {
   );
 }
 
+/**
+ * The AiResource types a `plugin` may contain — restricted to the component
+ * kinds a real Claude Code / GitHub Copilot plugin manifest allows: `skills`,
+ * `agents`, `hooks` and `mcpServers` (schemastore `claude-code-plugin` /
+ * `claude-code-marketplace.json`). A plugin's other manifest components
+ * (`commands`, `lspServers`, `outputStyles`, `themes`, `channels`, `monitors`)
+ * have no AiResource type, so they are never members here; other plugins are
+ * `dependencies`, not containment.
+ */
+export const PLUGIN_MEMBER_TYPES: readonly ResourceType[] = [
+  'skill',
+  'agent',
+  'hook',
+  'mcp-config',
+];
+
+/**
+ * The AiResource types a `marketplace` may contain: `plugin` only. A real
+ * `.claude-plugin/marketplace.json` `plugins` array lists plugins and nothing
+ * else (required by the schema Claude Code and Copilot CLI both read).
+ */
+export const MARKETPLACE_MEMBER_TYPES: readonly ResourceType[] = ['plugin'];
+
+/**
+ * Whether a container of `parent` type renders a child of `child` type as a
+ * member — restricted to what a real Claude/Copilot plugin or marketplace
+ * manifest permits (ADR-0010/0015). A `marketplace` contains `plugin` only; a
+ * `plugin` contains the component types DevAI Hub models. Any other pairing is
+ * silently not rendered. This is a rendering convention, not catalog
+ * validation (upstream `allowedKinds` is the broad `["AiResource"]`).
+ */
+export function isRenderableContainment(
+  parent: ResourceType,
+  child: ResourceType,
+): boolean {
+  if (parent === 'marketplace') return MARKETPLACE_MEMBER_TYPES.includes(child);
+  if (parent === 'plugin') return PLUGIN_MEMBER_TYPES.includes(child);
+  return false;
+}
+
 /** Annotation prefix owned by DevAI Hub. */
 export const DEVAIHUB_ANNOTATION_PREFIX = 'devaihub.io';
 
@@ -206,7 +246,20 @@ export interface ResourceSummary {
   frameworks: string[];
   version?: string;
   kind: string;
-  /** `plugin`/`marketplace` child count from spec.skills/spec.plugins; unpopulated until containment lands (issue #32). */
+  /**
+   * Entity refs this container declares as its contents — a `marketplace`'s
+   * `spec.plugins`, a `plugin`'s `spec.skills`; empty for leaf types. Filtered
+   * to the caller's visible set and to the child types the container renders
+   * (ADR-0015). The frontend resolves each ref against the summaries it holds.
+   */
+  children: string[];
+  /**
+   * Entity refs of the containers that declare this resource — the in-memory
+   * inverse of `children`, built over the same caller-visible catalog read
+   * (ADR-0015). A resource can belong to several containers.
+   */
+  parents: string[];
+  /** Count of `children` (their declared, caller-visible members). */
   childCount?: number;
   helpText?: string;
   annotations: Record<string, string>;

@@ -12,6 +12,7 @@
   "tsconfigFile": "plugins/dev-ai-hub-common/tsconfig.json",
   "mutate": [
     "plugins/dev-ai-hub-common/src/resources.ts",
+    "plugins/dev-ai-hub-common/src/toResourceSummary.ts",
     "plugins/dev-ai-hub-common/src/telemetry.ts",
     "!plugins/dev-ai-hub-common/src/**/*.test.ts"
   ],

@@ -91,6 +91,8 @@ function summary(overrides: Partial<ResourceSummary>): ResourceSummary {
     frameworks: [],
     kind: 'AiResource',
     annotations: {},
+    children: [],
+    parents: [],
     ...overrides,
   };
 }

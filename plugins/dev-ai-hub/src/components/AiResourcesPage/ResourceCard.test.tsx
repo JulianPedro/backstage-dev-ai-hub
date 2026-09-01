@@ -28,6 +28,8 @@ function summary(overrides: Partial<ResourceSummary>): ResourceSummary {
     frameworks: [],
     kind: 'AiResource',
     annotations: {},
+    children: [],
+    parents: [],
     ...overrides,
   };
 }
@@ -102,5 +104,73 @@ describe('ResourceCard — telemetry', () => {
 
     fireEvent.keyDown(card, { key: 'Enter' });
     expect(onView).toHaveBeenCalledWith('airesource:default/x');
+  });
+});
+
+describe('ResourceCard — relationship chips', () => {
+  it('shows a pluralised plugin count on a marketplace', () => {
+    render(
+      <ResourceCard
+        resource={summary({ type: 'marketplace', childCount: 2 })}
+        onView={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('2 plugins')).toBeInTheDocument();
+  });
+
+  it('shows a singular item count on a plugin', () => {
+    render(
+      <ResourceCard
+        resource={summary({ type: 'plugin', childCount: 1 })}
+        onView={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('1 item')).toBeInTheDocument();
+  });
+
+  it('shows a "part of" chip when the resource has parents', () => {
+    render(
+      <ResourceCard
+        resource={summary({ parents: ['airesource:default/a'] })}
+        onView={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('part of 1')).toBeInTheDocument();
+  });
+
+  it('uses the singular noun for a single member', () => {
+    render(
+      <ResourceCard
+        resource={summary({ type: 'marketplace', childCount: 1 })}
+        onView={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('1 plugin')).toBeInTheDocument();
+  });
+
+  it('pluralises the plugin member noun', () => {
+    render(
+      <ResourceCard
+        resource={summary({ type: 'plugin', childCount: 2 })}
+        onView={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('2 items')).toBeInTheDocument();
+  });
+
+  it('shows no member chip when the container is empty', () => {
+    render(
+      <ResourceCard
+        resource={summary({ type: 'marketplace', childCount: 0 })}
+        onView={jest.fn()}
+      />,
+    );
+    expect(screen.queryByText(/plugins?$/)).not.toBeInTheDocument();
+  });
+
+  it('shows no relationship chip for a childless, parentless resource', () => {
+    render(<ResourceCard resource={summary({})} onView={jest.fn()} />);
+    expect(screen.queryByText(/part of/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/plugins?$/)).not.toBeInTheDocument();
   });
 });

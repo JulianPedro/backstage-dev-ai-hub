@@ -144,8 +144,8 @@ Walk the entity against each gate and name a verdict for every line — a gate y
 
 Then state to the user which of the six types you wrote, where the body lives, and which frameworks will show install instructions.
 
-## Containment renders nowhere
+## Containment renders from the native field
 
-`plugin` and `marketplace` must declare what they contain or the catalog rejects them (`TYPES.md`) — but the hub renders none of it. `childCount` is never populated and `devaihub.io/parent` is read by nothing, so a `plugin` shows no child list and a child shows no parent.
+`plugin` and `marketplace` must declare what they contain or the catalog rejects them (`TYPES.md`), and the hub now renders it (ADR-0015): the backend reads `spec.skills`/`spec.plugins` directly, so a `plugin` lists its members under "Includes" and a member shows "Part of" its plugin, with `childCount` on the card. Containment is read **container-side** from the native field only — `devaihub.io/parent` is retired and read by nothing.
 
-Write the required field because omitting it is a drop, never because it will list children in the UI.
+Write the required field: it both keeps the entity from dropping and populates the relationship view.

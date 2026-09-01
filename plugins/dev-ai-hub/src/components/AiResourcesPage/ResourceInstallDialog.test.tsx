@@ -66,6 +66,8 @@ function summary(overrides: Partial<ResourceSummary> = {}): ResourceSummary {
     frameworks: [],
     kind: 'AiResource',
     annotations: {},
+    children: [],
+    parents: [],
     ...overrides,
   };
 }
@@ -228,6 +230,21 @@ describe('ResourceInstallDialog — plugin frame', () => {
       '"name": "my-plugin"',
     );
     expect(screen.queryByTestId('markdown')).not.toBeInTheDocument();
+  });
+
+  it('keeps the JSON manifest collapsed by default in the install dialog', () => {
+    const { container } = renderDialog(
+      { type: 'plugin' },
+      {
+        content: '{"name":"my-plugin","version":"1.0.0"}',
+        contentType: 'application/json',
+      },
+    );
+
+    const details = container.querySelector('details');
+    expect(details).toBeInTheDocument();
+    expect(details).not.toHaveAttribute('open');
+    expect(details?.querySelector('summary')).toHaveTextContent('Content');
   });
 });
 

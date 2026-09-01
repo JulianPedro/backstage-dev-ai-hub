@@ -30,13 +30,15 @@ interface ResourceSummary {
   frameworks: string[]; // "claude-code", "github-copilot", …
   version?: string;
   kind: string;
-  childCount?: number; // unpopulated until containment lands
+  children: string[]; // renderable container members (spec.skills/spec.plugins)
+  parents: string[]; // in-memory inverse of children
+  childCount?: number; // = children.length
   helpText?: string;
   annotations: Record<string, string>;
 }
 ```
 
-`toResourceSummary(entity)` is the `Entity` → `ResourceSummary` mapping, exported here so the backend router and the test fixtures cannot disagree about it.
+`toResourceSummary(entity)` maps one `Entity`; `toResourceSummaries(entities)` maps a whole catalog read and resolves containment in both directions (ADR-0015). Both are exported here so the backend router and the test fixtures cannot disagree about them.
 
 ## Also in here
 

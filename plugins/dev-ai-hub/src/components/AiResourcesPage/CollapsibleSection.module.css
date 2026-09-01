@@ -1,0 +1,93 @@
+@layer components {
+  .collapsible {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-2);
+  }
+
+  .summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bui-space-2);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    /* Reads as a button, not a heading: a filled, bordered bar with a hover
+       state so the toggle is discoverable without knowing the feature. */
+    padding: var(--bui-space-2) var(--bui-space-3);
+    background: var(--bui-bg-neutral-2);
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-2);
+    transition: border-color 120ms ease, background-color 120ms ease;
+  }
+
+  .summary:hover {
+    border-color: var(--drawer-accent, var(--bui-fg-info));
+    background: var(--bui-bg-neutral-1);
+  }
+
+  .summary:focus-visible {
+    outline: 2px solid var(--drawer-accent, var(--bui-fg-info));
+    outline-offset: 2px;
+  }
+
+  /* Hide the native disclosure triangle; the chevron below replaces it. */
+  .summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bui-space-1);
+  }
+
+  /* The Show/Hide pill: the explicit call to action that names the interaction,
+     swapped by open state below. */
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--drawer-accent, var(--bui-fg-info));
+  }
+
+  .collapsible[open] .show {
+    display: none;
+  }
+
+  .collapsible:not([open]) .hide {
+    display: none;
+  }
+
+  .chevron {
+    color: var(--bui-fg-secondary);
+    transition: transform 150ms ease;
+  }
+
+  .collapsible[open] .chevron {
+    transform: rotate(90deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chevron {
+      transition: none;
+    }
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-2);
+    margin-top: var(--bui-space-2);
+  }
+
+  /* The UA stylesheet hides a closed <details>'s non-summary children via
+     `display: none`, which the unconditional `display: flex` above
+     overrides — leaving the body visible even while collapsed. Restore the
+     closed-state hiding explicitly. */
+  .collapsible:not([open]) .body {
+    display: none;
+  }
+}

@@ -13,8 +13,11 @@ import {
   getPromptInstallLinks,
   hasCopyableBody,
   hasDownloadableArtifact,
+  isRenderableContainment,
   isResourceType,
+  MARKETPLACE_MEMBER_TYPES,
   normalizeFramework,
+  PLUGIN_MEMBER_TYPES,
   RESOURCE_TYPE_REGISTRY,
   RESOURCE_TYPES,
   type InstallMode,
@@ -155,6 +158,52 @@ describe('isResourceType', () => {
 
   it.each(['rule', 'instruction', '', undefined, 42])('rejects %s', t => {
     expect(isResourceType(t)).toBe(false);
+  });
+});
+
+describe('isRenderableContainment (ADR-0015)', () => {
+  it('matches the declared member-type sets exactly (Claude/Copilot compliance)', () => {
+    // A marketplace lists plugins only; a plugin lists the manifest component
+    // kinds DevAI Hub models. Locks the boundary against accidental drift.
+    expect([...MARKETPLACE_MEMBER_TYPES]).toEqual(['plugin']);
+    expect([...PLUGIN_MEMBER_TYPES].sort()).toEqual(
+      ['agent', 'hook', 'mcp-config', 'skill'].sort(),
+    );
+    for (const t of RESOURCE_TYPES) {
+      expect(isRenderableContainment('marketplace', t)).toBe(
+        MARKETPLACE_MEMBER_TYPES.includes(t),
+      );
+      expect(isRenderableContainment('plugin', t)).toBe(
+        PLUGIN_MEMBER_TYPES.includes(t),
+      );
+    }
+  });
+
+  it('renders plugin children of a marketplace, and nothing else', () => {
+    expect(isRenderableContainment('marketplace', 'plugin')).toBe(true);
+    for (const child of [
+      'skill',
+      'agent',
+      'hook',
+      'mcp-config',
+      'marketplace',
+    ] as const) {
+      expect(isRenderableContainment('marketplace', child)).toBe(false);
+    }
+  });
+
+  it('renders skill/agent/hook/mcp-config children of a plugin, but not containers', () => {
+    for (const child of ['skill', 'agent', 'hook', 'mcp-config'] as const) {
+      expect(isRenderableContainment('plugin', child)).toBe(true);
+    }
+    expect(isRenderableContainment('plugin', 'plugin')).toBe(false);
+    expect(isRenderableContainment('plugin', 'marketplace')).toBe(false);
+  });
+
+  it('renders nothing for leaf parent types', () => {
+    for (const parent of ['skill', 'agent', 'hook', 'mcp-config'] as const) {
+      expect(isRenderableContainment(parent, 'skill')).toBe(false);
+    }
   });
 });
 

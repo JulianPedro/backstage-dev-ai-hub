@@ -7,10 +7,9 @@ import type {
 } from '@backstage/backend-plugin-api';
 import type { CatalogService } from '@backstage/plugin-catalog-node';
 import type { TelemetryStore } from './database/TelemetryStore';
-import type { ResourceSummary } from '@nospt/plugin-dev-ai-hub-common';
 import {
   TelemetryEventInputSchema,
-  toResourceSummary,
+  toResourceSummaries,
 } from '@nospt/plugin-dev-ai-hub-common';
 import { hashActor } from './service/telemetryHash';
 import {
@@ -44,9 +43,7 @@ export function createRouter(options: RouterOptions): express.Router {
         { filter: { kind: 'AiResource' } },
         { credentials },
       );
-      const items = entities
-        .map(toResourceSummary)
-        .filter((s): s is ResourceSummary => s !== undefined);
+      const items = toResourceSummaries(entities);
       res.json({ items });
     } catch (error) {
       if ((error as Error).name === 'AuthenticationError') {

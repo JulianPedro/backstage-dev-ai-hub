@@ -47,7 +47,7 @@ Entities with an unsupported `spec.type` are silently dropped by the consumer.
 The flat JSON contract the backend returns to the frontend. Contains only the
 fields the UI actually needs (`entityRef`, `name`, `title`, `description`, `tags`,
 `type`, `lifecycle`, `owner`, `sourceLocation`, `frameworks`, `version`, `kind`,
-`childCount`, `helpText`, `annotations`). The frontend
+`children`, `parents`, `childCount`, `helpText`, `annotations`). The frontend
 never sees a raw Backstage `Entity` — it only knows `ResourceSummary`
 (architecture.md).
 
@@ -58,15 +58,14 @@ contains skills/agents/hooks/mcp-configs, a `marketplace` contains plugins only.
 Since Backstage 1.54.0 the containers express containment natively and
 **must**: `spec.skills` is required on `plugin`, `spec.plugins` on `marketplace`,
 and upstream generates `hasPart`/`partOf` relations from both.
-ADR-0013 additionally declares containment **by the child**, in a
-comma-separated `devaihub.io/parent` annotation naming its container(s) — chosen
-when no native mechanism existed. Which of the two the plugin reads is the open
-question in ADR-0015; the ADR-0013 read path below is a design record, not yet
-implemented. Once built, the backend would invert the declarations over its own
-catalog read and serve both directions (`parents`, `children`, `childCount`) —
-none of which exist on `ResourceSummary` today. A resource may name several
-parents. Links to a parent of the wrong type, or to one the caller cannot see,
-would be silently not rendered.
+ADR-0015 resolves the read: the backend reads these **native parent-side**
+fields as the sole source — so the marketplace/plugin owner is the gatekeeper of
+its own membership — and the child-side `devaihub.io/parent` annotation from
+ADR-0013 is retired. Over its single caller-visible catalog read the backend
+serves both directions on `ResourceSummary`: `children` from the native
+field (filtered to the caller's visible set and to the child types the
+container renders), `parents` as the in-memory inverse, and `childCount`. A resource may have several parents. A child ref of
+the wrong type, or one the caller cannot see, is silently not rendered.
 
 ### body
 
@@ -179,6 +178,7 @@ endpoint. Cards render fully without it.
 
 The six **ResourceTypes** drive the UI: each type has its own card colour, icon,
 and `getFrameworks()` read path. Two types have children (via **containment**,
-declared child-side): a `plugin` bundles skills/agents/hooks/mcp-configs, and a
+declared container-side in the native `spec.skills`/`spec.plugins` fields,
+ADR-0015): a `plugin` bundles skills/agents/hooks/mcp-configs, and a
 `marketplace` bundles plugins only. `parents`, `children`, and `childCount` are
 surfaced in `ResourceSummary` for every resource.

@@ -87,7 +87,7 @@ spec:
     - airesource:default/post-edit-lint
 ```
 
-`devaihub.io/plugin-manifest` is not rendered, and the hub lists no children — see the containment note in `SKILL.md`.
+`devaihub.io/plugin-manifest` is not rendered. The hub lists the plugin's members from `spec.skills` (ADR-0015) — see the containment note in `SKILL.md`.
 
 ## marketplace
 

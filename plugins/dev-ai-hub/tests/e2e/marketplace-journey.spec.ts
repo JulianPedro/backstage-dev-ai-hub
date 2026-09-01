@@ -127,7 +127,12 @@ test.describe('Marketplace install journey', () => {
 
     await summary.click();
     await expect(dialog.getByText('extraKnownMarketplaces')).toBeVisible();
-    await expect(dialog.getByText(REPO_SLUG).first()).toBeVisible();
+    // Scope to the team snippet: the repo slug also appears in the (collapsed)
+    // manifest Content, so a bare `.first()` would resolve to a hidden token.
+    const teamSnippet = dialog.locator(
+      'details:has(summary:has-text("For teams"))',
+    );
+    await expect(teamSnippet.getByText(REPO_SLUG).first()).toBeVisible();
   });
 
   test('the derived journey replaces the body doc rather than doubling it', async ({

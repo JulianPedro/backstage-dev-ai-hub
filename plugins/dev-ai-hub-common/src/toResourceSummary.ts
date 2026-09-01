@@ -7,6 +7,7 @@ import {
 import {
   ANNOTATION_HELP,
   getFrameworks,
+  isRenderableContainment,
   isResourceType,
   type ResourceSummary,
 } from './resources';
@@ -61,6 +62,53 @@ export function isParseableEntityRef(ref: string): boolean {
   }
 }
 
+/**
+ * Normalise a declared child ref to the canonical, lowercased form
+ * `stringifyEntityRef` emits, so it compares equal to a container entity's own
+ * ref regardless of how the producer wrote it (bare name or full ref). A bare
+ * name resolves in the *container's own* namespace — mirroring Backstage's
+ * native relation fields, which declare `defaultNamespace: 'inherit'` — not
+ * always `default`; a plugin in `team-a` listing a bare `child` must resolve
+ * to `airesource:team-a/child`, or it silently loses the relationship. An
+ * unparseable ref is dropped: a member the catalog could never resolve is not
+ * a relationship worth carrying.
+ */
+function normalizeChildRef(
+  ref: unknown,
+  containerNamespace: string,
+): string | undefined {
+  if (typeof ref !== 'string') return undefined;
+  try {
+    return stringifyEntityRef(
+      parseEntityRef(ref, {
+        defaultKind: 'AiResource',
+        defaultNamespace: containerNamespace,
+      }),
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The refs a container declares as its contents: a `marketplace`'s
+ * `spec.plugins`, a `plugin`'s `spec.skills` (ADR-0015). Leaf types declare
+ * nothing. Unparseable and duplicate refs are dropped; visibility filtering
+ * happens in `toResourceSummaries`, which alone sees the whole read.
+ */
+function declaredChildren(entity: Entity): string[] {
+  const type = entity.spec?.type;
+  let raw: unknown;
+  if (type === 'marketplace') raw = entity.spec?.plugins;
+  else if (type === 'plugin') raw = entity.spec?.skills;
+  if (!Array.isArray(raw)) return [];
+  const containerNamespace = entity.metadata.namespace ?? 'default';
+  const refs = raw
+    .map(ref => normalizeChildRef(ref, containerNamespace))
+    .filter((r): r is string => r !== undefined);
+  return Array.from(new Set(refs));
+}
+
 export function toResourceSummary(entity: Entity): ResourceSummary | undefined {
   const type = entity.spec?.type;
   if (!isResourceType(type)) {
@@ -68,6 +116,7 @@ export function toResourceSummary(entity: Entity): ResourceSummary | undefined {
   }
 
   const annotations = entity.metadata.annotations ?? {};
+  const children = declaredChildren(entity);
 
   return {
     entityRef: stringifyEntityRef(entity),
@@ -89,7 +138,62 @@ export function toResourceSummary(entity: Entity): ResourceSummary | undefined {
         ? entity.spec.version
         : undefined,
     kind: entity.kind,
+    // `parents` needs the whole read to invert; a single entity can't know
+    // them, so `toResourceSummaries` fills them in. `children` here is still
+    // the raw declared set — visibility filtering also needs the whole read.
+    children,
+    parents: [],
+    childCount: children.length,
     helpText: annotations[ANNOTATION_HELP],
     annotations,
   };
+}
+
+/**
+ * Map a whole caller-visible catalog read to summaries, resolving containment
+ * in both directions (ADR-0015). This is the function the served payload uses;
+ * `toResourceSummary` alone cannot, because containment is only knowable across
+ * the whole set.
+ *
+ * Upstream imposes no type restriction on membership — `spec.skills` /
+ * `spec.plugins` carry `allowedKinds: ["AiResource"]`, so any AiResource type
+ * is a legal member. DevAI Hub narrows that to its rendering convention
+ * (ADR-0010/0015): a `marketplace` renders `plugin` children only, a `plugin`
+ * renders `skill`/`agent`/`hook`/`mcp-config`. That convention is applied here,
+ * once, so `children`, `childCount`, `parents`, the card chip and the detail
+ * sections cannot disagree:
+ *
+ * - `children` keeps only refs that resolve within this read **and** whose type
+ *   the container legitimately contains — so a card never counts, nor a detail
+ *   panel links, a hidden member (ADR-0006) or an off-convention one.
+ * - `parents` is the in-memory inverse of those filtered children.
+ */
+export function toResourceSummaries(entities: Entity[]): ResourceSummary[] {
+  const summaries = entities
+    .map(toResourceSummary)
+    .filter((s): s is ResourceSummary => s !== undefined);
+
+  const byRef = new Map(summaries.map(s => [s.entityRef, s]));
+  const parentsByChild = new Map<string, string[]>();
+
+  for (const summary of summaries) {
+    summary.children = summary.children.filter(ref => {
+      const child = byRef.get(ref);
+      return (
+        child !== undefined && isRenderableContainment(summary.type, child.type)
+      );
+    });
+    summary.childCount = summary.children.length;
+    for (const childRef of summary.children) {
+      const bucket = parentsByChild.get(childRef);
+      if (bucket) bucket.push(summary.entityRef);
+      else parentsByChild.set(childRef, [summary.entityRef]);
+    }
+  }
+
+  for (const summary of summaries) {
+    summary.parents = parentsByChild.get(summary.entityRef) ?? [];
+  }
+
+  return summaries;
 }

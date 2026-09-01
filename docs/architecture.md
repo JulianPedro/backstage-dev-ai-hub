@@ -63,7 +63,9 @@ interface ResourceSummary {
   frameworks: string[];
   version?: string;            // native spec.version
   kind: string;
-  childCount?: number;         // plugin/marketplace child count (spec.skills/spec.plugins); unpopulated until containment lands (#32)
+  children: string[];          // renderable container members, from spec.skills/spec.plugins (ADR-0015)
+  parents: string[];           // in-memory inverse of children (ADR-0015)
+  childCount?: number;         // plugin/marketplace child count (= children.length)
   helpText?: string;           // parsed from devaihub.io/help annotation
   annotations: Record<string, string>;
 }
@@ -85,7 +87,7 @@ interface ResourceSummary {
 │  Backend:                                                  │
 │    1. Read caller credentials from httpAuth                │
 │    2. catalogClient.getEntities({ kind: 'AiResource' })   │
-│    3. For each entity → toResourceSummary()                │
+│    3. toResourceSummaries() — map + invert containment      │
 │    4. Return { items: ResourceSummary[] }                  │
 │                                                            │
 │  Frontend:                                                 │
@@ -123,8 +125,10 @@ GET /api/dev-ai-hub/entity/:ref/raw
 > Backstage 1.54.0 gave both container types a structured subtype: `spec.skills` (plugin) and
 > `spec.plugins` (marketplace) are **required**, and upstream generates `hasPart`/`partOf`
 > relations from them. That falsified the premise ADR-0013 was built on — it chose child-side
-> `devaihub.io/parent` precisely because no native mechanism existed — so the containment
-> direction the plugin reads is reopened in ADR-0015. Neither read path is implemented yet.
+> `devaihub.io/parent` precisely because no native mechanism existed. ADR-0015 resolves it: the
+> backend reads these **native parent-side** fields as the sole source (the container owner is the
+> gatekeeper of its membership) and retires the annotation. `toResourceSummaries()` serves
+> `children` (caller-visible members) and their in-memory inverse `parents` on every summary.
 
 ## Trust model (ADR-0005)
 

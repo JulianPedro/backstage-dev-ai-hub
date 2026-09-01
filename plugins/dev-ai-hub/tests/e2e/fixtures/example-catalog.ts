@@ -19,6 +19,7 @@ import { join, resolve } from 'node:path';
 import { parse } from 'yaml';
 import type { Entity } from '@backstage/catalog-model';
 import {
+  toResourceSummaries,
   toResourceSummary,
   type ResourceSummary,
 } from '@nospt/plugin-dev-ai-hub-common';
@@ -50,9 +51,8 @@ const ENTITIES = loadEntities();
  * which is what makes the stat tiles worth asserting at all — a fixture with
  * one of everything cannot tell a correct count from a hardcoded 1.
  */
-export const EXAMPLE_RESOURCES: ResourceSummary[] = ENTITIES.map(
-  toResourceSummary,
-).filter((s): s is ResourceSummary => s !== undefined);
+export const EXAMPLE_RESOURCES: ResourceSummary[] =
+  toResourceSummaries(ENTITIES);
 
 export function exampleByName(name: string): ResourceSummary {
   const found = EXAMPLE_RESOURCES.find(r => r.name === name);

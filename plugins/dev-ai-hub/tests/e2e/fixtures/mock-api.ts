@@ -58,6 +58,8 @@ export const NO_SOURCE_LOCATION_RESOURCE: ResourceSummary = {
   kind: 'AiResource',
   tags: ['broken-fixture'],
   annotations: {},
+  children: [],
+  parents: [],
 };
 
 /**
@@ -80,6 +82,8 @@ export const UNRESOLVABLE_BODY_RESOURCE: ResourceSummary = {
   kind: 'AiResource',
   tags: ['broken-fixture'],
   annotations: {},
+  children: [],
+  parents: [],
 };
 
 /**
@@ -103,6 +107,8 @@ export function manyResources(count: number): ResourceSummary[] {
       kind: 'AiResource',
       tags: ['bulk'],
       annotations: {},
+      children: [],
+      parents: [],
     };
   });
 }

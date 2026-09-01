@@ -1,0 +1,59 @@
+@layer components {
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-2);
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-1);
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    width: 100%;
+    text-align: left;
+    padding: var(--bui-space-2);
+    background: var(--bui-bg-neutral-2);
+    border: 1px solid var(--bui-border-1);
+    border-radius: var(--bui-radius-2);
+    cursor: pointer;
+    transition: border-color 120ms ease, background-color 120ms ease;
+  }
+
+  .row:hover {
+    border-color: var(--card-accent, var(--bui-fg-info));
+    background: var(--bui-bg-neutral-1);
+  }
+
+  .rowIcon {
+    display: flex;
+    flex-shrink: 0;
+    color: var(--card-accent);
+    background: var(--card-accent-bg);
+    border-radius: var(--bui-radius-1);
+    padding: 4px;
+  }
+
+  .rowText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .rowTitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rowChevron {
+    flex-shrink: 0;
+    color: var(--bui-fg-secondary);
+  }
+}

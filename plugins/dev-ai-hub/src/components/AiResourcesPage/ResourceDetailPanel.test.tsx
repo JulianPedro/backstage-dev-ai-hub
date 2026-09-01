@@ -74,6 +74,8 @@ function summary(overrides: Partial<ResourceSummary>): ResourceSummary {
     frameworks: ['claude-code'],
     kind: 'AiResource',
     annotations: {},
+    children: [],
+    parents: [],
     ...overrides,
   };
 }
@@ -359,5 +361,98 @@ describe('ResourceDetailPanel — metadata links', () => {
 
     const ownerValue = screen.getByText('group:');
     expect(ownerValue.tagName).not.toBe('A');
+  });
+});
+
+describe('ResourceDetailPanel — collapsible content', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    clearResourceBodyCache();
+  });
+
+  it('shows a plugin/marketplace JSON body under a collapsible "Content" toggle, expanded by default', async () => {
+    api.getEntityBody.mockResolvedValue({
+      content: '{"name":"p"}',
+      contentType: 'application/json',
+    });
+    const { container } = render(
+      <ResourceDetailPanel
+        resource={summary({ ...ACTIONABLE, type: 'plugin' })}
+        onClose={jest.fn()}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('json-body')).toBeInTheDocument(),
+    );
+    const details = container.querySelector('details');
+    expect(details).toBeInTheDocument();
+    // Expanded by default in the detail ("more information") panel.
+    expect(details).toHaveAttribute('open');
+    expect(details?.querySelector('summary')).toHaveTextContent('Content');
+  });
+
+  it('does not collapse a markdown body', async () => {
+    api.getEntityBody.mockResolvedValue({
+      content: '# hi',
+      contentType: 'text/markdown',
+    });
+    const { container } = render(
+      <ResourceDetailPanel resource={ACTIONABLE} onClose={jest.fn()} />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('markdown')).toBeInTheDocument(),
+    );
+    expect(container.querySelector('details')).not.toBeInTheDocument();
+  });
+});
+
+describe('ResourceDetailPanel — relationships', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    clearResourceBodyCache();
+  });
+
+  it('renders relationship sections when items and onOpen are supplied', () => {
+    const parent = summary({
+      entityRef: 'airesource:default/bundle',
+      name: 'bundle',
+      title: 'The Bundle',
+      type: 'plugin',
+    });
+    const child = summary({
+      entityRef: 'airesource:default/skill-a',
+      name: 'skill-a',
+      type: 'skill',
+      parents: ['airesource:default/bundle'],
+    });
+
+    render(
+      <ResourceDetailPanel
+        resource={child}
+        items={[parent, child]}
+        onOpen={jest.fn()}
+        onClose={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Part of')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /The Bundle/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('omits relationship sections when onOpen is not supplied', () => {
+    const child = summary({
+      entityRef: 'airesource:default/skill-a',
+      name: 'skill-a',
+      type: 'skill',
+      parents: ['airesource:default/bundle'],
+    });
+
+    render(<ResourceDetailPanel resource={child} onClose={jest.fn()} />);
+
+    expect(screen.queryByText('Part of')).not.toBeInTheDocument();
   });
 });
